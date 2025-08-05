@@ -1,4 +1,4 @@
-import {stat, readdir, readFile} from "node:fs/promises";
+import {readdir, readFile, rm, stat} from "node:fs/promises";
 import {resolve} from "node:path";
 import {serverFolder} from "~/server/minecraft-servers";
 
@@ -13,9 +13,15 @@ type FileEntry = {
 	}[];
 };
 
+const FORBIDDEN_PATHS = ["..", ".", ""];
+
+
+export function resolveSafePath(root: string, uid: string, paths:string): string {
+	return resolve(root, uid, ...paths.split("/").filter(p => !FORBIDDEN_PATHS.includes(p)));
+}
 
 export async function getMinecraftServerFiles(uid: string, relPath: string): Promise<FileEntry> {
-	const targetDir = resolve(serverFolder, uid, relPath);
+	const targetDir = resolveSafePath(serverFolder, uid, relPath);
 	const s = await stat(targetDir);
 
 	if (s.isDirectory()) {
@@ -33,4 +39,9 @@ export async function getMinecraftServerFiles(uid: string, relPath: string): Pro
 		const content = await readFile(targetDir, "utf-8");
 		return {type: "file", content};
 	}
+}
+
+export async function deleteMinecraftServerFile(uid: string, relPath: string): Promise<void> {
+	const targetPath = resolveSafePath(serverFolder, uid, relPath);
+	await rm(targetPath, {recursive: true, force: true});
 }
