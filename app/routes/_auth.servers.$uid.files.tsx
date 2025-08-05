@@ -1,5 +1,5 @@
 import type {Route} from './+types/_auth.servers.$uid.files';
-import {useSearchParams} from "react-router";
+import {useSearchParams, useSubmit} from "react-router";
 import {deleteMinecraftServerFile, getMinecraftServerFiles} from "~/server/file-explorer";
 import {IconFile, IconFolder, IconTrash} from "@tabler/icons-react";
 import CodeMirror from "@uiw/react-codemirror";
@@ -43,17 +43,16 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 		setConfirmOpen(true);
 	};
 
+	const submit = useSubmit();
+
 	const handleConfirmDelete = async () => {
 		if (!fileToDelete) return;
 		setLoading(true);
-		await fetch(window.location.pathname, {
-			method: "POST",
-			body: new URLSearchParams({path: fileToDelete.path}),
-		});
+		const formData = new URLSearchParams({path: fileToDelete.path});
+		await submit(formData, {method: "post"});
 		setLoading(false);
 		setConfirmOpen(false);
 		setFileToDelete(null);
-		window.location.reload();
 	};
 
 	const pathWithRoot = [
