@@ -1,9 +1,12 @@
 import type {Route} from './+types/_auth.servers.$uid.files';
-import {Form, useSearchParams, useNavigation} from "react-router";
+import {useSearchParams} from "react-router";
 import {deleteMinecraftServerFile, getMinecraftServerFiles} from "~/server/file-explorer";
 import {IconFile, IconFolder, IconTrash} from "@tabler/icons-react";
 import CodeMirror from "@uiw/react-codemirror";
-import {Stack, Text, Anchor, Breadcrumbs, Table, ScrollArea, Paper, Button, ActionIcon} from "@mantine/core";
+import {
+	Stack, Text, Anchor, Breadcrumbs, Table, ScrollArea, Paper, Button, ActionIcon, Modal, Group, Loader
+} from "@mantine/core";
+import {useState} from "react";
 
 export async function loader({params, request}: Route.LoaderArgs) {
 	const url = new URL(request.url);
@@ -14,7 +17,7 @@ export async function loader({params, request}: Route.LoaderArgs) {
 
 export async function action({request, params}: Route.ActionArgs) {
 	const formData = await request.formData();
-	const path = formData.get("path")
+	const path = formData.get("path");
 	if (typeof path === "string" && path.trim() !== "") {
 		await deleteMinecraftServerFile(params.uid, path);
 	}
@@ -26,11 +29,31 @@ const FORBIDDEN_PATHS = ["..", ".", ""];
 export default function FileExplorer({loaderData: {files}}: Route.ComponentProps) {
 	const [searchParms, setSearchParams] = useSearchParams();
 	const path = (searchParms.get("path") ?? "").split("/").filter(p => !FORBIDDEN_PATHS.includes(p));
-	const navigation = useNavigation();
-
+	const [confirmOpen, setConfirmOpen] = useState(false);
+	const [fileToDelete, setFileToDelete] = useState<{ name: string, isDir: boolean, path: string } | null>(null);
+	const [loading, setLoading] = useState(false);
 
 	const handleNavigate = (newPath: string) => {
 		setSearchParams({path: newPath});
+	};
+
+	const handleDeleteClick = (file: { name: string, isDir: boolean }, filePath: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		setFileToDelete({...file, path: filePath});
+		setConfirmOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!fileToDelete) return;
+		setLoading(true);
+		await fetch(window.location.pathname, {
+			method: "POST",
+			body: new URLSearchParams({path: fileToDelete.path}),
+		});
+		setLoading(false);
+		setConfirmOpen(false);
+		setFileToDelete(null);
+		window.location.reload();
 	};
 
 	const pathWithRoot = [
@@ -42,7 +65,6 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 		<Stack>
 			<Paper withBorder>
 				<ScrollArea>
-
 					<Breadcrumbs m="sm" style={{flexWrap: "nowrap"}}>
 						{pathWithRoot.map((p, index) => (
 							pathWithRoot.length - 1 === index ? (
@@ -77,38 +99,55 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 								</Table.Tr>
 							</Table.Thead>
 							<Table.Tbody>
-								{files.child.map((file) => (
-									<Table.Tr
-										key={file.name}
-										onClick={() => handleNavigate([...path, file.name].join("/"))}
-										style={{cursor: "pointer"}}
-									>
-										<Table.Td>
-											{file.isDir ? <IconFolder/> : <IconFile/>} {file.name}
-										</Table.Td>
-										<Table.Td>
-											{file.isDir ? "Dossier" : "Fichier"}
-										</Table.Td>
-										<Table.Td>
-											<Form method="post" onClick={e => e.stopPropagation()}>
-												<input type="hidden" name="path" value={[...path, file.name].join("/")}/>
+								{files.child.map((file) => {
+									const filePath = [...path, file.name].join("/");
+									return (
+										<Table.Tr
+											key={file.name}
+											onClick={() => handleNavigate(filePath)}
+											style={{cursor: "pointer"}}
+										>
+											<Table.Td>
+												{file.isDir ? <IconFolder/> : <IconFile/>} {file.name}
+											</Table.Td>
+											<Table.Td>
+												{file.isDir ? "Folder" : "File"}
+											</Table.Td>
+											<Table.Td>
 												<ActionIcon
 													color="red"
-													type="submit"
-													loading={navigation.state === "submitting"}
+													type="button"
 													aria-label="Delete file"
+													onClick={e => handleDeleteClick(file, filePath, e)}
+													disabled={loading}
 												>
-													<IconTrash/>
+													{loading && fileToDelete?.path === filePath ? <Loader size="xs"/> : <IconTrash/>}
 												</ActionIcon>
-											</Form>
-										</Table.Td>
-									</Table.Tr>
-								))}
+											</Table.Td>
+										</Table.Tr>
+									);
+								})}
 							</Table.Tbody>
 						</Table>
 					</Table.ScrollContainer>
 				)
 			}
+			<Modal
+				opened={confirmOpen}
+				onClose={() => setConfirmOpen(false)}
+				title="Confirm Deletion"
+				centered
+			>
+				{fileToDelete && (
+					fileToDelete.isDir
+						? <Text>Are you sure you want to delete entire {fileToDelete.name} directory?</Text>
+						: <Text>Are you sure you want to delete {fileToDelete.name} file?</Text>
+				)}
+				<Group mt="md" justify="flex-end">
+					<Button variant="default" onClick={() => setConfirmOpen(false)} disabled={loading}>Cancel</Button>
+					<Button color="red" onClick={handleConfirmDelete} loading={loading}>Delete</Button>
+				</Group>
+			</Modal>
 		</Stack>
 	);
 }
