@@ -1,4 +1,4 @@
-import {readFile, rm, readdir, stat} from "node:fs/promises";
+import {readFile, rm, readdir, stat, writeFile} from "node:fs/promises";
 import {resolve, basename} from "node:path";
 import {serverFolder} from "~/server/minecraft-servers";
 import JSZip from "jszip";
@@ -84,5 +84,17 @@ export async function downloadServerFile(uid: string, relPath: string): Promise<
 			name: basename(targetPath),
 			contentType: "application/octet-stream"
 		};
+	}
+}
+
+export async function uploadMinecraftServerFiles(
+	uid: string,
+	relPath: string,
+	files: { name: string, buffer: Buffer }[]
+): Promise<void> {
+	const targetDir = resolveSafePath(serverFolder, uid, relPath);
+	for (const file of files) {
+		const targetFile = resolve(targetDir, file.name);
+		await writeFile(targetFile, file.buffer);
 	}
 }
