@@ -1,6 +1,7 @@
-import {readdir, readFile, rm, stat} from "node:fs/promises";
-import {resolve} from "node:path";
+import {readFile, rm, readdir, stat} from "node:fs/promises";
+import {resolve, basename} from "node:path";
 import {serverFolder} from "~/server/minecraft-servers";
+import JSZip from "jszip";
 
 type FileEntry = {
 	type: "file";
@@ -16,7 +17,7 @@ type FileEntry = {
 const FORBIDDEN_PATHS = ["..", ".", ""];
 
 
-export function resolveSafePath(root: string, uid: string, paths:string): string {
+export function resolveSafePath(root: string, uid: string, paths: string): string {
 	return resolve(root, uid, ...paths.split("/").filter(p => !FORBIDDEN_PATHS.includes(p)));
 }
 
@@ -44,4 +45,44 @@ export async function getMinecraftServerFiles(uid: string, relPath: string): Pro
 export async function deleteMinecraftServerFile(uid: string, relPath: string): Promise<void> {
 	const targetPath = resolveSafePath(serverFolder, uid, relPath);
 	await rm(targetPath, {recursive: true, force: true});
+}
+
+export async function downloadServerFile(uid: string, relPath: string): Promise<{
+	content: Buffer,
+	name: string,
+	contentType: string
+}> {
+	const targetPath = resolveSafePath(serverFolder, uid, relPath);
+	const s = await stat(targetPath);
+	if (s.isDirectory()) {
+		const zip = new JSZip();
+
+		async function addDirToZip(dir: string, zipFolder: JSZip) {
+			const entries = await readdir(dir, {withFileTypes: true});
+			for (const entry of entries) {
+				const entryPath = `${dir}/${entry.name}`;
+				if (entry.isDirectory()) {
+					await addDirToZip(entryPath, zipFolder.folder(entry.name)!);
+				} else {
+					const fileData = await readFile(entryPath);
+					zipFolder.file(entry.name, fileData);
+				}
+			}
+		}
+
+		await addDirToZip(targetPath, zip);
+		const content = await zip.generateAsync({type: "nodebuffer"});
+		return {
+			content,
+			name: basename(targetPath) + ".zip",
+			contentType: "application/zip"
+		};
+	} else {
+		const content = await readFile(targetPath);
+		return {
+			content,
+			name: basename(targetPath),
+			contentType: "application/octet-stream"
+		};
+	}
 }

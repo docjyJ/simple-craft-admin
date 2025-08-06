@@ -1,10 +1,20 @@
-import type {Route} from './+types/_auth.servers.$uid.files';
-import {useSearchParams, useSubmit} from "react-router";
+import type {Route} from './+types/_auth.servers.$uid.files._index';
+import {useSearchParams, Form, Link} from "react-router";
 import {deleteMinecraftServerFile, getMinecraftServerFiles} from "~/server/file-explorer";
-import {IconFile, IconFolder, IconTrash} from "@tabler/icons-react";
+import {IconFile, IconFolder, IconTrash, IconDownload} from "@tabler/icons-react";
 import CodeMirror from "@uiw/react-codemirror";
 import {
-	Stack, Text, Anchor, Breadcrumbs, Table, ScrollArea, Paper, Button, ActionIcon, Modal, Group, Loader
+	Stack,
+	Text,
+	Anchor,
+	Breadcrumbs,
+	Table,
+	ScrollArea,
+	Paper,
+	Button,
+	ActionIcon,
+	Modal,
+	Group
 } from "@mantine/core";
 import {useState} from "react";
 
@@ -17,8 +27,9 @@ export async function loader({params, request}: Route.LoaderArgs) {
 
 export async function action({request, params}: Route.ActionArgs) {
 	const formData = await request.formData();
+	const type = formData.get("type");
 	const path = formData.get("path");
-	if (typeof path === "string" && path.trim() !== "") {
+	if (type === "delete" && typeof path === "string" && path.trim() !== "") {
 		await deleteMinecraftServerFile(params.uid, path);
 	}
 	return null;
@@ -31,28 +42,9 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 	const path = (searchParms.get("path") ?? "").split("/").filter(p => !FORBIDDEN_PATHS.includes(p));
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [fileToDelete, setFileToDelete] = useState<{ name: string, isDir: boolean, path: string } | null>(null);
-	const [loading, setLoading] = useState(false);
 
 	const handleNavigate = (newPath: string) => {
 		setSearchParams({path: newPath});
-	};
-
-	const handleDeleteClick = (file: { name: string, isDir: boolean }, filePath: string, e: React.MouseEvent) => {
-		e.stopPropagation();
-		setFileToDelete({...file, path: filePath});
-		setConfirmOpen(true);
-	};
-
-	const submit = useSubmit();
-
-	const handleConfirmDelete = async () => {
-		if (!fileToDelete) return;
-		setLoading(true);
-		const formData = new URLSearchParams({path: fileToDelete.path});
-		await submit(formData, {method: "post"});
-		setLoading(false);
-		setConfirmOpen(false);
-		setFileToDelete(null);
 	};
 
 	const pathWithRoot = [
@@ -117,10 +109,24 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 													color="red"
 													type="button"
 													aria-label="Delete file"
-													onClick={e => handleDeleteClick(file, filePath, e)}
-													disabled={loading}
+													onClick={e => {
+														e.stopPropagation();
+														setFileToDelete({ name: file.name, isDir: file.isDir, path: filePath });
+														setConfirmOpen(true);
+													}}
 												>
-													{loading && fileToDelete?.path === filePath ? <Loader size="xs"/> : <IconTrash/>}
+													<IconTrash/>
+												</ActionIcon>
+												<ActionIcon
+													component={Link}
+													to={`download?path=${encodeURIComponent(filePath)}`}
+													download reloadDocument
+													color="blue"
+													type="button"
+													aria-label={file.isDir ? "Download folder" : "Download file"}
+													onClick={e => e.stopPropagation()}
+												>
+													<IconDownload/>
 												</ActionIcon>
 											</Table.Td>
 										</Table.Tr>
@@ -143,8 +149,12 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 						: <Text>Are you sure you want to delete {fileToDelete.name} file?</Text>
 				)}
 				<Group mt="md" justify="flex-end">
-					<Button variant="default" onClick={() => setConfirmOpen(false)} disabled={loading}>Cancel</Button>
-					<Button color="red" onClick={handleConfirmDelete} loading={loading}>Delete</Button>
+					<Button variant="default" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+					<Form method="POST" onSubmit={() => setConfirmOpen(false)}>
+						<input type="hidden" name="type" value="delete"/>
+						<input type="hidden" name="path" value={fileToDelete?.path ?? ""}/>
+						<Button color="red" type="submit" name="type" value="delete">Delete</Button>
+					</Form>
 				</Group>
 			</Modal>
 		</Stack>
