@@ -1,4 +1,4 @@
-import {Button, Group, Input, Paper, Stack, Textarea, TextInput} from "@mantine/core";
+import {Button, Group, Stack, Textarea, TextInput} from "@mantine/core";
 import {IconSend} from "@tabler/icons-react";
 import {getMinecraftServerLog, sendCommandToServer} from "~/server/minecraft-servers";
 import {Form} from "react-router";

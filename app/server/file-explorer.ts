@@ -1,5 +1,5 @@
-import {readFile, rm, readdir, stat, writeFile} from "node:fs/promises";
-import {resolve, basename} from "node:path";
+import {readFile, rm, readdir, stat, writeFile, mkdir} from "node:fs/promises";
+import {resolve, basename, dirname} from "node:path";
 import {serverFolder} from "~/server/minecraft-servers";
 import JSZip from "jszip";
 
@@ -10,8 +10,11 @@ type FileEntry = {
 	type: "folder";
 	child: {
 		name: string;
-		isDir: boolean;
+		type: "file" | "folder" | "archive";
 	}[];
+} | {
+	type: "archive";
+	tree: string[];
 };
 
 const FORBIDDEN_PATHS = ["..", ".", ""];
@@ -27,15 +30,28 @@ export async function getMinecraftServerFiles(uid: string, relPath: string): Pro
 
 	if (s.isDirectory()) {
 		const entries = await readdir(targetDir, {withFileTypes: true});
-		const child = entries.map(entry => ({
-			name: entry.name,
-			isDir: entry.isDirectory(),
-		}));
+		const child = entries.map(entry => {
+			if (entry.isDirectory()) {
+				return {name: entry.name, type: "folder" as const};
+			} else if (entry.name.endsWith(".zip")) {
+				return {name: entry.name, type: "archive" as const};
+			} else {
+				return {name: entry.name, type: "file" as const};
+			}
+		});
 		child.sort((a, b) => {
-			if (a.isDir === b.isDir) return a.name.localeCompare(b.name);
-			return a.isDir ? -1 : 1;
+			if (a.type === b.type) return a.name.localeCompare(b.name);
+			return a.type === "folder" ? -1 : 1;
 		});
 		return {type: "folder", child};
+	} else if (targetDir.endsWith(".zip")) {
+		const buffer = await readFile(targetDir);
+		const zip = await JSZip.loadAsync(buffer);
+		const tree: string[] = [];
+		zip.forEach((relativePath) => {
+			tree.push(relativePath);
+		});
+		return {type: "archive", tree};
 	} else {
 		const content = await readFile(targetDir, "utf-8");
 		return {type: "file", content};
@@ -96,5 +112,29 @@ export async function uploadMinecraftServerFiles(
 	for (const file of files) {
 		const targetFile = resolve(targetDir, file.name);
 		await writeFile(targetFile, file.buffer);
+	}
+}
+
+export async function extractMinecraftServerArchive(
+	uid: string,
+	zipPaths: string
+): Promise<void> {
+	if (!zipPaths.endsWith(".zip")) {
+		throw new Error("Invalid archive path, must end with .zip");
+	}
+	const archivePath = resolveSafePath(serverFolder, uid, zipPaths);
+	const destDir = resolveSafePath(serverFolder, uid, zipPaths.slice(0, -4));
+	const buffer = await readFile(archivePath);
+	const zip = await JSZip.loadAsync(buffer);
+
+	for (const entry of Object.values(zip.files)) {
+		const outPath = resolve(destDir, entry.name);
+		if (entry.dir) {
+			await mkdir(outPath, {recursive: true});
+		} else {
+			await mkdir(dirname(outPath), {recursive: true});
+			const content = await entry.async("nodebuffer");
+			await writeFile(outPath, content);
+		}
 	}
 }

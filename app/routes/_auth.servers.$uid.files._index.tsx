@@ -1,7 +1,20 @@
 import type {Route} from './+types/_auth.servers.$uid.files._index';
 import {useSearchParams, Form, Link} from "react-router";
-import {deleteMinecraftServerFile, getMinecraftServerFiles, uploadMinecraftServerFiles} from "~/server/file-explorer";
-import {IconFile, IconFolder, IconTrash, IconDownload} from "@tabler/icons-react";
+import {
+	deleteMinecraftServerFile,
+	getMinecraftServerFiles,
+	uploadMinecraftServerFiles,
+	extractMinecraftServerArchive
+} from "~/server/file-explorer";
+import {
+	IconFile,
+	IconFolder,
+	IconTrash,
+	IconDownload,
+	IconUpload,
+	IconFileZip,
+	IconFolderUp
+} from "@tabler/icons-react";
 import CodeMirror from "@uiw/react-codemirror";
 import {
 	Stack,
@@ -37,7 +50,7 @@ export async function action({request, params}: Route.ActionArgs) {
 	}
 
 	if (type === "upload" && typeof path === "string") {
-		const files: {name: string, buffer: Buffer}[] = [];
+		const files: { name: string, buffer: Buffer }[] = [];
 		for (const entry of formData.getAll("file")) {
 			if (typeof entry === "object" && entry) {
 				const arrayBuffer = await entry.arrayBuffer();
@@ -48,6 +61,11 @@ export async function action({request, params}: Route.ActionArgs) {
 			}
 		}
 		await uploadMinecraftServerFiles(params.uid, path, files);
+		return null;
+	}
+
+	if (type === "extract" && typeof path === "string") {
+		await extractMinecraftServerArchive(params.uid, path);
 		return null;
 	}
 
@@ -99,47 +117,40 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 					to={`download?path=${encodeURIComponent(pathString)}`}
 					download reloadDocument
 					color="blue"
-					aria-label={files.type === "file" ? "Download current file" : "Download current folder"}
+					aria-label={files.type === "folder" ? "Download current folder" : "Download current file"}
 					leftSection={<IconDownload/>}
 				>
 					Download
 				</Button>
 				{
-					files.type === "file" ? (
-							<Button
-								color="red"
-								aria-label="Delete file"
-								onClick={() => {
-									setFileToDelete({name: pathArray[pathArray.length - 1], isDir: false, path: pathString});
-									setDeleteOpen(true);
-								}}
-								leftSection={<IconTrash/>}
-							>
-								Delete
-							</Button>
-						)
-						: (
-							<Button
-								color="green"
-								aria-label="Upload file"
-								onClick={() => {
-									setUploadOpen(true);
-								}}
-								leftSection={<IconFile/>}
-							>
-								Upload
-							</Button>
-						)
+					files.type === "folder" ? (
+						<Button
+							color="green"
+							aria-label="Upload file"
+							onClick={() => {
+								setUploadOpen(true);
+							}}
+							leftSection={<IconUpload/>}
+						>
+							Upload
+						</Button>
+					) : (
+						<Button
+							color="red"
+							aria-label="Delete file"
+							onClick={() => {
+								setFileToDelete({name: pathArray[pathArray.length - 1], isDir: false, path: pathString});
+								setDeleteOpen(true);
+							}}
+							leftSection={<IconTrash/>}
+						>
+							Delete
+						</Button>
+					)
 				}
 			</Group>
 			{
-				files.type === "file" ? (
-					<CodeMirror
-						value={files.content}
-						readOnly={true}
-						style={{fontSize: 14}}
-					/>
-				) : (
+				files.type === "folder" ? (
 					<Table.ScrollContainer minWidth={800} type="native">
 						<Table highlightOnHover>
 							<Table.Thead>
@@ -159,35 +170,54 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 											style={{cursor: "pointer"}}
 										>
 											<Table.Td>
-												{file.isDir ? <IconFolder/> : <IconFile/>} {file.name}
+												{file.type === "folder" ? <IconFolder/> : file.type === "archive" ? <IconFileZip/> :
+													<IconFile/>} {file.name}
 											</Table.Td>
 											<Table.Td>
-												{file.isDir ? "Folder" : "File"}
+												{file.type === "folder" ? "Folder" : file.type === "archive" ? "Archive" : "File"}
 											</Table.Td>
 											<Table.Td>
-												<ActionIcon
-													color="red"
-													type="button"
-													aria-label="Delete file"
-													onClick={e => {
-														e.stopPropagation();
-														setFileToDelete({name: file.name, isDir: file.isDir, path: filePath});
-														setDeleteOpen(true);
-													}}
-												>
-													<IconTrash/>
-												</ActionIcon>
-												<ActionIcon
-													component={Link}
-													to={`download?path=${encodeURIComponent(filePath)}`}
-													download reloadDocument
-													color="blue"
-													type="button"
-													aria-label={file.isDir ? "Download folder" : "Download file"}
-													onClick={e => e.stopPropagation()}
-												>
-													<IconDownload/>
-												</ActionIcon>
+												<Group>
+													<ActionIcon
+														color="red"
+														type="button"
+														aria-label="Delete file"
+														onClick={e => {
+															e.stopPropagation();
+															setFileToDelete({name: file.name, isDir: file.type === "folder", path: filePath});
+															setDeleteOpen(true);
+														}}
+													>
+														<IconTrash/>
+													</ActionIcon>
+													<ActionIcon
+														component={Link}
+														to={`download?path=${encodeURIComponent(filePath)}`}
+														download reloadDocument
+														color="blue"
+														type="button"
+														aria-label={file.type === "folder" ? "Download folder" : "Download file"}
+														onClick={e => e.stopPropagation()}
+													>
+														<IconDownload/>
+													</ActionIcon>
+													{
+														file.type === "archive" && (
+															<Form method="POST">
+																<input type="hidden" name="path" value={filePath}/>
+																<ActionIcon
+																	color="green"
+																	type="submit"
+																	aria-label="Extract archive"
+																	name="type"
+																	value="extract"
+																	onClick={e => e.stopPropagation()}
+
+																><IconFolderUp/></ActionIcon>
+															</Form>
+														)
+													}
+												</Group>
 											</Table.Td>
 										</Table.Tr>
 									);
@@ -195,6 +225,14 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 							</Table.Tbody>
 						</Table>
 					</Table.ScrollContainer>
+				) : files.type === "archive" ? (
+					<Stack>{files.tree.map((name) => (<Text key={name}>{name}</Text>))}</Stack>
+				) : (
+					<CodeMirror
+						value={files.content}
+						readOnly={true}
+						style={{fontSize: 14}}
+					/>
 				)
 			}
 			<Modal
@@ -240,6 +278,5 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 				</Form>
 			</Modal>
 		</Stack>
-	)
-		;
+	);
 }

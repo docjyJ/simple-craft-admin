@@ -1,4 +1,4 @@
-import {listMinecraftServers, getServerData, isRunning, fullListMinecraftServers} from "~/server/minecraft-servers";
+import {fullListMinecraftServers} from "~/server/minecraft-servers";
 import type {Route} from './+types/_auth.servers._index';
 import {ActionIcon, Avatar, Badge, Group, Paper, Table, Text} from "@mantine/core";
 import {IconAccessPoint, IconAccessPointOff, IconEdit} from "@tabler/icons-react";

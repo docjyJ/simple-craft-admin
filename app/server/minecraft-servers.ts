@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import {spawn} from "child_process";
-import {getServerIcon, getServerProperties, getServerStatus} from "~/server/server-status";
+import {getServerIcon, getServerProperties} from "~/server/server-status";
 
 
 export type MinecraftServer = {
