@@ -7,7 +7,7 @@ import type {Route} from './+types/_auth.servers.$uid._index';
 export async function loader({params}: Route.LoaderArgs) {
 	const {uid} = params;
 	if (!uid) throw new Response("UID manquant", {status: 400});
-	const log = getMinecraftServerLog(uid) ?? "";
+	const log = await getMinecraftServerLog(uid) ?? "";
 	return {log};
 }
 

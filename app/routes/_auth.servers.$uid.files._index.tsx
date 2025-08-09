@@ -1,10 +1,10 @@
 import type {Route} from './+types/_auth.servers.$uid.files._index';
-import {Form, Link, type Path, useLocation, useNavigate} from "react-router";
+import {Form, Link, useLocation, useNavigate} from "react-router";
 import {
 	deletePath,
 	getPath,
 	uploadFiles,
-	extractArchive
+	extractArchive, type FolderEntry
 } from "~/server/file-explorer";
 import {
 	IconFile,
@@ -28,15 +28,15 @@ import {
 	ActionIcon,
 	Modal,
 	Group,
-	FileInput
+	FileInput,
 } from "@mantine/core";
 import {useState} from "react";
 
 export async function loader({params, request}: Route.LoaderArgs) {
 	const url = new URL(request.url);
 	const path = url.searchParams.get("path") || "";
-	const files = await getPath(params.uid, path);
-	return {files};
+	const file = await getPath(params.uid, path);
+	return {file};
 }
 
 export async function action({request, params}: Route.ActionArgs) {
@@ -65,24 +65,30 @@ export async function action({request, params}: Route.ActionArgs) {
 
 const FORBIDDEN_PATHS = ["..", ".", ""];
 
-function urlBuilder({path, download, upload}: { path: string, download?: boolean, upload?: boolean }): Partial<Path> {
-	const out: Partial<Path> = {};
-	if (download) out.pathname = 'download';
-	if (path) out.search = `?path=${encodeURIComponent(path)}`;
-	if (upload) out.hash = '#upload';
-
-	return out
+function urlBuilder({path, download, upload}: { path: string, download?: boolean, upload?: boolean }): string {
+	const builder = []
+	if (download) builder.push(download);
+	if (path) builder.push(`?path=${encodeURIComponent(path)}`);
+	if (upload) builder.push('#upload');
+	return builder.join('');
 }
 
-export default function FileExplorer({loaderData: {files}}: Route.ComponentProps) {
+function useExplorerLocation() {
 	const location = useLocation();
-	const navigate = useNavigate();
-	const searchParms = new URLSearchParams(location.search);
-	const [deleteModal, setDeleteModal] = useState<{ name: string, isDir: boolean, path: string } | null>(null);
-
-
-	const pathArray = (searchParms.get("path") ?? "").split("/").filter(p => !FORBIDDEN_PATHS.includes(p));
+	const searchParams = new URLSearchParams(location.search);
+	const pathArray = (searchParams.get("path") ?? "").split("/").filter(p => !FORBIDDEN_PATHS.includes(p));
 	const pathString = pathArray.join("/");
+	return {
+		pathArray,
+		pathString,
+		upload: location.hash === "#upload"
+	};
+}
+
+export default function FileExplorer({loaderData: {file}}: Route.ComponentProps) {
+	const {pathArray, pathString} = useExplorerLocation();
+
+
 	const pathWithRoot = [
 		"Root",
 		...pathArray
@@ -115,13 +121,13 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 					to={urlBuilder({path: pathString})}
 					download reloadDocument
 					color="blue"
-					aria-label={files.type === "folder" ? "Download current folder" : "Download current file"}
+					aria-label={file.type === "folder" ? "Download current folder" : "Download current file"}
 					leftSection={<IconDownload/>}
 				>
 					Download
 				</Button>
 				{
-					files.type === "folder" ? (
+					file.type === "folder" ? (
 						<Button
 							component={Link}
 							to={urlBuilder({path: pathString, upload: true})}
@@ -136,7 +142,7 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 							color="red"
 							aria-label="Delete file"
 							onClick={() => {
-								setDeleteModal({name: pathArray[pathArray.length - 1], isDir: false, path: pathString});
+								// TODO setDeleteModal({name: pathArray[pathArray.length - 1], isDir: false, path: pathString});
 							}}
 							leftSection={<IconTrash/>}
 						>
@@ -146,154 +152,32 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 				}
 			</Group>
 			{
-				files.type === "folder" ? (
-					<Table.ScrollContainer minWidth={800} type="native">
-						<Table highlightOnHover>
-							<Table.Thead>
-								<Table.Tr>
-									<Table.Th>Name</Table.Th>
-									<Table.Th>Type</Table.Th>
-									<Table.Th>Actions</Table.Th>
-								</Table.Tr>
-							</Table.Thead>
-							<Table.Tbody>
-								{files.entries.map((file) => {
-									const filePath = [...pathArray, file.name].join("/");
-									return (
-										<Table.Tr
-											key={file.name}
-											onClick={() => navigate(urlBuilder({path: filePath}))}
-											style={{cursor: "pointer"}}
-										>
-											<Table.Td>
-												{file.type === "folder" ? <IconFolder/> : file.type === "archive" ? <IconFileZip/> :
-													<IconFile/>} {file.name}
-											</Table.Td>
-											<Table.Td>
-												{file.type === "folder" ? "Folder" : file.type === "archive" ? "Archive" : "File"}
-											</Table.Td>
-											<Table.Td>
-												<Group>
-													<ActionIcon
-														color="red"
-														type="button"
-														aria-label="Delete file"
-														onClick={e => {
-															e.stopPropagation();
-															setDeleteModal({name: file.name, isDir: file.type === "folder", path: filePath});
-														}}
-													>
-														<IconTrash/>
-													</ActionIcon>
-													<ActionIcon
-														component={Link}
-														to={urlBuilder({path: filePath, download: true})}
-														download reloadDocument
-														color="blue"
-														type="button"
-														aria-label={file.type === "folder" ? "Download folder" : "Download file"}
-														onClick={e => e.stopPropagation()}
-													>
-														<IconDownload/>
-													</ActionIcon>
-													{
-														file.type === "archive" && (
-															<Form method="POST">
-																<input type="hidden" name="path" value={filePath}/>
-																<ActionIcon
-																	color="green"
-																	type="submit"
-																	aria-label="Extract archive"
-																	name="type"
-																	value="extract"
-																	onClick={e => e.stopPropagation()}
-
-																><IconFolderUp/></ActionIcon>
-															</Form>
-														)
-													}
-												</Group>
-											</Table.Td>
-										</Table.Tr>
-									);
-								})}
-							</Table.Tbody>
-						</Table>
-					</Table.ScrollContainer>
-				) : files.type === "archive" ? (
-					<Stack>{files.tree.map((name) => (<Text key={name}>{name}</Text>))}</Stack>
-				) : (
-					<CodeMirror
-						value={files.content}
-						readOnly={true}
-						style={{fontSize: 14}}
-					/>
-				)
+				file.type === "folder"
+					? <DirectoryExplorer entries={file.entries}/>
+					: file.type === "archive"
+						? <ArchiveViewer archiveFiles={file.tree}/>
+						: <FileEditor fileContent={file.content}/>
 			}
-			<Modal
-				opened={deleteModal !== null}
-				onClose={() => setDeleteModal(null)}
-				title="Confirm Deletion"
-				centered
-			>
-				{deleteModal && (
-					deleteModal.isDir
-						? <Text>Are you sure you want to delete entire {deleteModal.name} directory?</Text>
-						: <Text>Are you sure you want to delete {deleteModal.name} file?</Text>
-				)}
-				<Form method="POST" onSubmit={() => setDeleteModal(null)}>
-					<input type="hidden" name="type" value="delete"/>
-					<input type="hidden" name="path" value={deleteModal?.path ?? ""}/>
-					<Group mt="md" justify="flex-end">
-						<Button variant="default" type="button" onClick={() => setDeleteModal(null)}>Cancel</Button>
-						<Button color="red" type="submit" name="type" value="delete">Delete</Button>
-					</Group>
-				</Form>
-			</Modal>
-			<Modal
-				opened={location.hash === "#upload"}
-				onClose={() => navigate(urlBuilder({path: pathString}))}
-				title="Upload file"
-				centered
-			>
-				<Form method="POST" encType="multipart/form-data" onSubmit={() => navigate(urlBuilder({path: pathString}))}>
-					<input type="hidden" name="path" value={pathString}/>
-					<FileInput
-						name="file"
-						multiple
-						required
-						label="Select file(s) to upload"
-						placeholder="Choose file(s)"
-						accept="*/*"
-					/>
-					<Group mt="md" justify="flex-end">
-						<Button variant="default" type="button"
-										onClick={() => navigate(urlBuilder({path: pathString}))}>Cancel</Button>
-						<Button color="green" type="submit" name="type" value="upload">Upload</Button>
-					</Group>
-				</Form>
-			</Modal>
-			<UploadFilesModal opened={location.hash === "#upload"} path={pathString}
-												onClose={() => navigate(urlBuilder({path: pathString}))}/>
 		</Stack>
 	);
 }
 
 type UploadFilesModalProps = {
 	opened: boolean;
-	onClose: () => void;
+	closePath: string;
 	path: string;
 }
 
-function UploadFilesModal({onClose, path, opened}: UploadFilesModalProps) {
+function UploadFilesModal({closePath, path, opened}: UploadFilesModalProps) {
+	const navigate = useNavigate();
+	if (!opened) return null;
 	return (
 		<Modal
-			opened={opened}
-			onClose={onClose}
+			onClose={() => navigate(closePath)}
 			title="Upload file"
-			centered
+			centered opened
 		>
-			<Form method="POST" encType="multipart/form-data" onSubmit={onClose}>
+			<Form method="POST" encType="multipart/form-data" action={closePath}>
 				<input type="hidden" name="path" value={path}/>
 				<FileInput
 					name="file"
@@ -304,10 +188,152 @@ function UploadFilesModal({onClose, path, opened}: UploadFilesModalProps) {
 					accept="*/*"
 				/>
 				<Group mt="md" justify="flex-end">
-					<Button variant="default" type="button" onClick={onClose}>Cancel</Button>
+					<Button component={Link} to={closePath} variant="default" type="button">Cancel</Button>
 					<Button color="green" type="submit" name="type" value="upload">Upload</Button>
 				</Group>
 			</Form>
 		</Modal>
+	);
+}
+
+type DeleteFileModalProps = {
+	path: string;
+	deleteModal: { name: string, isDir: boolean } | null;
+	onClose: () => void;
+};
+
+function DeleteFileModal({deleteModal, onClose, path}: DeleteFileModalProps) {
+	if (!deleteModal) return null;
+	return (
+		<Modal
+			onClose={onClose}
+			title="Confirm Deletion"
+			centered opened>
+			{deleteModal && (
+				deleteModal.isDir
+					? <Text>Are you sure you want to delete entire {deleteModal.name} directory?</Text>
+					: <Text>Are you sure you want to delete {deleteModal.name} file?</Text>
+			)}
+			<Form method="POST" onSubmit={onClose}>
+				<input type="hidden" name="type" value="delete"/>
+				<input type="hidden" name="path" value={`${path}/${deleteModal.name}`}/>
+				<Group mt="md" justify="flex-end">
+					<Button variant="default" type="button" onClick={onClose}>Cancel</Button>
+					<Button color="red" type="submit" name="type" value="delete">Delete</Button>
+				</Group>
+			</Form>
+		</Modal>
+	);
+}
+
+type FileEditorProps = {
+	fileContent: string;
+}
+
+function FileEditor({fileContent}: FileEditorProps) {
+	return (
+		<CodeMirror
+			value={fileContent}
+			readOnly={true}
+			style={{fontSize: 14}}
+		/>
+	);
+}
+
+type ArchiveViewerProps = {
+	archiveFiles: string[];
+}
+
+function ArchiveViewer({archiveFiles}: ArchiveViewerProps) {
+	return <Stack>{archiveFiles.map((name) => (<Text key={name}>{name}</Text>))}</Stack>;
+}
+
+type DirectoryExplorerProps = {
+	entries: FolderEntry[];
+};
+
+function DirectoryExplorer({entries}: DirectoryExplorerProps) {
+	const {pathArray, pathString, upload} = useExplorerLocation();
+	const navigate = useNavigate();
+	const [deleteModal, setDeleteModal] = useState<{ name: string, isDir: boolean, path: string } | null>(null);
+	return (
+		<>
+			<Table.ScrollContainer minWidth={800} type="native">
+				<Table highlightOnHover>
+					<Table.Thead>
+						<Table.Tr>
+							<Table.Th>Name</Table.Th>
+							<Table.Th>Type</Table.Th>
+							<Table.Th>Actions</Table.Th>
+						</Table.Tr>
+					</Table.Thead>
+					<Table.Tbody>
+						{entries.map((entry) => {
+							const filePath = [...pathArray, entry.name].join("/");
+							return (
+								<Table.Tr
+									key={entry.name}
+									onClick={() => navigate(urlBuilder({path: filePath}))}
+									style={{cursor: "pointer"}}
+								>
+									<Table.Td>
+										{entry.type === "folder" ? <IconFolder/> : entry.type === "archive" ? <IconFileZip/> :
+											<IconFile/>} {entry.name}
+									</Table.Td>
+									<Table.Td>
+										{entry.type === "folder" ? "Folder" : entry.type === "archive" ? "Archive" : "File"}
+									</Table.Td>
+									<Table.Td>
+										<Group>
+											<ActionIcon
+												color="red"
+												type="button"
+												aria-label="Delete file"
+												onClick={e => {
+													e.stopPropagation();
+													setDeleteModal({name: entry.name, isDir: entry.type === "folder", path: filePath});
+												}}
+											>
+												<IconTrash/>
+											</ActionIcon>
+											<ActionIcon
+												component={Link}
+												to={urlBuilder({path: filePath, download: true})}
+												download reloadDocument
+												color="blue"
+												type="button"
+												aria-label={entry.type === "folder" ? "Download folder" : "Download file"}
+												onClick={e => e.stopPropagation()}
+											>
+												<IconDownload/>
+											</ActionIcon>
+											{
+												entry.type === "archive" && (
+													<Form method="POST" action={urlBuilder({path: pathString})}>
+														<input type="hidden" name="path" value={filePath}/>
+														<ActionIcon
+															color="green"
+															type="submit"
+															aria-label="Extract archive"
+															name="type"
+															value="extract"
+															onClick={e => e.stopPropagation()}
+
+														><IconFolderUp/></ActionIcon>
+													</Form>
+												)
+											}
+										</Group>
+									</Table.Td>
+								</Table.Tr>
+							);
+						})}
+					</Table.Tbody>
+				</Table>
+			</Table.ScrollContainer>
+			<DeleteFileModal path={pathString} deleteModal={deleteModal} onClose={() => setDeleteModal(null)}/>
+			<UploadFilesModal opened={upload} path={pathString}
+												closePath={urlBuilder({path: pathString})}/>
+		</>
 	);
 }
