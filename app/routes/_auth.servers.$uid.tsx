@@ -69,7 +69,7 @@ export default function ServerLayout({loaderData: {server_data, is_online}, para
 				</Tabs>
 
 			</Paper>
-			<Paper withBorder p="md" style={{flexGrow: 1}}>
+			<Paper withBorder p="md" style={{flexGrow: 1, overflow: "auto"}}>
 				<Outlet/>
 			</Paper>
 		</Stack>
