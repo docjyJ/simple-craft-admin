@@ -5,14 +5,14 @@ import {dirname} from "node:path";
 
 export async function zipTree(path: string): Promise<string[]> {
 	const buffer = await readFile(path);
-	const zip = await loadAsync(buffer);
+	const zip = await JSZip.loadAsync(buffer);
 	const tree: string[] = [];
-	zip.forEach(f => tree.push(f.name));
+	zip.forEach(relativePath => tree.push(relativePath));
 	return tree;
 }
 
 export async function unzipFile(buffer: Buffer, outputPath: string): Promise<void> {
-	const zip = await loadAsync(buffer);
+	const zip = await JSZip.loadAsync(buffer);
 	for (const entry of Object.values(zip.files)) {
 		const filePath = `${outputPath}/${entry.name}`;
 		if (entry.dir) {
