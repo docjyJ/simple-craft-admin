@@ -30,9 +30,11 @@ export default function ServerLayout({loaderData: {server_data, is_online}, para
 	return (
 		<Stack h="100%" justify="space-between" p="md">
 			<Paper withBorder p="md">
-				<Group>
-					<Avatar src={server_data.server_icon}/>
-					<Text>{server_data.motd}</Text>
+				<Group justify="space-between">
+					<Group gap="xs">
+						<Avatar src={server_data.server_icon}/>
+						<Text>{server_data.motd}</Text>
+					</Group>
 					<Group gap="xs">
 						<Text fz="sm" fw={500}>
 							{server_data.online_players ?? '??'}
@@ -41,6 +43,9 @@ export default function ServerLayout({loaderData: {server_data, is_online}, para
 							/ {server_data?.max_players ?? '??'}
 						</Text>
 					</Group>
+					<Text fz="sm">
+						{server_data.server_version ?? 'Unknown'}
+					</Text>
 					<Form method="post">
 						<Button
 							color={is_online ? "red" : "green"}

@@ -11,14 +11,14 @@ export async function loader() {
 }
 
 export default function ServersIndex({loaderData: {servers}}: Route.ComponentProps) {
-	const rows = servers.map(({uid, server_data, is_online}) => (
+	const rows = servers.map(({uid, server_data}) => (
 		<Table.Tr key={uid}>
 			<Table.Td>
 				<Group gap="sm">
 					<Avatar src={server_data.server_icon}/>
 					<div>
 						<Text fz="sm" fw={500}>
-							{server_data.motd ?? "No MOTD"}
+							{server_data.motd}
 						</Text>
 					</div>
 				</Group>
@@ -30,13 +30,18 @@ export default function ServersIndex({loaderData: {servers}}: Route.ComponentPro
 						{server_data.online_players ?? '??'}
 					</Text>
 					<Text fz="xs" c="dimmed">
-						/ {server_data.max_players ?? '??'}
+						/ {server_data.max_players}
 					</Text>
 				</Group>
 			</Table.Td>
 			<Table.Td>
+				<Text fz="sm">
+					{server_data.server_version ?? 'Unknown'}
+				</Text>
+			</Table.Td>
+			<Table.Td>
 				{
-					is_online ? (
+					server_data.is_online ? (
 						<Badge color="green" size="sm" leftSection={<IconAccessPoint size={12}/>}>
 							Online
 						</Badge>
@@ -65,6 +70,7 @@ export default function ServersIndex({loaderData: {servers}}: Route.ComponentPro
 							<Table.Tr>
 								<Table.Th>Server</Table.Th>
 								<Table.Th>Players</Table.Th>
+								<Table.Th>Version</Table.Th>
 								<Table.Th>Status</Table.Th>
 								<Table.Th>Action</Table.Th>
 							</Table.Tr>

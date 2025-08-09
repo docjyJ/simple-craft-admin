@@ -1,21 +1,20 @@
 import {spawn} from "node:child_process";
 import {readdir, readFile} from "node:fs/promises";
-import {getServerIcon, getServerProperties} from "~/server/server-status";
+import {getServerIcon, getServerProperties, getServerStatus} from "~/server/server-status";
 import {getRootPaths, isValidUid, resolveSafePath} from "~/server/path-validation";
 
 
 export type MinecraftServer = {
 	uid: string;
 	server_data: ServerData;
-	is_online: boolean;
 }
 
 export type ServerData = {
-	motd?: string;
+	is_online: boolean;
+	motd: string;
 	online_players?: number;
-	players?: string[];
-	max_players?: number;
-	server_icon?: string;
+	max_players: number;
+	server_icon: string;
 	server_version?: string;
 };
 const serverProcesses: Map<string, import("child_process").ChildProcess> = new Map();
@@ -30,27 +29,31 @@ export async function fullListMinecraftServers(): Promise<MinecraftServer[]> {
 	const servers: MinecraftServer[] = [];
 	for (const uid of await listMinecraftServers()) {
 		const serverData = await getServerData(uid);
-		const isOnline = isRunning(uid);
-		servers.push({uid, server_data: serverData, is_online: isOnline});
+		servers.push({uid, server_data: serverData});
 	}
 	return servers;
 }
 
 export async function getServerData(uid: string) {
-
 	const {fullPath} = resolveSafePath(uid, "");
-
-	const serverProperties = await getServerProperties(fullPath)
-	// TODO const status = await getServerStatus(serverProperties.server_port)
-
-	const serverIcon = await getServerIcon(fullPath);
-
-
-	return {
-		motd: serverProperties.motd,
-		max_players: serverProperties.max_players,
-		server_icon: serverIcon,
-	} as ServerData;
+	const serverProperties = await getServerProperties(fullPath);
+	const serverStatus = isRunning(uid) ? await getServerStatus(serverProperties.server_port) : null
+	if (serverStatus) {
+		return {
+			is_online: true,
+			motd: serverStatus.motd,
+			max_players: serverStatus.max_players,
+			online_players: serverStatus.online_players,
+			server_icon: serverStatus.icon,
+			server_version: serverStatus.version,
+		}
+	} else
+		return {
+			is_online: false,
+			motd: serverProperties.motd,
+			max_players: serverProperties.max_players,
+			server_icon: await getServerIcon(fullPath),
+		}
 }
 
 

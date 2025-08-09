@@ -1,50 +1,62 @@
 import * as net from "node:net"
 import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";
-
-// TODO add cache
+import pack_jpg from "~/assets/pack_png";
 
 export type ServerStatus = {
 	version: string,
 	max_players: number,
 	online_players: number,
-	players: [{
+	players: {
 		name: string,
 		id: string
-	}[]],
+	}[],
 	motd: string,
-	icon?: string,
+	icon: string,
 }
 export type ServerProperties = {
-	motd?: string;
-	max_players?: number;
-	server_port?: number;
+	motd: string;
+	max_players: number;
+	server_port: number;
 }
 
 
 export async function getServerStatus(
 	port: number,
-) {
+): Promise<ServerStatus | null> {
 	return new Promise((resolve) => {
 		const socket = new net.Socket();
 
 		socket.on('connect', () => {
 			const handshake = Buffer.from([
+				0x0F, // Handshake length
 				0x00, // Packet ID for Handshake
-				0x00, // Protocol version (0 for legacy)
-				0x00, // Server address length
-				0x00, // Server address
-				port >> 8, port & 0xFF, // Port number
-				0x01  // Next state (1 for status)
+				0x04, // Protocol version (0 for legacy)
+				0x09, // Server address length
+				0x6C, 0x6F, 0x63, 0x61, 0x6C, 0x68, 0x6F, 0x73, 0x74, // Server address (localhost)
+				(port >> 8) & 0xFF, port & 0xFF, // Port number
+				0x01, // Next state
+				0x01, // Status Request length
+				0x00, // Packet ID for Status Request
 			]);
 			socket.write(handshake);
 			socket.end();
 		});
 
-		socket.on('data', (data: any) => {
+		socket.on('data', (data: Buffer) => {
+			const brut = data.toString('utf8');
+			const json = brut.slice(brut.indexOf('{'), brut.lastIndexOf('}') + 1);
 			try {
-				const response = JSON.parse(data.toString());
-				resolve(response as ServerStatus);
+				const obj = JSON.parse(json);
+				console.log(obj);
+				resolve({
+					version: obj.version.name as string,
+					max_players: obj.players.max as number,
+					online_players: obj.players.online as number,
+					players: obj.players.sample as { name: string, id: string }[],
+					motd: obj.description as string,
+					icon: obj.favicon as string,
+				});
 			} catch (e) {
 				resolve(null);
 			}
@@ -60,9 +72,13 @@ export async function getServerStatus(
 
 export async function getServerProperties(server_folder: string) {
 	const filePath = resolve(server_folder, "server.properties");
+	const properties: ServerProperties = {
+		motd: "A Minecraft Server",
+		max_players: 20,
+		server_port: 25565,
+	};
 	return readFile(filePath, "utf8").then(
 		data => {
-			const properties: ServerProperties = {};
 			data.split("\n").forEach(line => {
 				const data = line.split("=");
 				if (data.length === 2) {
@@ -85,25 +101,12 @@ export async function getServerProperties(server_folder: string) {
 			});
 			return properties;
 		}
-	).catch(
-		error => {
-			console.error(`Error reading server properties from ${filePath}:`, error);
-			return {} as ServerProperties;
-		}
-	)
+	).catch(() => properties)
 }
-
 
 export async function getServerIcon(server_folder: string) {
 	const filePath = resolve(server_folder, "server-icon.png");
-	return readFile(filePath, "base64").then(
-		data => {
-			return `data:image/png;base64,${data}`;
-		}
-	).catch(
-		error => {
-			console.error(`Error reading server icon from ${filePath}:`, error);
-			return undefined
-		}
-	)
+	return readFile(filePath, "base64")
+		.then(data => `data:image/png;base64,${data}`)
+		.catch(() => pack_jpg)
 }
