@@ -1,7 +1,6 @@
-import {readFile, rm, readdir, stat, writeFile, mkdir} from "node:fs/promises";
-import {resolve, dirname} from "node:path";
-import JSZip from "jszip";
+import {readFile, rm, readdir, stat, writeFile} from "node:fs/promises";
 import {resolveSafePath} from "~/server/path-validation";
+import {zipTree, unzipFile, zipFile} from "~/server/zip-managment";
 
 export type PathContent = {
 	type: "file";
@@ -40,12 +39,7 @@ export async function getPath(uid: string, inputPath: string): Promise<PathConte
 		});
 		return {type: "folder", child};
 	} else if (fullPath.endsWith(".zip")) {
-		const buffer = await readFile(fullPath);
-		const zip = await JSZip.loadAsync(buffer);
-		const tree: string[] = [];
-		zip.forEach((relativePath) => {
-			tree.push(relativePath);
-		});
+		const tree = zipTree(fullPath);
 		return {type: "archive", tree};
 	} else {
 		const content = await readFile(fullPath, "utf-8");
@@ -65,26 +59,10 @@ export async function downloadPath(uid: string, relPath: string): Promise<Downlo
 	const {fullPath, pathSplit} = resolveSafePath(uid, relPath);
 	const s = await stat(fullPath);
 	if (s.isDirectory()) {
-		const zip = new JSZip();
-
-		async function addDirToZip(dir: string, zipFolder: JSZip) {
-			const entries = await readdir(dir, {withFileTypes: true});
-			for (const entry of entries) {
-				const entryPath = `${dir}/${entry.name}`;
-				if (entry.isDirectory()) {
-					await addDirToZip(entryPath, zipFolder.folder(entry.name)!);
-				} else {
-					const fileData = await readFile(entryPath);
-					zipFolder.file(entry.name, fileData);
-				}
-			}
-		}
-
-		await addDirToZip(fullPath, zip);
-		const content = await zip.generateAsync({type: "nodebuffer"});
+		const content = await zipFile(fullPath);
 		return {
 			content,
-			name: pathSplit[pathSplit.length - 1] + ".zip",
+			name: `${pathSplit[pathSplit.length - 1]}.zip`,
 			contentType: "application/zip"
 		};
 	} else {
@@ -100,7 +78,7 @@ export async function downloadPath(uid: string, relPath: string): Promise<Downlo
 export async function uploadFiles(uid: string, targetPath: string, files: File[]): Promise<void> {
 	const {fullPath} = resolveSafePath(uid, targetPath);
 	for (const file of files) {
-		await writeFile(resolve(fullPath, file.name), Buffer.from(await file.arrayBuffer()));
+		await writeFile(`${fullPath}/${file.name}`, Buffer.from(await file.arrayBuffer()));
 	}
 }
 
@@ -110,16 +88,5 @@ export async function extractArchive(uid: string, targetPath: string): Promise<v
 		throw new Error("Invalid archive path, must end with .zip");
 	}
 	const buffer = await readFile(fullPath);
-	const zip = await JSZip.loadAsync(buffer);
-	const destDir = fullPath.slice(0, -4);
-	for (const entry of Object.values(zip.files)) {
-		const outPath = resolve(destDir, entry.name);
-		if (entry.dir) {
-			await mkdir(outPath, {recursive: true});
-		} else {
-			await mkdir(dirname(outPath), {recursive: true});
-			const content = await entry.async("nodebuffer");
-			await writeFile(outPath, content);
-		}
-	}
+	await unzipFile(buffer, fullPath.slice(0, -4));
 }

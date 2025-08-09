@@ -16,7 +16,7 @@ export function isValidUid(uid: string): boolean {
 
 export function resolveSafePath(uid: string, pathInput: string): FilePath {
 	if (isValidUid(uid)) {
-		throw new Error("Invalid uid: '" + uid + "'. Only alphanumeric characters, and hyphens are allowed.");
+		throw new Error(`Invalid uid: '${uid}'. Only alphanumeric characters, and hyphens are allowed.`);
 	}
 	const split = pathInput.split("/");
 	if (split.some(p => p === "..")) {

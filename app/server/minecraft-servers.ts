@@ -77,7 +77,7 @@ export function sendCommandToServer(uid: string, command: string) {
 	const proc = serverProcesses.get(uid);
 	if (proc !== undefined && proc.stdin !== null) {
 		try {
-			proc.stdin.write(command + "\n");
+			proc.stdin.write(`${command}\n`);
 		} catch {
 		}
 	}
