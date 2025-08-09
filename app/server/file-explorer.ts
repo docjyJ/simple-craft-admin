@@ -2,15 +2,19 @@ import {readFile, rm, readdir, stat, writeFile} from "node:fs/promises";
 import {resolveSafePath} from "~/server/path-validation";
 import {zipTree, unzipFile, zipFile} from "~/server/zip-managment";
 
+export type FileType = "file" | "folder" | "archive";
+
+export type FolderEntry = {
+	name: string;
+	type: FileType;
+}
+
 export type PathContent = {
 	type: "file";
 	content: string;
 } | {
 	type: "folder";
-	child: {
-		name: string;
-		type: "file" | "folder" | "archive";
-	}[];
+	entries: FolderEntry[];
 } | {
 	type: "archive";
 	tree: string[];
@@ -28,18 +32,17 @@ export async function getPath(uid: string, inputPath: string): Promise<PathConte
 	const s = await stat(fullPath);
 
 	if (s.isDirectory()) {
-		const entries = await readdir(fullPath, {withFileTypes: true});
-		const child = entries.map(entry => ({
-			name: entry.name,
-			type: entry.isDirectory() ? "folder" as const : entry.name.endsWith(".zip") ? "archive" as const : "file" as const
-		}));
-		child.sort((a, b) => {
-			if (a.type === b.type) return a.name.localeCompare(b.name);
-			return a.type === "folder" ? -1 : 1;
-		});
-		return {type: "folder", child};
+		const entries = (await readdir(fullPath, {withFileTypes: true}))
+			.map(entry => ({
+				name: entry.name,
+				type: entry.isDirectory() ? "folder" : entry.name.endsWith(".zip") ? "archive" : "file"
+			} as FolderEntry))
+			.sort((a, b) => {
+				return a.type === b.type ? a.name.localeCompare(b.name) : a.type === "folder" ? -1 : 1;
+			});
+		return {type: "folder", entries};
 	} else if (fullPath.endsWith(".zip")) {
-		const tree = zipTree(fullPath);
+		const tree = await zipTree(fullPath);
 		return {type: "archive", tree};
 	} else {
 		const content = await readFile(fullPath, "utf-8");

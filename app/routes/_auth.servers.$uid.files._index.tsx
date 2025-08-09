@@ -1,5 +1,5 @@
 import type {Route} from './+types/_auth.servers.$uid.files._index';
-import {useSearchParams, Form, Link} from "react-router";
+import {Form, Link, type Path, useLocation, useNavigate} from "react-router";
 import {
 	deletePath,
 	getPath,
@@ -65,15 +65,21 @@ export async function action({request, params}: Route.ActionArgs) {
 
 const FORBIDDEN_PATHS = ["..", ".", ""];
 
-export default function FileExplorer({loaderData: {files}}: Route.ComponentProps) {
-	const [searchParms, setSearchParams] = useSearchParams();
-	const [deleteOpen, setDeleteOpen] = useState(false);
-	const [uploadOpen, setUploadOpen] = useState(false);
-	const [fileToDelete, setFileToDelete] = useState<{ name: string, isDir: boolean, path: string } | null>(null);
+function urlBuilder({path, download, upload}: { path: string, download?: boolean, upload?: boolean }): Partial<Path> {
+	const out: Partial<Path> = {};
+	if (download) out.pathname = 'download';
+	if (path) out.search = `?path=${encodeURIComponent(path)}`;
+	if (upload) out.hash = '#upload';
 
-	const handleNavigate = (newPath: string) => {
-		setSearchParams({path: newPath});
-	};
+	return out
+}
+
+export default function FileExplorer({loaderData: {files}}: Route.ComponentProps) {
+	const location = useLocation();
+	const navigate = useNavigate();
+	const searchParms = new URLSearchParams(location.search);
+	const [deleteModal, setDeleteModal] = useState<{ name: string, isDir: boolean, path: string } | null>(null);
+
 
 	const pathArray = (searchParms.get("path") ?? "").split("/").filter(p => !FORBIDDEN_PATHS.includes(p));
 	const pathString = pathArray.join("/");
@@ -94,7 +100,8 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 								) : (
 									<Anchor
 										key={index}
-										onClick={() => handleNavigate(pathWithRoot.slice(1, index + 1).join("/"))}
+										component={Link}
+										to={urlBuilder({path: pathWithRoot.slice(1, index + 1).join("/")})}
 									>
 										{p}
 									</Anchor>
@@ -105,7 +112,7 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 				</Paper>
 				<Button
 					component={Link}
-					to={`download?path=${encodeURIComponent(pathString)}`}
+					to={urlBuilder({path: pathString})}
 					download reloadDocument
 					color="blue"
 					aria-label={files.type === "folder" ? "Download current folder" : "Download current file"}
@@ -116,11 +123,10 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 				{
 					files.type === "folder" ? (
 						<Button
+							component={Link}
+							to={urlBuilder({path: pathString, upload: true})}
 							color="green"
 							aria-label="Upload file"
-							onClick={() => {
-								setUploadOpen(true);
-							}}
 							leftSection={<IconUpload/>}
 						>
 							Upload
@@ -130,8 +136,7 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 							color="red"
 							aria-label="Delete file"
 							onClick={() => {
-								setFileToDelete({name: pathArray[pathArray.length - 1], isDir: false, path: pathString});
-								setDeleteOpen(true);
+								setDeleteModal({name: pathArray[pathArray.length - 1], isDir: false, path: pathString});
 							}}
 							leftSection={<IconTrash/>}
 						>
@@ -152,12 +157,12 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 								</Table.Tr>
 							</Table.Thead>
 							<Table.Tbody>
-								{files.child.map((file) => {
+								{files.entries.map((file) => {
 									const filePath = [...pathArray, file.name].join("/");
 									return (
 										<Table.Tr
 											key={file.name}
-											onClick={() => handleNavigate(filePath)}
+											onClick={() => navigate(urlBuilder({path: filePath}))}
 											style={{cursor: "pointer"}}
 										>
 											<Table.Td>
@@ -175,15 +180,14 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 														aria-label="Delete file"
 														onClick={e => {
 															e.stopPropagation();
-															setFileToDelete({name: file.name, isDir: file.type === "folder", path: filePath});
-															setDeleteOpen(true);
+															setDeleteModal({name: file.name, isDir: file.type === "folder", path: filePath});
 														}}
 													>
 														<IconTrash/>
 													</ActionIcon>
 													<ActionIcon
 														component={Link}
-														to={`download?path=${encodeURIComponent(filePath)}`}
+														to={urlBuilder({path: filePath, download: true})}
 														download reloadDocument
 														color="blue"
 														type="button"
@@ -227,32 +231,32 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 				)
 			}
 			<Modal
-				opened={deleteOpen}
-				onClose={() => setDeleteOpen(false)}
+				opened={deleteModal !== null}
+				onClose={() => setDeleteModal(null)}
 				title="Confirm Deletion"
 				centered
 			>
-				{fileToDelete && (
-					fileToDelete.isDir
-						? <Text>Are you sure you want to delete entire {fileToDelete.name} directory?</Text>
-						: <Text>Are you sure you want to delete {fileToDelete.name} file?</Text>
+				{deleteModal && (
+					deleteModal.isDir
+						? <Text>Are you sure you want to delete entire {deleteModal.name} directory?</Text>
+						: <Text>Are you sure you want to delete {deleteModal.name} file?</Text>
 				)}
-				<Form method="POST" onSubmit={() => setDeleteOpen(false)}>
+				<Form method="POST" onSubmit={() => setDeleteModal(null)}>
 					<input type="hidden" name="type" value="delete"/>
-					<input type="hidden" name="path" value={fileToDelete?.path ?? ""}/>
+					<input type="hidden" name="path" value={deleteModal?.path ?? ""}/>
 					<Group mt="md" justify="flex-end">
-						<Button variant="default" type="button" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+						<Button variant="default" type="button" onClick={() => setDeleteModal(null)}>Cancel</Button>
 						<Button color="red" type="submit" name="type" value="delete">Delete</Button>
 					</Group>
 				</Form>
 			</Modal>
 			<Modal
-				opened={uploadOpen}
-				onClose={() => setUploadOpen(false)}
+				opened={location.hash === "#upload"}
+				onClose={() => navigate(urlBuilder({path: pathString}))}
 				title="Upload file"
 				centered
 			>
-				<Form method="POST" encType="multipart/form-data" onSubmit={() => setUploadOpen(false)}>
+				<Form method="POST" encType="multipart/form-data" onSubmit={() => navigate(urlBuilder({path: pathString}))}>
 					<input type="hidden" name="path" value={pathString}/>
 					<FileInput
 						name="file"
@@ -263,11 +267,47 @@ export default function FileExplorer({loaderData: {files}}: Route.ComponentProps
 						accept="*/*"
 					/>
 					<Group mt="md" justify="flex-end">
-						<Button variant="default" type="button" onClick={() => setUploadOpen(false)}>Cancel</Button>
+						<Button variant="default" type="button"
+										onClick={() => navigate(urlBuilder({path: pathString}))}>Cancel</Button>
 						<Button color="green" type="submit" name="type" value="upload">Upload</Button>
 					</Group>
 				</Form>
 			</Modal>
+			<UploadFilesModal opened={location.hash === "#upload"} path={pathString}
+												onClose={() => navigate(urlBuilder({path: pathString}))}/>
 		</Stack>
+	);
+}
+
+type UploadFilesModalProps = {
+	opened: boolean;
+	onClose: () => void;
+	path: string;
+}
+
+function UploadFilesModal({onClose, path, opened}: UploadFilesModalProps) {
+	return (
+		<Modal
+			opened={opened}
+			onClose={onClose}
+			title="Upload file"
+			centered
+		>
+			<Form method="POST" encType="multipart/form-data" onSubmit={onClose}>
+				<input type="hidden" name="path" value={path}/>
+				<FileInput
+					name="file"
+					multiple
+					required
+					label="Select file(s) to upload"
+					placeholder="Choose file(s)"
+					accept="*/*"
+				/>
+				<Group mt="md" justify="flex-end">
+					<Button variant="default" type="button" onClick={onClose}>Cancel</Button>
+					<Button color="green" type="submit" name="type" value="upload">Upload</Button>
+				</Group>
+			</Form>
+		</Modal>
 	);
 }
