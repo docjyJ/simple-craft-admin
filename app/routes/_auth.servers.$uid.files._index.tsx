@@ -1,10 +1,10 @@
 import type {Route} from './+types/_auth.servers.$uid.files._index';
 import {useSearchParams, Form, Link} from "react-router";
 import {
-	deleteMinecraftServerFile,
-	getMinecraftServerFiles,
-	uploadMinecraftServerFiles,
-	extractMinecraftServerArchive
+	deletePath,
+	getPath,
+	uploadFiles,
+	extractArchive
 } from "~/server/file-explorer";
 import {
 	IconFile,
@@ -35,7 +35,7 @@ import {useState} from "react";
 export async function loader({params, request}: Route.LoaderArgs) {
 	const url = new URL(request.url);
 	const path = url.searchParams.get("path") || "";
-	const files = await getMinecraftServerFiles(params.uid, path);
+	const files = await getPath(params.uid, path);
 	return {files};
 }
 
@@ -45,27 +45,18 @@ export async function action({request, params}: Route.ActionArgs) {
 	const path = formData.get("path");
 
 	if (type === "delete" && typeof path === "string" && path.trim() !== "") {
-		await deleteMinecraftServerFile(params.uid, path);
+		await deletePath(params.uid, path);
 		return null;
 	}
 
 	if (type === "upload" && typeof path === "string") {
-		const files: { name: string, buffer: Buffer }[] = [];
-		for (const entry of formData.getAll("file")) {
-			if (typeof entry === "object" && entry) {
-				const arrayBuffer = await entry.arrayBuffer();
-				files.push({
-					name: entry.name,
-					buffer: Buffer.from(arrayBuffer),
-				});
-			}
-		}
-		await uploadMinecraftServerFiles(params.uid, path, files);
+		const files = formData.getAll("file").filter((entry => entry instanceof File)) as File[];
+		await uploadFiles(params.uid, path, files);
 		return null;
 	}
 
 	if (type === "extract" && typeof path === "string") {
-		await extractMinecraftServerArchive(params.uid, path);
+		await extractArchive(params.uid, path);
 		return null;
 	}
 

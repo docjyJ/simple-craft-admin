@@ -1,10 +1,10 @@
 import type {Route} from './+types/_auth.servers.$uid.files.download';
-import {downloadServerFile} from "~/server/file-explorer";
+import {downloadPath} from "~/server/file-explorer";
 
 export async function loader({request, params}: Route.LoaderArgs) {
 	const url = new URL(request.url);
 	const path = url.searchParams.get("path") || "";
-	const {content, name, contentType} = await downloadServerFile(params.uid, path);
+	const {content, name, contentType} = await downloadPath(params.uid, path);
 	return new Response(content, {
 		headers: {
 			"Content-Type": contentType,

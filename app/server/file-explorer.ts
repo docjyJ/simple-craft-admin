@@ -1,9 +1,9 @@
 import {readFile, rm, readdir, stat, writeFile, mkdir} from "node:fs/promises";
-import {resolve, basename, dirname} from "node:path";
-import {serverFolder} from "~/server/minecraft-servers";
+import {resolve, dirname} from "node:path";
 import JSZip from "jszip";
+import {resolveSafePath} from "~/server/path-validation";
 
-type FileEntry = {
+export type PathContent = {
 	type: "file";
 	content: string;
 } | {
@@ -17,35 +17,30 @@ type FileEntry = {
 	tree: string[];
 };
 
-const FORBIDDEN_PATHS = ["..", ".", ""];
-
-
-export function resolveSafePath(root: string, uid: string, paths: string): string {
-	return resolve(root, uid, ...paths.split("/").filter(p => !FORBIDDEN_PATHS.includes(p)));
+export type DownloadPath = {
+	content: Buffer;
+	name: string;
+	contentType: "application/zip" | "application/octet-stream";
 }
 
-export async function getMinecraftServerFiles(uid: string, relPath: string): Promise<FileEntry> {
-	const targetDir = resolveSafePath(serverFolder, uid, relPath);
-	const s = await stat(targetDir);
+
+export async function getPath(uid: string, inputPath: string): Promise<PathContent> {
+	const {fullPath} = resolveSafePath(uid, inputPath);
+	const s = await stat(fullPath);
 
 	if (s.isDirectory()) {
-		const entries = await readdir(targetDir, {withFileTypes: true});
-		const child = entries.map(entry => {
-			if (entry.isDirectory()) {
-				return {name: entry.name, type: "folder" as const};
-			} else if (entry.name.endsWith(".zip")) {
-				return {name: entry.name, type: "archive" as const};
-			} else {
-				return {name: entry.name, type: "file" as const};
-			}
-		});
+		const entries = await readdir(fullPath, {withFileTypes: true});
+		const child = entries.map(entry => ({
+			name: entry.name,
+			type: entry.isDirectory() ? "folder" as const : entry.name.endsWith(".zip") ? "archive" as const : "file" as const
+		}));
 		child.sort((a, b) => {
 			if (a.type === b.type) return a.name.localeCompare(b.name);
 			return a.type === "folder" ? -1 : 1;
 		});
 		return {type: "folder", child};
-	} else if (targetDir.endsWith(".zip")) {
-		const buffer = await readFile(targetDir);
+	} else if (fullPath.endsWith(".zip")) {
+		const buffer = await readFile(fullPath);
 		const zip = await JSZip.loadAsync(buffer);
 		const tree: string[] = [];
 		zip.forEach((relativePath) => {
@@ -53,23 +48,22 @@ export async function getMinecraftServerFiles(uid: string, relPath: string): Pro
 		});
 		return {type: "archive", tree};
 	} else {
-		const content = await readFile(targetDir, "utf-8");
+		const content = await readFile(fullPath, "utf-8");
 		return {type: "file", content};
 	}
 }
 
-export async function deleteMinecraftServerFile(uid: string, relPath: string): Promise<void> {
-	const targetPath = resolveSafePath(serverFolder, uid, relPath);
-	await rm(targetPath, {recursive: true, force: true});
+export async function deletePath(uid: string, inputPath: string): Promise<void> {
+	const {fullPath, pathSplit} = resolveSafePath(uid, inputPath);
+	if (pathSplit.length === 0) {
+		throw new Error("Cannot delete the root directory of a server");
+	}
+	await rm(fullPath, {recursive: true, force: true});
 }
 
-export async function downloadServerFile(uid: string, relPath: string): Promise<{
-	content: Buffer,
-	name: string,
-	contentType: string
-}> {
-	const targetPath = resolveSafePath(serverFolder, uid, relPath);
-	const s = await stat(targetPath);
+export async function downloadPath(uid: string, relPath: string): Promise<DownloadPath> {
+	const {fullPath, pathSplit} = resolveSafePath(uid, relPath);
+	const s = await stat(fullPath);
 	if (s.isDirectory()) {
 		const zip = new JSZip();
 
@@ -86,47 +80,38 @@ export async function downloadServerFile(uid: string, relPath: string): Promise<
 			}
 		}
 
-		await addDirToZip(targetPath, zip);
+		await addDirToZip(fullPath, zip);
 		const content = await zip.generateAsync({type: "nodebuffer"});
 		return {
 			content,
-			name: basename(targetPath) + ".zip",
+			name: pathSplit[pathSplit.length - 1] + ".zip",
 			contentType: "application/zip"
 		};
 	} else {
-		const content = await readFile(targetPath);
+		const content = await readFile(fullPath);
 		return {
 			content,
-			name: basename(targetPath),
+			name: pathSplit[pathSplit.length - 1],
 			contentType: "application/octet-stream"
 		};
 	}
 }
 
-export async function uploadMinecraftServerFiles(
-	uid: string,
-	relPath: string,
-	files: { name: string, buffer: Buffer }[]
-): Promise<void> {
-	const targetDir = resolveSafePath(serverFolder, uid, relPath);
+export async function uploadFiles(uid: string, targetPath: string, files: File[]): Promise<void> {
+	const {fullPath} = resolveSafePath(uid, targetPath);
 	for (const file of files) {
-		const targetFile = resolve(targetDir, file.name);
-		await writeFile(targetFile, file.buffer);
+		await writeFile(resolve(fullPath, file.name), Buffer.from(await file.arrayBuffer()));
 	}
 }
 
-export async function extractMinecraftServerArchive(
-	uid: string,
-	zipPaths: string
-): Promise<void> {
-	if (!zipPaths.endsWith(".zip")) {
+export async function extractArchive(uid: string, targetPath: string): Promise<void> {
+	const {fullPath} = resolveSafePath(uid, targetPath);
+	if (!fullPath.endsWith(".zip")) {
 		throw new Error("Invalid archive path, must end with .zip");
 	}
-	const archivePath = resolveSafePath(serverFolder, uid, zipPaths);
-	const destDir = resolveSafePath(serverFolder, uid, zipPaths.slice(0, -4));
-	const buffer = await readFile(archivePath);
+	const buffer = await readFile(fullPath);
 	const zip = await JSZip.loadAsync(buffer);
-
+	const destDir = fullPath.slice(0, -4);
 	for (const entry of Object.values(zip.files)) {
 		const outPath = resolve(destDir, entry.name);
 		if (entry.dir) {

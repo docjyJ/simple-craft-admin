@@ -1,7 +1,7 @@
-import * as fs from "fs";
-import * as path from "path";
-import {spawn} from "child_process";
+import {spawn} from "node:child_process";
+import {readdir, readFile} from "node:fs/promises";
 import {getServerIcon, getServerProperties} from "~/server/server-status";
+import {getRootPaths, isValidUid, resolveSafePath} from "~/server/path-validation";
 
 
 export type MinecraftServer = {
@@ -20,19 +20,15 @@ export type ServerData = {
 };
 const serverProcesses: Map<string, import("child_process").ChildProcess> = new Map();
 
-export const serverFolder = "./minecraft/servers"
 
-export function listMinecraftServers(): string[] {
-	//list folders in serverFolder
-
-	return fs.readdirSync(path.resolve(serverFolder), {withFileTypes: true})
-		.filter(dirent => dirent.isDirectory())
-		.map(dirent => dirent.name)
+export async function listMinecraftServers(): Promise<string[]> {
+	const dirs = await readdir(getRootPaths(), {withFileTypes: true});
+	return dirs.filter(d => d.isDirectory()).map(d => d.name).filter(isValidUid)
 }
 
 export async function fullListMinecraftServers(): Promise<MinecraftServer[]> {
 	const servers: MinecraftServer[] = [];
-	for (const uid of listMinecraftServers()) {
+	for (const uid of await listMinecraftServers()) {
 		const serverData = await getServerData(uid);
 		const isOnline = isRunning(uid);
 		servers.push({uid, server_data: serverData, is_online: isOnline});
@@ -42,12 +38,12 @@ export async function fullListMinecraftServers(): Promise<MinecraftServer[]> {
 
 export async function getServerData(uid: string) {
 
-	const serverPath = path.resolve(serverFolder, uid);
+	const {fullPath} = resolveSafePath(uid, "");
 
-	const serverProperties = await getServerProperties(serverPath)
+	const serverProperties = await getServerProperties(fullPath)
 	// TODO const status = await getServerStatus(serverProperties.server_port)
 
-	const serverIcon = await getServerIcon(serverPath);
+	const serverIcon = await getServerIcon(fullPath);
 
 
 	return {
@@ -59,10 +55,10 @@ export async function getServerData(uid: string) {
 
 
 export function startMinecraftServer(uid: string) {
-	const serverPath = path.resolve(serverFolder, uid);
+	const {fullPath} = resolveSafePath(uid, "");
 	const javaArgs = ["-Xmx1024M", "-Xms1024M", "-jar", "server.jar", "nogui"];
 	const proc = spawn("java", javaArgs, {
-		cwd: serverPath,
+		cwd: fullPath,
 		detached: true,
 		stdio: ["pipe", "ignore", "ignore"]
 	});
@@ -70,7 +66,7 @@ export function startMinecraftServer(uid: string) {
 	if (typeof proc.pid === "number") {
 		serverProcesses.set(uid, proc);
 	} else {
-		throw new Error("Impossible de récupérer le PID du processus Minecraft.");
+		throw new Error("Failed to start Minecraft server process. PID is not a number.");
 	}
 
 	proc.unref();
@@ -115,10 +111,7 @@ export function forceKill(uid: string): boolean {
 	}
 }
 
-export function getMinecraftServerLog(uid: string): string | undefined {
-	const logPath = path.resolve(serverFolder, uid, "logs", "latest.log");
-	if (!fs.existsSync(logPath)) {
-		return undefined;
-	}
-	return fs.readFileSync(logPath, "utf-8");
+export async function getMinecraftServerLog(uid: string): Promise<string> {
+	const {fullPath} = resolveSafePath(uid, "logs/latest.log");
+	return await readFile(fullPath, "utf-8");
 }
