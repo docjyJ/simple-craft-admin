@@ -114,7 +114,14 @@ export function forceKill(uid: string): boolean {
 	}
 }
 
-export async function getMinecraftServerLog(uid: string): Promise<string> {
+export async function getMinecraftServerLog(uid: string, clientLines: number): Promise<string[]> {
 	const {fullPath} = resolveSafePath(uid, "logs/latest.log");
-	return await readFile(fullPath, "utf-8");
+	const content = await readFile(fullPath, "utf-8");
+	const logLines = content.split("\n");
+	if (logLines[logLines.length - 1] === "") {
+		logLines.pop();
+	}
+	if (clientLines <= 0) return logLines;
+	if (clientLines >= logLines.length) return [];
+	return logLines.slice(clientLines);
 }

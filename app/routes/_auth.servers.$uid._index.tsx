@@ -1,15 +1,9 @@
 import {Button, Group, Stack, Textarea, TextInput} from "@mantine/core";
 import {IconSend} from "@tabler/icons-react";
-import {getMinecraftServerLog, sendCommandToServer} from "~/server/minecraft-servers";
+import {sendCommandToServer} from "~/server/minecraft-servers";
 import {Form} from "react-router";
 import type {Route} from './+types/_auth.servers.$uid._index';
-
-export async function loader({params}: Route.LoaderArgs) {
-	const {uid} = params;
-	if (!uid) throw new Response("UID manquant", {status: 400});
-	const log = await getMinecraftServerLog(uid) ?? "";
-	return {log};
-}
+import {useEffect, useState, useRef} from "react";
 
 export async function action({request, params}: Route.ActionArgs) {
 	const {uid} = params;
@@ -20,14 +14,34 @@ export async function action({request, params}: Route.ActionArgs) {
 	}
 }
 
-export default function ServerConsole({loaderData: {log}}: Route.ComponentProps) {
+export default function ServerConsole({params: {uid}}: Route.ComponentProps) {
+	const [log, setLog] = useState([]);
+	useEffect(() => {
+		let isMounted = true;
+		const fetchLog = async () => {
+			const res = await fetch(`/servers/${uid}/log?lines=${log.length}`);
+			if (res.ok) {
+				const data = await res.json();
+				if (isMounted && Array.isArray(data) && data.length > 0) {
+					setLog(prev => {
+						return prev.concat(data);
+					});
+				}
+			}
+		};
+		const interval = setInterval(fetchLog, 1000);
+		return () => {
+			isMounted = false;
+			clearInterval(interval);
+		};
+	});
 
 	return (
 		<Stack>
 			<Textarea
 				placeholder="Console output will appear here..."
 				readOnly
-				value={log}
+				value={log.join("\n")}
 				autosize
 				minRows={20}
 				maxRows={20}
