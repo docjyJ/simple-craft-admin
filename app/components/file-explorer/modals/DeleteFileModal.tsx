@@ -1,29 +1,30 @@
 import {Button, Group, Modal, Text} from "@mantine/core";
-import {Form} from "react-router";
+import {Form, Link, useNavigate} from "react-router";
 
 type DeleteFileModalProps = {
+	opened: boolean;
+	closePath: string;
 	path: string;
-	deleteModal: { name: string, isDir: boolean } | null;
-	onClose: () => void;
 };
 
-export default function DeleteFileModal({deleteModal, onClose, path}: DeleteFileModalProps) {
-	if (!deleteModal) return null;
+export default function DeleteFileModal({closePath, path, opened}: DeleteFileModalProps) {
+	const fileName = path.split("/").pop() || "";
+
+	const navigate = useNavigate();
+	if (!opened) return null;
 	return (
 		<Modal
-			onClose={onClose}
+			onClose={() => navigate(closePath)}
 			title="Confirm Deletion"
 			centered opened>
-			{deleteModal && (
-				deleteModal.isDir
-					? <Text>Are you sure you want to delete entire {deleteModal.name} directory?</Text>
-					: <Text>Are you sure you want to delete {deleteModal.name} file?</Text>
-			)}
-			<Form method="POST" onSubmit={onClose}>
+			<Text size="sm" mb="md">
+				Are you sure you want to delete <strong>{fileName}</strong>?<br/>This action cannot be undone.
+			</Text>
+			<Form method="POST" action={closePath}>
 				<input type="hidden" name="type" value="delete"/>
-				<input type="hidden" name="path" value={`${path}/${deleteModal.name}`}/>
+				<input type="hidden" name="path" value={path}/>
 				<Group mt="md" justify="flex-end">
-					<Button variant="default" type="button" onClick={onClose}>Cancel</Button>
+					<Button component={Link} to={closePath} variant="default" type="button">Cancel</Button>
 					<Button color="red" type="submit" name="type" value="delete">Delete</Button>
 				</Group>
 			</Form>

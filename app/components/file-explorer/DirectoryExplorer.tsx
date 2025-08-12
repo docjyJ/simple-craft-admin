@@ -1,6 +1,5 @@
 import type {FolderEntry} from "~/server/file-explorer";
 import {Form, Link, useNavigate} from "react-router";
-import {useState} from "react";
 import {ActionIcon, Group, Stack, Table} from "@mantine/core";
 import HeaderExplorer from "~/components/file-explorer/HeaderExplorer";
 import {IconDownload, IconFile, IconFileZip, IconFolder, IconFolderUp, IconTrash} from "@tabler/icons-react";
@@ -14,9 +13,8 @@ type DirectoryExplorerProps = {
 };
 
 export default function DirectoryExplorer({entries}: DirectoryExplorerProps) {
-	const {pathArray, pathString, upload} = useExplorerLocation();
+	const {pathArray, pathString, fileParam, upload, delete: del} = useExplorerLocation();
 	const navigate = useNavigate();
-	const [deleteModal, setDeleteModal] = useState<{ name: string, isDir: boolean, path: string } | null>(null);
 	return (
 		<Stack miw={600}>
 			<HeaderExplorer
@@ -51,13 +49,12 @@ export default function DirectoryExplorer({entries}: DirectoryExplorerProps) {
 								<Table.Td>
 									<Group>
 										<ActionIcon
+											component={Link}
+											to={urlBuilder({path: pathString, file: entry.name, delete: true})}
 											color="red"
 											type="button"
 											aria-label="Delete file"
-											onClick={e => {
-												e.stopPropagation();
-												setDeleteModal({name: entry.name, isDir: entry.type === "folder", path: filePath});
-											}}
+											onClick={e => e.stopPropagation()}
 										>
 											<IconTrash/>
 										</ActionIcon>
@@ -95,7 +92,8 @@ export default function DirectoryExplorer({entries}: DirectoryExplorerProps) {
 					})}
 				</Table.Tbody>
 			</Table>
-			<DeleteFileModal path={pathString} deleteModal={deleteModal} onClose={() => setDeleteModal(null)}/>
+			<DeleteFileModal opened={del} path={fileParam ? `${pathString}/${fileParam}` : pathString}
+											 closePath={urlBuilder({path: pathString})}/>
 			<UploadFilesModal opened={upload} path={pathString}
 												closePath={urlBuilder({path: pathString})}/>
 		</Stack>
