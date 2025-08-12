@@ -26,7 +26,7 @@ export default function Shell() {
 						hiddenFrom="sm"
 						size="sm"
 					/>
-					<div>Logo</div>
+					<div>SimpleCraftAdmin</div>
 				</Group>
 			</AppShell.Header>
 
