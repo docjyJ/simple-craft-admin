@@ -35,6 +35,9 @@ importers:
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
+      properties-file:
+        specifier: ^3.5.13
+        version: 3.5.13
       react:
         specifier: ^19.1.0
         version: 19.1.1
@@ -1567,6 +1570,9 @@ packages:
   promise-retry@2.0.1:
     resolution: {integrity: sha512-y+WKFlBR8BGXnsNlIHFGPZmyDf3DFMoLhaflAnyZgV6rG6xu+JwesTo2Q9R6XwYmtmwAFCkAk3e35jEdoeh/3g==}
     engines: {node: '>=10'}
+
+  properties-file@3.5.13:
+    resolution: {integrity: sha512-Zm0MkGfj4Mefz4J2GO1U5ux8iNd5/w/Pk7KnurarzN9dJBhHtL1/SVTm8PGdEKDFagD9qWeDlEkRMKpYhpGwfQ==}
 
   proxy-addr@2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
@@ -3677,6 +3683,8 @@ snapshots:
     dependencies:
       err-code: 2.0.3
       retry: 0.12.0
+
+  properties-file@3.5.13: {}
 
   proxy-addr@2.0.7:
     dependencies:

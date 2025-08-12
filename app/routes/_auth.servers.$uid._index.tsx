@@ -3,7 +3,7 @@ import {IconSend} from "@tabler/icons-react";
 import {sendCommandToServer} from "~/server/minecraft-servers";
 import {Form} from "react-router";
 import type {Route} from './+types/_auth.servers.$uid._index';
-import {useEffect, useState, useRef} from "react";
+import {useEffect, useState} from "react";
 
 export async function action({request, params}: Route.ActionArgs) {
 	const {uid} = params;
@@ -15,7 +15,7 @@ export async function action({request, params}: Route.ActionArgs) {
 }
 
 export default function ServerConsole({params: {uid}}: Route.ComponentProps) {
-	const [log, setLog] = useState([]);
+	const [log, setLog] = useState<string[]>([]);
 	useEffect(() => {
 		let isMounted = true;
 		const fetchLog = async () => {

@@ -1,8 +1,10 @@
 import type {Route} from './+types/_auth.servers.$uid';
 import {Form, Outlet, useLocation, useNavigate} from "react-router";
 import {forceKill, getServerData, isRunning, startMinecraftServer} from "~/server/minecraft-servers";
-import {Avatar, Button, Group, Paper, Stack, Tabs, Text} from "@mantine/core";
+import {Button, Group, Paper, Stack, Tabs, Text} from "@mantine/core";
 import {IconPlayerStop, IconPower} from '@tabler/icons-react';
+import ServerUser from "~/components/ServerUser";
+import ServerPlayerCount from "~/components/ServerPlayerCount";
 
 export async function loader({params: {uid}}: Route.LoaderArgs) {
 	return {
@@ -31,18 +33,8 @@ export default function ServerLayout({loaderData: {server_data, is_online}, para
 		<Stack h="100%" justify="space-between" p="md">
 			<Paper withBorder p="md">
 				<Group justify="space-between">
-					<Group gap="xs">
-						<Avatar src={server_data.server_icon}/>
-						<Text>{server_data.motd}</Text>
-					</Group>
-					<Group gap="xs">
-						<Text fz="sm" fw={500}>
-							{server_data.online_players ?? '??'}
-						</Text>
-						<Text fz="xs" c="dimmed">
-							/ {server_data?.max_players ?? '??'}
-						</Text>
-					</Group>
+					<ServerUser name={"TODO"} motd={server_data.motd} icon={server_data.server_icon}/>
+					<ServerPlayerCount max_players={server_data.max_players} online_players={server_data.online_players}/>
 					<Text fz="sm">
 						{server_data.server_version ?? 'Unknown'}
 					</Text>

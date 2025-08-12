@@ -1,8 +1,10 @@
 import {fullListMinecraftServers} from "~/server/minecraft-servers";
 import type {Route} from './+types/_auth.servers._index';
-import {ActionIcon, Avatar, Badge, Group, Paper, Table, Text} from "@mantine/core";
+import {ActionIcon, Badge, Paper, Table, Text} from "@mantine/core";
 import {IconAccessPoint, IconAccessPointOff, IconEdit} from "@tabler/icons-react";
 import {Link} from "react-router";
+import ServerUser from "~/components/ServerUser";
+import ServerPlayerCount from "~/components/ServerPlayerCount";
 
 
 export async function loader() {
@@ -14,25 +16,10 @@ export default function ServersIndex({loaderData: {servers}}: Route.ComponentPro
 	const rows = servers.map(({uid, server_data}) => (
 		<Table.Tr key={uid}>
 			<Table.Td>
-				<Group gap="sm">
-					<Avatar src={server_data.server_icon}/>
-					<div>
-						<Text fz="sm" fw={500}>
-							{server_data.motd}
-						</Text>
-					</div>
-				</Group>
+				<ServerUser name={"TODO"} motd={server_data.motd} icon={server_data.server_icon}/>
 			</Table.Td>
-
 			<Table.Td>
-				<Group gap="xs">
-					<Text fz="sm" fw={500}>
-						{server_data.online_players ?? '??'}
-					</Text>
-					<Text fz="xs" c="dimmed">
-						/ {server_data.max_players}
-					</Text>
-				</Group>
+				<ServerPlayerCount max_players={server_data.max_players} online_players={server_data.online_players}/>
 			</Table.Td>
 			<Table.Td>
 				<Text fz="sm">

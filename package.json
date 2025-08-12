@@ -20,6 +20,7 @@
     "@uiw/react-codemirror": "^4.24.2",
     "isbot": "^5.1.28",
     "jszip": "^3.10.1",
+    "properties-file": "^3.5.13",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "^7.6.3"

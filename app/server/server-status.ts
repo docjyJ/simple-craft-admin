@@ -2,6 +2,7 @@ import * as net from "node:net"
 import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import pack_jpg from "~/assets/pack_png";
+import {getProperties} from "properties-file";
 
 export type ServerStatus = {
 	version: string,
@@ -77,31 +78,29 @@ export async function getServerProperties(server_folder: string) {
 		max_players: 20,
 		server_port: 25565,
 	};
-	return readFile(filePath, "utf8").then(
+	return readFile(filePath, "utf8").then(getProperties).then(
 		data => {
-			data.split("\n").forEach(line => {
-				const data = line.split("=");
-				if (data.length === 2) {
-					const key = data[0].trim();
-					const value = data[1].trim();
-					if (key === "motd") {
-						properties.motd = value;
-					} else if (key === "max-players") {
-						const valueInt = parseInt(value, 10);
-						if (!isNaN(valueInt)) {
-							properties.max_players = valueInt;
-						}
-					} else if (key === "server-port") {
-						const valueInt = parseInt(value, 10);
-						if (!isNaN(valueInt)) {
-							properties.server_port = valueInt;
-						}
-					}
+			if (data    ["motd"]) {
+				properties.motd = data["motd"];
+			}
+			if (data["max-players"]) {
+				const valueInt = parseInt(data["max-players"], 10);
+				if (!isNaN(valueInt)) {
+					properties.max_players = valueInt;
 				}
-			});
+			}
+			if (data["server-port"]) {
+				const valueInt = parseInt(data["server-port"], 10);
+				if (!isNaN(valueInt)) {
+					properties.server_port = valueInt;
+				}
+			}
 			return properties;
 		}
-	).catch(() => properties)
+	).catch(e => {
+		console.error("Error reading server.properties:", e);
+		return properties;
+	})
 }
 
 export async function getServerIcon(server_folder: string) {
