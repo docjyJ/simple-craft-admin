@@ -1,7 +1,7 @@
 import type {FolderEntry} from "~/server/file-explorer";
 import {Form, Link, useNavigate} from "react-router";
 import {useState} from "react";
-import {ActionIcon, Group, ScrollArea, Stack, Table} from "@mantine/core";
+import {ActionIcon, Group, Stack, Table} from "@mantine/core";
 import HeaderExplorer from "~/components/file-explorer/HeaderExplorer";
 import {IconDownload, IconFile, IconFileZip, IconFolder, IconFolderUp, IconTrash} from "@tabler/icons-react";
 import {DownloadButton, UploadButton} from "~/components/file-explorer/buttons";
@@ -34,7 +34,7 @@ export default function DirectoryExplorer({entries}: DirectoryExplorerProps) {
 				</Table.Thead>
 				<Table.Tbody>
 					{entries.map((entry) => {
-						const filePath = [...pathArray, entry.name].join("/");
+						const filePath = ["", ...pathArray, entry.name].join("/");
 						return (
 							<Table.Tr
 								key={entry.name}

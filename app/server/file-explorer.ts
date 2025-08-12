@@ -1,5 +1,5 @@
 import {readFile, rm, readdir, stat, writeFile} from "node:fs/promises";
-import {resolveSafePath} from "~/server/path-validation";
+import {getRelativePath, resolveSafePath} from "~/server/path-validation";
 import {zipTree, unzipFile, zipFile} from "~/server/zip-managment";
 
 export type FileType = "file" | "folder" | "archive";
@@ -28,7 +28,7 @@ export type DownloadPath = {
 
 
 export async function getPath(uid: string, inputPath: string): Promise<PathContent> {
-	const {fullPath} = resolveSafePath(uid, inputPath);
+	const fullPath = resolveSafePath(uid, inputPath);
 	const s = await stat(fullPath);
 
 	if (s.isDirectory()) {
@@ -51,42 +51,45 @@ export async function getPath(uid: string, inputPath: string): Promise<PathConte
 }
 
 export async function deletePath(uid: string, inputPath: string): Promise<void> {
-	const {fullPath, pathSplit} = resolveSafePath(uid, inputPath);
-	if (pathSplit.length === 0) {
+	const fullPath = resolveSafePath(uid, inputPath);
+	const relativePath = getRelativePath(uid, fullPath);
+	if (relativePath === "/") {
 		throw new Error("Cannot delete the root directory of a server");
 	}
 	await rm(fullPath, {recursive: true, force: true});
 }
 
 export async function downloadPath(uid: string, relPath: string): Promise<DownloadPath> {
-	const {fullPath, pathSplit} = resolveSafePath(uid, relPath);
+	const fullPath = resolveSafePath(uid, relPath);
+	const relativePath = getRelativePath(uid, fullPath);
+	const fileName = relativePath === "/" ? "Root" : relativePath.split("/").pop() || "Unknown";
 	const s = await stat(fullPath);
 	if (s.isDirectory()) {
 		const content = await zipFile(fullPath);
 		return {
 			content,
-			name: `${pathSplit[pathSplit.length - 1]}.zip`,
+			name: `${fileName}.zip`,
 			contentType: "application/zip"
 		};
 	} else {
 		const content = await readFile(fullPath);
 		return {
 			content,
-			name: pathSplit[pathSplit.length - 1],
+			name: fileName,
 			contentType: "application/octet-stream"
 		};
 	}
 }
 
 export async function uploadFiles(uid: string, targetPath: string, files: File[]): Promise<void> {
-	const {fullPath} = resolveSafePath(uid, targetPath);
+	const fullPath = resolveSafePath(uid, targetPath);
 	for (const file of files) {
 		await writeFile(`${fullPath}/${file.name}`, Buffer.from(await file.arrayBuffer()));
 	}
 }
 
 export async function extractArchive(uid: string, targetPath: string): Promise<void> {
-	const {fullPath} = resolveSafePath(uid, targetPath);
+	const fullPath = resolveSafePath(uid, targetPath);
 	if (!fullPath.endsWith(".zip")) {
 		throw new Error("Invalid archive path, must end with .zip");
 	}

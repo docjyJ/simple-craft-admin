@@ -1,28 +1,35 @@
-import {resolve} from "node:path";
+import {resolve, relative} from "node:path";
 
-export type FilePath = {
-	fullPath: string;
-	pathSplit: string[];
-}
-const root = "./minecraft/servers"
-
-export function getRootPaths(): string {
-	return resolve(root);
-}
+export const root = resolve("./minecraft/servers");
 
 export function isValidUid(uid: string): boolean {
 	return /^[a-zA-Z0-9-]+$/.test(uid);
 }
 
-export function resolveSafePath(uid: string, pathInput: string): FilePath {
+function outOfRoot(path: string): boolean {
+	let depth = 0;
+	const parts = path.split("/");
+	for (const part of parts) {
+		if (part === "..") {
+			depth--;
+			if (depth < 0) return true;
+		} else if (part !== "" && part !== ".") {
+			depth++;
+		}
+	}
+	return depth < 0;
+}
+
+export function resolveSafePath(uid: string, pathInput: string): string {
 	if (!isValidUid(uid)) {
 		throw new Error(`Invalid uid: '${uid}'. Only alphanumeric characters, and hyphens are allowed.`);
 	}
-	const split = pathInput.split("/");
-	if (split.some(p => p === "..")) {
-		throw new Error("Invalid path: Parent directory traversal ('..') is not allowed.");
+	if (outOfRoot(pathInput)) {
+		throw new Error(`Path '${pathInput}' is outside the root directory.`);
 	}
-	const pathSplit = split.filter(p => p !== "." && p !== "");
-	const fullPath = resolve(root, uid, ...pathSplit);
-	return {pathSplit, fullPath};
+	return resolve([root, uid, pathInput].join("/"));
+}
+
+export function getRelativePath(uid: string, fullPath: string): string {
+	return  "/" + relative(resolve(root, uid), fullPath);
 }

@@ -1,7 +1,7 @@
 import {spawn} from "node:child_process";
 import {readdir, readFile} from "node:fs/promises";
 import {getServerIcon, getServerProperties, getServerStatus} from "~/server/server-status";
-import {getRootPaths, isValidUid, resolveSafePath} from "~/server/path-validation";
+import {isValidUid, resolveSafePath, root} from "~/server/path-validation";
 
 
 export type MinecraftServer = {
@@ -21,7 +21,7 @@ const serverProcesses: Map<string, import("child_process").ChildProcess> = new M
 
 
 export async function listMinecraftServers(): Promise<string[]> {
-	const dirs = await readdir(getRootPaths(), {withFileTypes: true});
+	const dirs = await readdir(root, {withFileTypes: true});
 	return dirs.filter(d => d.isDirectory()).map(d => d.name).filter(isValidUid)
 }
 
@@ -35,7 +35,7 @@ export async function fullListMinecraftServers(): Promise<MinecraftServer[]> {
 }
 
 export async function getServerData(uid: string) {
-	const {fullPath} = resolveSafePath(uid, "");
+	const fullPath = resolveSafePath(uid, "");
 	const serverProperties = await getServerProperties(fullPath);
 	const serverStatus = isRunning(uid) ? await getServerStatus(serverProperties.server_port) : null
 	if (serverStatus) {
@@ -58,7 +58,7 @@ export async function getServerData(uid: string) {
 
 
 export function startMinecraftServer(uid: string) {
-	const {fullPath} = resolveSafePath(uid, "");
+	const fullPath = resolveSafePath(uid, "");
 	const javaArgs = ["-Xmx1024M", "-Xms1024M", "-jar", "server.jar", "nogui"];
 	const proc = spawn("java", javaArgs, {
 		cwd: fullPath,
@@ -115,7 +115,7 @@ export function forceKill(uid: string): boolean {
 }
 
 export async function getMinecraftServerLog(uid: string, clientLines: number): Promise<string[]> {
-	const {fullPath} = resolveSafePath(uid, "logs/latest.log");
+	const fullPath = resolveSafePath(uid, "logs/latest.log");
 	const content = await readFile(fullPath, "utf-8");
 	const logLines = content.split("\n");
 	if (logLines[logLines.length - 1] === "") {

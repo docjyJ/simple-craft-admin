@@ -1,4 +1,4 @@
-import {Anchor, Breadcrumbs, Group, Paper, ScrollArea, Text} from "@mantine/core";
+import {Anchor, Breadcrumbs, Group, Paper, Text} from "@mantine/core";
 import {Link} from "react-router";
 import React from "react";
 import {urlBuilder} from "~/hooks/file-explorer/useExplorerLocation";
@@ -9,7 +9,7 @@ export default function HeaderExplorer({leftSection, pathArray}: {
 	leftSection: React.ReactNode
 }) {
 	const pathWithRoot = [
-		"Root",
+		"",
 		...pathArray
 	];
 	return (
@@ -18,14 +18,14 @@ export default function HeaderExplorer({leftSection, pathArray}: {
 				<Breadcrumbs m="sm" style={{flexWrap: "nowrap"}}>
 					{pathWithRoot.map((p, index) => (
 						pathWithRoot.length - 1 === index ? (
-							<Text key={index}>{p}</Text>
+							<Text key={index}>{index === 0 ? "Root" : p}</Text>
 						) : (
 							<Anchor
 								key={index}
 								component={Link}
-								to={urlBuilder({path: pathWithRoot.slice(1, index + 1).join("/")})}
+								to={urlBuilder({path: "/" + pathArray.slice(0, index).join("/")})}
 							>
-								{p}
+								{index === 0 ? "Root" : p}
 							</Anchor>
 						)
 					))}
