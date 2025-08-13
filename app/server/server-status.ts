@@ -1,8 +1,9 @@
 import * as net from "node:net"
-import {readFile} from "node:fs/promises";
+import {readFile, writeFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import pack_jpg from "~/assets/pack_png";
 import {getProperties} from "properties-file";
+import {PropertiesEditor} from "properties-file/editor";
 
 export type ServerStatus = {
 	version: string,
@@ -21,6 +22,18 @@ export type ServerProperties = {
 	server_port: number;
 }
 
+export type SacProperties = {
+	name: string;
+}
+
+export function defaultIfFileNotExist<T>(defaultValue: T) {
+	return function (e: { code?: any }): T {
+		if (e.code === 'ENOENT') {
+			return defaultValue;
+		}
+		throw e;
+	}
+}
 
 export async function getServerStatus(
 	port: number,
@@ -80,7 +93,7 @@ export async function getServerProperties(server_folder: string) {
 	};
 	return readFile(filePath, "utf8").then(getProperties).then(
 		data => {
-			if (data    ["motd"]) {
+			if (data["motd"]) {
 				properties.motd = data["motd"];
 			}
 			if (data["max-players"]) {
@@ -97,15 +110,73 @@ export async function getServerProperties(server_folder: string) {
 			}
 			return properties;
 		}
-	).catch(e => {
-		console.error("Error reading server.properties:", e);
-		return properties;
-	})
+	).catch(defaultIfFileNotExist(properties))
 }
 
 export async function getServerIcon(server_folder: string) {
 	const filePath = resolve(server_folder, "server-icon.png");
 	return readFile(filePath, "base64")
 		.then(data => `data:image/png;base64,${data}`)
-		.catch(() => pack_jpg)
+		.catch(defaultIfFileNotExist(pack_jpg))
+}
+
+export async function getSacProperties(server_folder: string): Promise<SacProperties> {
+	const filePath = resolve(server_folder, "sac.properties");
+	const properties: SacProperties = {
+		name: "Unknown Server"
+	};
+	return readFile(filePath, "utf8").then(getProperties).then(
+		data => {
+			if (data["name"]) {
+				properties.name = data["name"];
+			}
+			return properties;
+		}
+	).catch(defaultIfFileNotExist(properties))
+}
+
+export async function editServerProperties(
+	server_folder: string,
+	properties: Partial<ServerProperties>
+): Promise<void> {
+	const filePath = resolve(server_folder, "server.properties");
+
+	return readFile(filePath, "utf8")
+		.catch(defaultIfFileNotExist(""))
+		.then(data => new PropertiesEditor(data))
+		.then(editor => {
+			if (properties.motd !== undefined) {
+				editor.upsert("motd", properties.motd);
+			}
+			if (properties.max_players !== undefined) {
+				editor.upsert("max-players", properties.max_players.toString());
+			}
+			if (properties.server_port !== undefined) {
+				editor.upsert("server-port", properties.server_port.toString());
+			}
+			return editor.format()
+		})
+		.then(formattedData => {
+			return writeFile(filePath, formattedData, "utf8");
+		})
+}
+
+export async function editSacProperties(
+	server_folder: string,
+	properties: Partial<SacProperties>
+): Promise<void> {
+	const filePath = resolve(server_folder, "sac.properties");
+
+	return readFile(filePath, "utf8")
+		.catch(defaultIfFileNotExist(""))
+		.then(data => new PropertiesEditor(data))
+		.then(editor => {
+			if (properties.name !== undefined) {
+				editor.upsert("name", properties.name);
+			}
+			return editor.format()
+		})
+		.then(formattedData => {
+			return writeFile(filePath, formattedData, "utf8");
+		})
 }

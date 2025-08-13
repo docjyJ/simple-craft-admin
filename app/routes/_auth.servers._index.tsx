@@ -16,7 +16,7 @@ export default function ServersIndex({loaderData: {servers}}: Route.ComponentPro
 	const rows = servers.map(({uid, server_data}) => (
 		<Table.Tr key={uid}>
 			<Table.Td>
-				<ServerUser name={"TODO"} motd={server_data.motd} icon={server_data.server_icon}/>
+				<ServerUser name={server_data.name} motd={server_data.motd} icon={server_data.server_icon}/>
 			</Table.Td>
 			<Table.Td>
 				<ServerPlayerCount max_players={server_data.max_players} online_players={server_data.online_players}/>

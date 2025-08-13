@@ -1,6 +1,13 @@
 import {spawn} from "node:child_process";
 import {readdir, readFile} from "node:fs/promises";
-import {getServerIcon, getServerProperties, getServerStatus} from "~/server/server-status";
+import {
+	editSacProperties,
+	editServerProperties,
+	getSacProperties,
+	getServerIcon,
+	getServerProperties,
+	getServerStatus,
+} from "~/server/server-status";
 import {isValidUid, resolveSafePath, root} from "~/server/path-validation";
 
 
@@ -10,12 +17,23 @@ export type MinecraftServer = {
 }
 
 export type ServerData = {
-	is_online: boolean;
-	motd: string;
-	online_players?: number;
-	max_players: number;
-	server_icon: string;
-	server_version?: string;
+	is_online: boolean,
+	motd: string,
+	server_port: number,
+	max_players: number,
+	online_players: number,
+	server_icon: string,
+	server_version: string,
+	name: string
+} | {
+	is_online: boolean,
+	motd: string,
+	server_port: number,
+	max_players: number,
+	online_players?: undefined,
+	server_icon: string,
+	server_version?: undefined,
+	name: string
 };
 const serverProcesses: Map<string, import("child_process").ChildProcess> = new Map();
 
@@ -34,9 +52,10 @@ export async function fullListMinecraftServers(): Promise<MinecraftServer[]> {
 	return servers;
 }
 
-export async function getServerData(uid: string) {
+export async function getServerData(uid: string): Promise<ServerData> {
 	const fullPath = resolveSafePath(uid, "");
 	const serverProperties = await getServerProperties(fullPath);
+	const sacProperties = await getSacProperties(fullPath);
 	const serverStatus = isRunning(uid) ? await getServerStatus(serverProperties.server_port) : null
 	if (serverStatus) {
 		return {
@@ -46,6 +65,8 @@ export async function getServerData(uid: string) {
 			online_players: serverStatus.online_players,
 			server_icon: serverStatus.icon,
 			server_version: serverStatus.version,
+			name: sacProperties.name,
+			server_port: serverProperties.server_port,
 		}
 	} else
 		return {
@@ -53,6 +74,8 @@ export async function getServerData(uid: string) {
 			motd: serverProperties.motd,
 			max_players: serverProperties.max_players,
 			server_icon: await getServerIcon(fullPath),
+			name: sacProperties.name,
+			server_port: serverProperties.server_port
 		}
 }
 
@@ -124,4 +147,18 @@ export async function getMinecraftServerLog(uid: string, clientLines: number): P
 	if (clientLines <= 0) return logLines;
 	if (clientLines >= logLines.length) return [];
 	return logLines.slice(clientLines);
+}
+
+
+export async function updateConfig(uid: string, {name, server_port}: {
+	name: string,
+	server_port: number
+}): Promise<void> {
+	const fullPath = resolveSafePath(uid, "");
+	await editServerProperties(fullPath, {
+		server_port
+	})
+	await editSacProperties(fullPath, {
+		name: name.trim(),
+	})
 }

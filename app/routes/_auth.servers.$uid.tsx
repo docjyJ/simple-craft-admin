@@ -33,7 +33,7 @@ export default function ServerLayout({loaderData: {server_data, is_online}, para
 		<Stack h="100%" justify="space-between" p="md">
 			<Paper withBorder p="md">
 				<Group justify="space-between">
-					<ServerUser name={"TODO"} motd={server_data.motd} icon={server_data.server_icon}/>
+					<ServerUser name={server_data.name} motd={server_data.motd} icon={server_data.server_icon}/>
 					<ServerPlayerCount max_players={server_data.max_players} online_players={server_data.online_players}/>
 					<Text fz="sm">
 						{server_data.server_version ?? 'Unknown'}
@@ -62,6 +62,7 @@ export default function ServerLayout({loaderData: {server_data, is_online}, para
 					<Tabs.List>
 						<Tabs.Tab value={`/servers/${uid}`}>Console</Tabs.Tab>
 						<Tabs.Tab value={`/servers/${uid}/files`}>Files</Tabs.Tab>
+						<Tabs.Tab value={`/servers/${uid}/manage`}>Manage</Tabs.Tab>
 					</Tabs.List>
 				</Tabs>
 
