@@ -25,6 +25,7 @@ export type ServerData = {
 	server_icon: string,
 	server_version: string,
 	name: string
+	jar_url: string;
 } | {
 	is_online: boolean,
 	motd: string,
@@ -34,6 +35,7 @@ export type ServerData = {
 	server_icon: string,
 	server_version?: undefined,
 	name: string
+	jar_url: string;
 };
 const serverProcesses: Map<string, import("child_process").ChildProcess> = new Map();
 
@@ -161,4 +163,19 @@ export async function updateConfig(uid: string, {name, server_port}: {
 	await editSacProperties(fullPath, {
 		name: name.trim(),
 	})
+}
+
+export async function updateJar(uid: string, jarUrl: string): Promise<void> {
+	const fullPath = resolveSafePath(uid, "");
+	await editServerProperties(fullPath, {
+		jar_url: jarUrl
+	});
+	// download the jar file from the URL and save it to the server directory as server.jar
+	const jarPath = resolveSafePath(uid, "server.jar");
+	const response = await fetch(jarUrl);
+	if (!response.ok) {
+		throw new Error(`Failed to download jar file from ${jarUrl}: ${response.statusText}`);
+	}
+	const buffer = await response.buffer();
+	await writeFile(jarPath, buffer);
 }

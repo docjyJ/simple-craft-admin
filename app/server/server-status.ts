@@ -24,6 +24,7 @@ export type ServerProperties = {
 
 export type SacProperties = {
 	name: string;
+	jar_url: string;
 }
 
 export function defaultIfFileNotExist<T>(defaultValue: T) {
