@@ -3,27 +3,45 @@ import {getServerData, updateConfig} from "~/server/minecraft-servers";
 import {Form} from "react-router";
 import type {Route} from './+types/_auth.servers.$uid.manage';
 import {IconDeviceFloppy} from "@tabler/icons-react";
+import {zod4Resolver} from 'mantine-form-zod-resolver';
+import {z} from 'zod';
+import {useForm} from '@mantine/form';
+import {safeParseFormData} from "~/zod-utils";
+
+const FromSchema = z.discriminatedUnion("type", [
+	z.object({
+		type: z.literal("settings"),
+			name: z.coerce.string().min(1, "Server name is required"),
+		server_port: z.coerce.bigint().min(1, "Port must be between 1 and 65535").max(65535, "Port must be between 1 and 65535")
+		})
+])
+
 
 export async function loader({params: {uid}}: Route.LoaderArgs) {
 	return getServerData(uid).then(serverData => ({serverData}));
 }
 
 export async function action({request, params: {uid}}: Route.ActionArgs) {
-	const formData = await request.formData();
-	const type = formData.get("type");
+	const formData = await safeParseFormData(request, FromSchema);
+	if (!formData.success) {
+		return {error: formData.error}
+	}
+	const {type, ...data} = formData.data;
 	if (type === "settings") {
-		const name = formData.get("name") as string;
-		const server_port = parseInt(formData.get("port") as string, 10);
-
-		if (name && !isNaN(server_port) && server_port >= 1 && server_port <= 65535) {
-			return updateConfig(uid, {name, server_port});
-		} else {
-			throw new Error("Invalid form data");
-		}
+		return updateConfig(uid, data);
 	}
 }
 
 export default function ManageServer({loaderData: {serverData}}: Route.ComponentProps) {
+	const form = useForm({
+		mode: 'uncontrolled',
+		initialValues: {
+				name: serverData.name,
+				server_port: serverData.server_port
+		},
+		schema: zod4Resolver(FromSchema)
+	});
+
 	return (
 		<Stack>
 			<Form method="post">
@@ -32,16 +50,15 @@ export default function ManageServer({loaderData: {serverData}}: Route.Component
 					<TextInput
 						name="name"
 						label="Server Name"
-						defaultValue={serverData.name}
-						required/>
+						required
+						{...form.getInputProps('name')}/>
 					<NumberInput
-						name="port"
+						name="server_port"
 						label="Server Port"
-						defaultValue={serverData.server_port}
 						required
 						min={1}
 						max={65535}
-					/>
+						{...form.getInputProps('server_port')}/>
 					<Button type="submit" name="type" value="settings" leftSection={<IconDeviceFloppy size={18}/>}>
 						Save Settings
 					</Button>
