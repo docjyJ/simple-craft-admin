@@ -124,12 +124,16 @@ export async function getServerIcon(server_folder: string) {
 export async function getSacProperties(server_folder: string): Promise<SacProperties> {
 	const filePath = resolve(server_folder, "sac.properties");
 	const properties: SacProperties = {
-		name: "Unknown Server"
+		name: "Unknown Server",
+		jar_url: ""
 	};
 	return readFile(filePath, "utf8").then(getProperties).then(
 		data => {
 			if (data["name"]) {
 				properties.name = data["name"];
+			}
+			if (data["jar-url"]) {
+				properties.jar_url = data["jar-url"];
 			}
 			return properties;
 		}
@@ -174,6 +178,9 @@ export async function editSacProperties(
 		.then(editor => {
 			if (properties.name !== undefined) {
 				editor.upsert("name", properties.name);
+			}
+			if (properties.jar_url !== undefined) {
+				editor.upsert("jar-url", properties.jar_url);
 			}
 			return editor.format()
 		})

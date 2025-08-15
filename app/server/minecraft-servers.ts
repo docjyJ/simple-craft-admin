@@ -69,6 +69,7 @@ export async function getServerData(uid: string): Promise<ServerData> {
 			server_version: serverStatus.version,
 			name: sacProperties.name,
 			server_port: serverProperties.server_port,
+			jar_url: sacProperties.jar_url
 		}
 	} else
 		return {
@@ -77,7 +78,8 @@ export async function getServerData(uid: string): Promise<ServerData> {
 			max_players: serverProperties.max_players,
 			server_icon: await getServerIcon(fullPath),
 			name: sacProperties.name,
-			server_port: serverProperties.server_port
+			server_port: serverProperties.server_port,
+			jar_url: sacProperties.jar_url
 		}
 }
 
@@ -167,7 +169,7 @@ export async function updateConfig(uid: string, {name, server_port}: {
 
 export async function updateJar(uid: string, jarUrl: string): Promise<void> {
 	const fullPath = resolveSafePath(uid, "");
-	await editServerProperties(fullPath, {
+	await editSacProperties(fullPath, {
 		jar_url: jarUrl
 	});
 	const jarPath = resolveSafePath(uid, "server.jar");
