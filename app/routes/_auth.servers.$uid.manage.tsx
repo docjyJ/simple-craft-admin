@@ -1,5 +1,5 @@
 import {Button, Fieldset, NumberInput, Stack, TextInput} from "@mantine/core";
-import {getServerData, updateConfig} from "~/server/minecraft-servers";
+import {getServerData, updateConfig, updateJar} from "~/server/minecraft-servers";
 import {Form} from "react-router";
 import type {Route} from './+types/_auth.servers.$uid.manage';
 import {IconDeviceFloppy} from "@tabler/icons-react";

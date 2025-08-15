@@ -1,5 +1,5 @@
 import {spawn} from "node:child_process";
-import {readdir, readFile} from "node:fs/promises";
+import {readdir, readFile, writeFile} from "node:fs/promises";
 import {
 	editSacProperties,
 	editServerProperties,
@@ -170,12 +170,12 @@ export async function updateJar(uid: string, jarUrl: string): Promise<void> {
 	await editServerProperties(fullPath, {
 		jar_url: jarUrl
 	});
-	// download the jar file from the URL and save it to the server directory as server.jar
 	const jarPath = resolveSafePath(uid, "server.jar");
 	const response = await fetch(jarUrl);
 	if (!response.ok) {
 		throw new Error(`Failed to download jar file from ${jarUrl}: ${response.statusText}`);
 	}
-	const buffer = await response.buffer();
+	const arrayBuffer = await response.arrayBuffer();
+	const buffer = Buffer.from(arrayBuffer);
 	await writeFile(jarPath, buffer);
 }
