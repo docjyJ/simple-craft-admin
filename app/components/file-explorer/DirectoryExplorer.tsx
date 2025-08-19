@@ -1,5 +1,5 @@
 import type {FolderEntry} from "~/server/file-explorer";
-import {Form, Link, useNavigate} from "react-router";
+import {Link, useNavigate} from "react-router";
 import {ActionIcon, Group, Stack, Table} from "@mantine/core";
 import HeaderExplorer from "~/components/file-explorer/HeaderExplorer";
 import {IconDownload, IconFile, IconFileZip, IconFolder, IconFolderUp, IconTrash} from "@tabler/icons-react";
@@ -7,13 +7,14 @@ import {DownloadButton, UploadButton} from "~/components/file-explorer/buttons";
 import useExplorerLocation, {urlBuilder} from "~/hooks/file-explorer/useExplorerLocation";
 import DeleteFileModal from "~/components/file-explorer/modals/DeleteFileModal";
 import UploadFilesModal from "~/components/file-explorer/modals/UploadFilesModal";
+import {ExtractArchiveModal} from "~/components/file-explorer/modals";
 
 type DirectoryExplorerProps = {
 	entries: FolderEntry[];
 };
 
 export default function DirectoryExplorer({entries}: DirectoryExplorerProps) {
-	const {pathArray, pathString, fileParam, upload, delete: del} = useExplorerLocation();
+	const {pathArray, pathString, fileParam, upload, delete: del, extract} = useExplorerLocation();
 	const navigate = useNavigate();
 	return (
 		<Stack miw={600}>
@@ -71,18 +72,16 @@ export default function DirectoryExplorer({entries}: DirectoryExplorerProps) {
 										</ActionIcon>
 										{
 											entry.type === "archive" && (
-												<Form method="POST" action={urlBuilder({path: pathString})}>
-													<input type="hidden" name="path" value={filePath}/>
-													<ActionIcon
-														color="green"
-														type="submit"
-														aria-label="Extract archive"
-														name="type"
-														value="extract"
-														onClick={e => e.stopPropagation()}
-
-													><IconFolderUp/></ActionIcon>
-												</Form>
+												<ActionIcon
+													component={Link}
+													to={urlBuilder({path: pathString, file: entry.name, extract: true})}
+													color="green"
+													type="button"
+													aria-label="Extract archive"
+													onClick={e => e.stopPropagation()}
+												>
+													<IconFolderUp/>
+												</ActionIcon>
 											)
 										}
 									</Group>
@@ -96,6 +95,8 @@ export default function DirectoryExplorer({entries}: DirectoryExplorerProps) {
 											 closePath={urlBuilder({path: pathString})}/>
 			<UploadFilesModal opened={upload} path={pathString}
 												closePath={urlBuilder({path: pathString})}/>
+			<ExtractArchiveModal opened={extract} path={fileParam ? `${pathString}/${fileParam}` : pathString}
+													 closePath={urlBuilder({path: pathString})}/>
 		</Stack>
 	);
 }

@@ -1,6 +1,14 @@
 import type {Route} from './+types/_auth.servers.$uid.files._index';
 import {deletePath, getPath, uploadFiles, extractArchive} from "~/server/file-explorer";
 import {ArchiveViewer, DirectoryExplorer, FileEditor} from "~/components/file-explorer";
+import {z} from 'zod';
+import {deleteSchema, extractSchema, uploadSchema} from "~/components/file-explorer/modals";
+import {parseFormData, validationError} from "@rvf/react-router";
+
+
+
+
+const schema = z.discriminatedUnion("type", [deleteSchema, uploadSchema, extractSchema]);
 
 export async function loader({params, request}: Route.LoaderArgs) {
 	const url = new URL(request.url);
@@ -10,26 +18,22 @@ export async function loader({params, request}: Route.LoaderArgs) {
 }
 
 export async function action({request, params}: Route.ActionArgs) {
-	const formData = await request.formData();
-	const type = formData.get("type");
-	const path = formData.get("path");
-
-	if (type === "delete" && typeof path === "string" && path.trim() !== "") {
-		await deletePath(params.uid, path);
-		return null;
+	const result = await parseFormData(request, schema);
+	if (result.error) {
+		return validationError(result.error, result.submittedData);
 	}
 
-	if (type === "upload" && typeof path === "string") {
-		const files = formData.getAll("file").filter((entry => entry instanceof File)) as File[];
-		await uploadFiles(params.uid, path, files);
-		return null;
+	switch (result.data.type) {
+		case "delete":
+			await deletePath(params.uid, result.data.path);
+			break;
+		case "upload":
+			await uploadFiles(params.uid, result.data.path, result.data.file);
+			break;
+		case "extract":
+			await extractArchive(params.uid, result.data.path);
+			break;
 	}
-
-	if (type === "extract" && typeof path === "string") {
-		await extractArchive(params.uid, path);
-		return null;
-	}
-
 	return null;
 }
 

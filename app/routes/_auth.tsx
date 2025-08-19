@@ -1,12 +1,11 @@
 import {AppShell, Burger, Group, NavLink} from '@mantine/core';
-import {useDisclosure} from '@mantine/hooks';
 import {Link, Outlet} from "react-router";
 import {IconServer} from "@tabler/icons-react";
-
+import {useState} from "react";
 
 
 export default function Shell() {
-	const [opened, {toggle}] = useDisclosure();
+	const [opened, setOpened] = useState(false);
 
 	return (
 		<AppShell
@@ -22,7 +21,7 @@ export default function Shell() {
 				<Group>
 					<Burger
 						opened={opened}
-						onClick={toggle}
+						onClick={() => setOpened(o => !o)}
 						hiddenFrom="sm"
 						size="sm"
 					/>

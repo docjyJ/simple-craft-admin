@@ -81,11 +81,9 @@ export async function downloadPath(uid: string, relPath: string): Promise<Downlo
 	}
 }
 
-export async function uploadFiles(uid: string, targetPath: string, files: File[]): Promise<void> {
+export async function uploadFiles(uid: string, targetPath: string, file: File): Promise<void> {
 	const fullPath = resolveSafePath(uid, targetPath);
-	for (const file of files) {
-		await writeFile(`${fullPath}/${file.name}`, Buffer.from(await file.arrayBuffer()));
-	}
+	await writeFile(`${fullPath}/${file.name}`, Buffer.from(await file.arrayBuffer()));
 }
 
 export async function extractArchive(uid: string, targetPath: string): Promise<void> {
