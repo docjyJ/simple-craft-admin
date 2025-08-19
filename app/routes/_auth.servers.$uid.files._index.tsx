@@ -1,14 +1,18 @@
 import type {Route} from './+types/_auth.servers.$uid.files._index';
-import {deletePath, getPath, uploadFiles, extractArchive, renamePath} from "~/server/file-explorer";
+import {deletePath, getPath, uploadFiles, extractArchive, renamePath, saveFile} from "~/server/file-explorer";
 import {ArchiveViewer, DirectoryExplorer, FileEditor} from "~/components/file-explorer";
 import {z} from 'zod';
 import {deleteSchema, extractSchema, uploadSchema, renameSchema} from "~/components/file-explorer/modals";
 import {parseFormData, validationError} from "@rvf/react-router";
 
 
+const saveSchema = z.object({
+	type: z.literal("save"),
+	path: z.string(),
+	content: z.string()
+});
 
-
-const schema = z.discriminatedUnion("type", [deleteSchema, uploadSchema, extractSchema, renameSchema]);
+const schema = z.discriminatedUnion("type", [deleteSchema, uploadSchema, extractSchema, renameSchema, saveSchema]);
 
 export async function loader({params, request}: Route.LoaderArgs) {
 	const url = new URL(request.url);
@@ -23,20 +27,23 @@ export async function action({request, params}: Route.ActionArgs) {
 		return validationError(result.error, result.submittedData);
 	}
 
-		switch (result.data.type) {
-			case "delete":
-				await deletePath(params.uid, result.data.path);
-				break;
-			case "upload":
-				await uploadFiles(params.uid, result.data.path, result.data.file);
-				break;
-			case "extract":
-				await extractArchive(params.uid, result.data.path, result.data.destinationDir);
-				break;
-			case "rename":
-				await renamePath(params.uid, result.data.path, result.data.newName);
-				break;
-		}
+	switch (result.data.type) {
+		case "delete":
+			await deletePath(params.uid, result.data.path);
+			break;
+		case "upload":
+			await uploadFiles(params.uid, result.data.path, result.data.file);
+			break;
+		case "extract":
+			await extractArchive(params.uid, result.data.path, result.data.destinationDir);
+			break;
+		case "rename":
+			await renamePath(params.uid, result.data.path, result.data.newName);
+			break;
+		case "save":
+			await saveFile(params.uid, result.data.path, result.data.content);
+			break;
+	}
 	return null;
 }
 
