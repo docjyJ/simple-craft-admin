@@ -1,5 +1,6 @@
 import {spawn} from "node:child_process";
-import {readdir, readFile, writeFile} from "node:fs/promises";
+import {readdir, readFile, writeFile, mkdir} from "node:fs/promises";
+import {randomUUID} from "crypto";
 import {
 	editSacProperties,
 	editServerProperties,
@@ -181,4 +182,15 @@ export async function updateJar(uid: string): Promise<void> {
 	const arrayBuffer = await response.arrayBuffer();
 	const buffer = Buffer.from(arrayBuffer);
 	await writeFile(jarPath, buffer);
+}
+
+export async function createMinecraftServer({name}: {name: string}): Promise<string> {
+	const uid = randomUUID();
+	const serverPath = resolveSafePath(uid, "");
+	await mkdir(serverPath, {recursive: true});
+	// Fichier sac.properties minimal
+	await writeFile(resolveSafePath(uid, "sac.properties"), `name=${name}\njar_url=\n`);
+	// Fichier server.properties minimal
+	await writeFile(resolveSafePath(uid, "server.properties"), `motd=${name}\nmax-players=20\nserver-port=25565\n`);
+	return uid;
 }
