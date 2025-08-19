@@ -154,9 +154,10 @@ export async function getMinecraftServerLog(uid: string, clientLines: number): P
 }
 
 
-export async function updateConfig(uid: string, {name, server_port}: {
+export async function updateConfig(uid: string, {name, server_port, jar_url}: {
 	name: string,
-	server_port: number
+	server_port: number,
+	jar_url: string
 }): Promise<void> {
 	const fullPath = resolveSafePath(uid, "");
 	await editServerProperties(fullPath, {
@@ -164,18 +165,18 @@ export async function updateConfig(uid: string, {name, server_port}: {
 	})
 	await editSacProperties(fullPath, {
 		name: name.trim(),
+		jar_url: jar_url
 	})
 }
 
-export async function updateJar(uid: string, jarUrl: string): Promise<void> {
+// TODO: Add buton in manage view to update jar file
+export async function updateJar(uid: string): Promise<void> {
 	const fullPath = resolveSafePath(uid, "");
-	await editSacProperties(fullPath, {
-		jar_url: jarUrl
-	});
+	const {jar_url} = await getSacProperties(fullPath);
 	const jarPath = resolveSafePath(uid, "server.jar");
-	const response = await fetch(jarUrl);
+	const response = await fetch(jar_url);
 	if (!response.ok) {
-		throw new Error(`Failed to download jar file from ${jarUrl}: ${response.statusText}`);
+		throw new Error(`Failed to download jar file from ${jar_url}: ${response.statusText}`);
 	}
 	const arrayBuffer = await response.arrayBuffer();
 	const buffer = Buffer.from(arrayBuffer);

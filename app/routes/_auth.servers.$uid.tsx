@@ -62,7 +62,7 @@ export default function ServerLayout({loaderData: {server_data, is_online}, para
 					<Tabs.List>
 						<Tabs.Tab value={`/servers/${uid}`}>Console</Tabs.Tab>
 						<Tabs.Tab value={`/servers/${uid}/files`}>Files</Tabs.Tab>
-						<Tabs.Tab value={`/servers/${uid}/manage`}>Manage</Tabs.Tab>
+						<Tabs.Tab value={`/servers/${uid}/settings`}>Settings</Tabs.Tab>
 					</Tabs.List>
 				</Tabs>
 
