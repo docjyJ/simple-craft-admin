@@ -8,7 +8,7 @@ export default function UploadButton({to}: { to: string }) {
 		<Button
 			component={Link}
 			to={to}
-			color="green"
+			color="blue"
 			aria-label="Upload file"
 			leftSection={<IconUpload/>}
 		>

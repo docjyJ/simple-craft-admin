@@ -17,6 +17,7 @@
     "@react-router/serve": "^7.6.3",
     "@rvf/react-router": "^8.0.0",
     "@tabler/icons-react": "^3.34.1",
+    "@uiw/codemirror-extensions-langs": "^4.25.1",
     "@uiw/react-codemirror": "^4.24.2",
     "isbot": "^5.1.28",
     "jszip": "^3.10.1",

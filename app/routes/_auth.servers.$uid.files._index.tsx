@@ -1,16 +1,11 @@
 import type {Route} from './+types/_auth.servers.$uid.files._index';
 import {deletePath, getPath, uploadFiles, extractArchive, renamePath, saveFile} from "~/server/file-explorer";
-import {ArchiveViewer, DirectoryExplorer, FileEditor} from "~/components/file-explorer";
+import {ArchiveViewer, DirectoryExplorer, FileEditor, saveSchema} from "~/components/file-explorer";
 import {z} from 'zod';
 import {deleteSchema, extractSchema, uploadSchema, renameSchema} from "~/components/file-explorer/modals";
 import {parseFormData, validationError} from "@rvf/react-router";
 
 
-const saveSchema = z.object({
-	type: z.literal("save"),
-	path: z.string(),
-	content: z.string()
-});
 
 const schema = z.discriminatedUnion("type", [deleteSchema, uploadSchema, extractSchema, renameSchema, saveSchema]);
 
