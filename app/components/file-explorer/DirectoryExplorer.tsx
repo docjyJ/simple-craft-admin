@@ -2,19 +2,19 @@ import type {FolderEntry} from "~/server/file-explorer";
 import {Link, useNavigate} from "react-router";
 import {ActionIcon, Group, Stack, Table} from "@mantine/core";
 import HeaderExplorer from "~/components/file-explorer/HeaderExplorer";
-import {IconDownload, IconFile, IconFileZip, IconFolder, IconFolderUp, IconTrash} from "@tabler/icons-react";
+import {IconDownload, IconFile, IconFileZip, IconFolder, IconFolderUp, IconTrash, IconPencil} from "@tabler/icons-react";
 import {DownloadButton, UploadButton} from "~/components/file-explorer/buttons";
 import useExplorerLocation, {urlBuilder} from "~/hooks/file-explorer/useExplorerLocation";
 import DeleteFileModal from "~/components/file-explorer/modals/DeleteFileModal";
 import UploadFilesModal from "~/components/file-explorer/modals/UploadFilesModal";
-import {ExtractArchiveModal} from "~/components/file-explorer/modals";
+import {ExtractArchiveModal, RenameFileModal} from "~/components/file-explorer/modals";
 
 type DirectoryExplorerProps = {
 	entries: FolderEntry[];
 };
 
 export default function DirectoryExplorer({entries}: DirectoryExplorerProps) {
-	const {pathArray, pathString, fileParam, upload, delete: del, extract} = useExplorerLocation();
+	const {pathArray, pathString, fileParam, upload, delete: del, extract, rename} = useExplorerLocation();
 	const navigate = useNavigate();
 	return (
 		<Stack miw={600}>
@@ -70,20 +70,30 @@ export default function DirectoryExplorer({entries}: DirectoryExplorerProps) {
 										>
 											<IconDownload/>
 										</ActionIcon>
-										{
-											entry.type === "archive" && (
-												<ActionIcon
-													component={Link}
-													to={urlBuilder({path: pathString, file: entry.name, extract: true})}
-													color="green"
-													type="button"
-													aria-label="Extract archive"
-													onClick={e => e.stopPropagation()}
-												>
-													<IconFolderUp/>
-												</ActionIcon>
-											)
-										}
+										<ActionIcon
+											component={Link}
+											to={urlBuilder({path: pathString, file: entry.name, rename: true})}
+											color="blue"
+											type="button"
+											aria-label="Rename"
+											onClick={e => e.stopPropagation()}
+										>
+											<IconPencil/>
+										</ActionIcon>
+    						{
+    							entry.type === "archive" && (
+    								<ActionIcon
+    									component={Link}
+    									to={urlBuilder({path: pathString, file: entry.name, extract: true})}
+    									color="blue"
+    									type="button"
+    									aria-label="Extract archive"
+    									onClick={e => e.stopPropagation()}
+    								>
+    									<IconFolderUp/>
+    								</ActionIcon>
+    							)
+    						}
 									</Group>
 								</Table.Td>
 							</Table.Tr>
@@ -93,10 +103,12 @@ export default function DirectoryExplorer({entries}: DirectoryExplorerProps) {
 			</Table>
 			<DeleteFileModal opened={del} path={fileParam ? `${pathString}/${fileParam}` : pathString}
 											 closePath={urlBuilder({path: pathString})}/>
-			<UploadFilesModal opened={upload} path={pathString}
+			<UploadFilesModal opened={upload} path={fileParam ? `${pathString}/${fileParam}` : pathString}
 												closePath={urlBuilder({path: pathString})}/>
 			<ExtractArchiveModal opened={extract} path={fileParam ? `${pathString}/${fileParam}` : pathString}
 													 closePath={urlBuilder({path: pathString})}/>
+			<RenameFileModal opened={rename} path={fileParam ? `${pathString}/${fileParam}` : pathString}
+											 closePath={urlBuilder({path: pathString})}/>
 		</Stack>
 	);
 }

@@ -1,4 +1,4 @@
-import {Button, Group, Modal, Text} from "@mantine/core";
+import {Button, Group, Modal, Text, TextInput} from "@mantine/core";
 import {Link, useNavigate} from "react-router";
 import {z} from "zod";
 import {ValidatedForm} from "@rvf/react-router";
@@ -11,7 +11,8 @@ type ExtractArchiveModalProps = {
 
 export const extractSchema = z.object({
 	type: z.literal("extract"),
-	path: z.string()
+	path: z.string(),
+	destinationDir: z.string()
 });
 
 export default function ExtractArchiveModal({opened, closePath, path}: ExtractArchiveModalProps) {
@@ -19,6 +20,7 @@ export default function ExtractArchiveModal({opened, closePath, path}: ExtractAr
 	if (!opened) return null;
 
 	const fileName = path.split("/").pop() || "";
+	const defaultDest = path.slice(0, -4);
 
 	return (
 		<Modal
@@ -28,21 +30,26 @@ export default function ExtractArchiveModal({opened, closePath, path}: ExtractAr
 			onClose={() => navigate(closePath)}
 		>
 			<Text size="sm" mb="md">
-				Extracting <strong>{fileName}</strong> will decompress its contents into a directory with the same name.<br/>
+				Extracting <strong>{fileName}</strong> will decompress its contents into the destination folder.
 			</Text>
 			<ValidatedForm
 				method="post"
 				action={closePath}
 				schema={extractSchema}
-				defaultValues={{type: "extract", path}}
+				defaultValues={{type: "extract", path, destinationDir: defaultDest}}
 			>
 				{(form) => (
 					<>
-						<input type="hidden" {...form.getInputProps("type")}/>
-						<input type="hidden" {...form.getInputProps("path")}/>
+						<input type="hidden" {...form.getInputProps("type")} />
+						<input type="hidden" {...form.getInputProps("path")} />
+						<TextInput
+							label="Destination folder"
+							placeholder="/path/inside/server"
+							{...form.getInputProps("destinationDir")}
+						/>
 						<Group mt="md" justify="flex-end">
 							<Button component={Link} to={closePath} variant="subtle" color="gray" type="button">
-								cancel
+								Cancel
 							</Button>
 							<Button
 								color="blue"

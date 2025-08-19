@@ -1,7 +1,7 @@
 import {useLocation} from "react-router";
 
 
-export function urlBuilder({path, download, upload, delete:del, file, extract}: { path: string, download?: boolean, upload?: boolean, file?:string, delete?:boolean, extract?: boolean }): string {
+export function urlBuilder({path, download, upload, delete:del, file, extract, rename}: { path: string, download?: boolean, upload?: boolean, file?:string, delete?:boolean, extract?: boolean, rename?: boolean }): string {
 	const builder = []
 	if (download) builder.push(download);
 	builder.push(`?path=${encodeURIComponent(path).replace(/%2F/g, '/')}`);
@@ -9,6 +9,7 @@ export function urlBuilder({path, download, upload, delete:del, file, extract}: 
 	if (upload) builder.push('#upload');
 	if (del) builder.push('#delete');
 	if (extract) builder.push('#extract');
+	if (rename) builder.push('#rename');
 	return builder.join('');
 }
 
@@ -26,5 +27,6 @@ export default function useExplorerLocation() {
 		upload: location.hash === "#upload",
 		delete: location.hash === "#delete",
 		extract: location.hash === "#extract",
+		rename: location.hash === "#rename",
 	};
 }

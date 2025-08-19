@@ -1,4 +1,4 @@
-import {readFile, rm, readdir, stat, writeFile} from "node:fs/promises";
+import {readFile, rm, readdir, stat, writeFile, rename as fsRename, mkdir} from "node:fs/promises";
 import {getRelativePath, resolveSafePath} from "~/server/path-validation";
 import {zipTree, unzipFile, zipFile} from "~/server/zip-managment";
 
@@ -81,16 +81,34 @@ export async function downloadPath(uid: string, relPath: string): Promise<Downlo
 	}
 }
 
+export async function renamePath(uid: string, sourcePath: string, newName: string): Promise<void> {
+	if (newName.includes("/") || newName.includes("..")) {
+		throw new Error("Invalid new name.");
+	}
+	const srcFull = resolveSafePath(uid, sourcePath);
+	const parts = srcFull.split("/");
+	parts.pop();
+	const destFull = `${parts.join("/")}/${newName}`;
+	await fsRename(srcFull, destFull);
+}
+
+export async function saveFile(uid: string, filePath: string, content: string): Promise<void> {
+	const fullPath = resolveSafePath(uid, filePath);
+	await writeFile(fullPath, content, "utf-8");
+}
+
 export async function uploadFiles(uid: string, targetPath: string, file: File): Promise<void> {
 	const fullPath = resolveSafePath(uid, targetPath);
 	await writeFile(`${fullPath}/${file.name}`, Buffer.from(await file.arrayBuffer()));
 }
 
-export async function extractArchive(uid: string, targetPath: string): Promise<void> {
+export async function extractArchive(uid: string, targetPath: string, destinationDir: string): Promise<void> {
 	const fullPath = resolveSafePath(uid, targetPath);
 	if (!fullPath.endsWith(".zip")) {
 		throw new Error("Invalid archive path, must end with .zip");
 	}
 	const buffer = await readFile(fullPath);
-	await unzipFile(buffer, fullPath.slice(0, -4));
+	const dest = resolveSafePath(uid, destinationDir);
+	await mkdir(dest, {recursive: true});
+	await unzipFile(buffer, dest);
 }
