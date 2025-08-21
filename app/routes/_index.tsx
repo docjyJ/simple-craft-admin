@@ -1,7 +1,5 @@
-export default function Index() {
-  return (
-    <main>
-      <span>index</span>
-    </main>
-  );
+import { redirect } from 'react-router';
+
+export async function loader() {
+  return redirect('/servers');
 }
