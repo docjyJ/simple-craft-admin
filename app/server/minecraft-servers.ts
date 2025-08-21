@@ -174,7 +174,7 @@ export async function updateConfig(
   });
 }
 
-// TODO: Add buton in manage view to update jar file
+// TODO: Add button in manage view to update jar file
 export async function updateJar(uid: string): Promise<void> {
   const fullPath = resolveSafePath(uid, '');
   const { jar_url } = await getSacProperties(fullPath);
