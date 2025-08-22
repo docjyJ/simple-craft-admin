@@ -9,7 +9,10 @@
     "test": "vitest",
     "typecheck": "react-router typegen && tsc",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@mantine/core": "^8.2.5",

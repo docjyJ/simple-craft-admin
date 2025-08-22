@@ -1,9 +1,15 @@
-import { AppShell, Burger, Group, NavLink } from '@mantine/core';
-import { Link, Outlet } from 'react-router';
+import type { Route } from './+types/_auth';
+import { AppShell, Burger, Button, Group, NavLink } from '@mantine/core';
+import { Link, Outlet, redirect } from 'react-router';
 import { IconServer } from '@tabler/icons-react';
 import { useState } from 'react';
+import { getUser } from '~/server/session';
 
-export default function Shell() {
+export async function loader({ request }: Route.LoaderArgs) {
+  return getUser(request).then((user) => (user ? { user } : redirect('/login')));
+}
+
+export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
   const [opened, setOpened] = useState(false);
 
   return (
@@ -17,9 +23,22 @@ export default function Shell() {
       }}
     >
       <AppShell.Header>
-        <Group>
-          <Burger opened={opened} onClick={() => setOpened((o) => !o)} hiddenFrom="sm" size="sm" />
-          <div>SimpleCraftAdmin</div>
+        <Group justify="space-between" w="100%" px="md">
+          <Group>
+            <Burger
+              opened={opened}
+              onClick={() => setOpened((o) => !o)}
+              hiddenFrom="sm"
+              size="sm"
+            />
+            <div>SimpleCraftAdmin</div>
+          </Group>
+          <Group>
+            <div>{user.pseudo}</div>
+            <Button component={Link} to="/logout" size="xs" variant="outline">
+              Logout
+            </Button>
+          </Group>
         </Group>
       </AppShell.Header>
 

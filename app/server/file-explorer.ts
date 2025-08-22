@@ -1,69 +1,43 @@
 import {
-  readFile,
-  rm,
+  mkdir,
   readdir,
+  readFile,
+  rename as fsRename,
+  rm,
   stat,
   writeFile,
-  rename as fsRename,
-  mkdir,
 } from 'node:fs/promises';
 import { getRelativePath, resolveSafePath } from '~/server/path-validation';
-import { zipTree, unzipFile, zipFile } from '~/server/zip-managment';
+import { unzipFile, zipFile, zipTree } from '~/server/zip-managment';
 
-export type FileType = 'file' | 'folder' | 'archive';
-
-export type FolderEntry = {
-  name: string;
-  type: FileType;
-};
-
-export type PathContent =
-  | {
-      type: 'file';
-      content: string;
-    }
-  | {
-      type: 'folder';
-      entries: FolderEntry[];
-    }
-  | {
-      type: 'archive';
-      tree: string[];
-    };
-
-export type DownloadPath = {
-  content: Buffer;
-  name: string;
-  contentType: 'application/zip' | 'application/octet-stream';
-};
-
-export async function getPath(uid: string, inputPath: string): Promise<PathContent> {
+export async function getPath(uid: string, inputPath: string) {
   const fullPath = resolveSafePath(uid, inputPath);
   const s = await stat(fullPath);
 
   if (s.isDirectory()) {
     const entries = (await readdir(fullPath, { withFileTypes: true }))
-      .map(
-        (entry) =>
-          ({
-            name: entry.name,
-            type: entry.isDirectory() ? 'folder' : entry.name.endsWith('.zip') ? 'archive' : 'file',
-          }) as FolderEntry,
-      )
+      .map((entry) => ({
+        name: entry.name,
+        type: entry.isDirectory()
+          ? ('folder' as const)
+          : entry.name.endsWith('.zip')
+            ? ('archive' as const)
+            : ('file' as const),
+      }))
       .sort((a, b) => {
         return a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1;
       });
-    return { type: 'folder', entries };
+    return { type: 'folder' as const, entries };
   } else if (fullPath.endsWith('.zip')) {
     const tree = await zipTree(fullPath);
-    return { type: 'archive', tree };
+    return { type: 'archive' as const, tree };
   } else {
     const content = await readFile(fullPath, 'utf-8');
-    return { type: 'file', content };
+    return { type: 'file' as const, content };
   }
 }
 
-export async function deletePath(uid: string, inputPath: string): Promise<void> {
+export async function deletePath(uid: string, inputPath: string) {
   const fullPath = resolveSafePath(uid, inputPath);
   const relativePath = getRelativePath(uid, fullPath);
   if (relativePath === '/') {
@@ -72,7 +46,7 @@ export async function deletePath(uid: string, inputPath: string): Promise<void> 
   await rm(fullPath, { recursive: true, force: true });
 }
 
-export async function downloadPath(uid: string, relPath: string): Promise<DownloadPath> {
+export async function downloadPath(uid: string, relPath: string) {
   const fullPath = resolveSafePath(uid, relPath);
   const relativePath = getRelativePath(uid, fullPath);
   const fileName = relativePath === '/' ? 'Root' : relativePath.split('/').pop() || 'Unknown';
@@ -94,7 +68,7 @@ export async function downloadPath(uid: string, relPath: string): Promise<Downlo
   }
 }
 
-export async function renamePath(uid: string, sourcePath: string, newName: string): Promise<void> {
+export async function renamePath(uid: string, sourcePath: string, newName: string) {
   if (newName.includes('/') || newName.includes('..')) {
     throw new Error('Invalid new name.');
   }
@@ -105,12 +79,12 @@ export async function renamePath(uid: string, sourcePath: string, newName: strin
   await fsRename(srcFull, destFull);
 }
 
-export async function saveFile(uid: string, filePath: string, content: string): Promise<void> {
+export async function saveFile(uid: string, filePath: string, content: string) {
   const fullPath = resolveSafePath(uid, filePath);
   await writeFile(fullPath, content, 'utf-8');
 }
 
-export async function uploadFiles(uid: string, targetPath: string, file: File): Promise<void> {
+export async function uploadFiles(uid: string, targetPath: string, file: File) {
   const fullPath = resolveSafePath(uid, targetPath);
   await writeFile(`${fullPath}/${file.name}`, Buffer.from(await file.arrayBuffer()));
 }
