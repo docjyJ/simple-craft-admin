@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'crypto';
 import {
   editSacProperties,
@@ -11,37 +11,9 @@ import {
 } from '~/server/server-status';
 import { isValidUid, resolveSafePath, root } from '~/server/path-validation';
 
-export type MinecraftServer = {
-  uid: string;
-  server_data: ServerData;
-};
-
-export type ServerData =
-  | {
-      is_online: boolean;
-      motd: string;
-      server_port: number;
-      max_players: number;
-      online_players: number;
-      server_icon: string;
-      server_version: string;
-      name: string;
-      jar_url: string;
-    }
-  | {
-      is_online: boolean;
-      motd: string;
-      server_port: number;
-      max_players: number;
-      online_players?: undefined;
-      server_icon: string;
-      server_version?: undefined;
-      name: string;
-      jar_url: string;
-    };
 const serverProcesses: Map<string, import('child_process').ChildProcess> = new Map();
 
-export async function listMinecraftServers(): Promise<string[]> {
+export async function listMinecraftServers() {
   const dirs = await readdir(root, { withFileTypes: true });
   return dirs
     .filter((d) => d.isDirectory())
@@ -49,8 +21,8 @@ export async function listMinecraftServers(): Promise<string[]> {
     .filter(isValidUid);
 }
 
-export async function fullListMinecraftServers(): Promise<MinecraftServer[]> {
-  const servers: MinecraftServer[] = [];
+export async function fullListMinecraftServers() {
+  const servers = [];
   for (const uid of await listMinecraftServers()) {
     const serverData = await getServerData(uid);
     servers.push({ uid, server_data: serverData });
@@ -58,7 +30,7 @@ export async function fullListMinecraftServers(): Promise<MinecraftServer[]> {
   return servers;
 }
 
-export async function getServerData(uid: string): Promise<ServerData> {
+export async function getServerData(uid: string) {
   const fullPath = resolveSafePath(uid, '');
   const serverProperties = await getServerProperties(fullPath);
   const sacProperties = await getSacProperties(fullPath);
@@ -114,7 +86,7 @@ export function sendCommandToServer(uid: string, command: string) {
   }
 }
 
-export function isRunning(uid: string): boolean {
+export function isRunning(uid: string) {
   const proc = serverProcesses.get(uid);
   if (proc === undefined) {
     return false;
@@ -124,7 +96,7 @@ export function isRunning(uid: string): boolean {
   } else return true;
 }
 
-export function forceKill(uid: string): boolean {
+export function forceKill(uid: string) {
   const proc = serverProcesses.get(uid);
   if (proc !== undefined) {
     try {
@@ -140,7 +112,7 @@ export function forceKill(uid: string): boolean {
   }
 }
 
-export async function getMinecraftServerLog(uid: string, clientLines: number): Promise<string[]> {
+export async function getMinecraftServerLog(uid: string, clientLines: number) {
   const fullPath = resolveSafePath(uid, 'logs/latest.log');
   const content = await readFile(fullPath, 'utf-8');
   const logLines = content.split('\n');
@@ -163,7 +135,7 @@ export async function updateConfig(
     server_port: number;
     jar_url: string;
   },
-): Promise<void> {
+) {
   const fullPath = resolveSafePath(uid, '');
   await editServerProperties(fullPath, {
     server_port,
@@ -175,7 +147,7 @@ export async function updateConfig(
 }
 
 // TODO: Add button in manage view to update jar file
-export async function updateJar(uid: string): Promise<void> {
+export async function updateJar(uid: string) {
   const fullPath = resolveSafePath(uid, '');
   const { jar_url } = await getSacProperties(fullPath);
   const jarPath = resolveSafePath(uid, 'server.jar');
@@ -188,7 +160,7 @@ export async function updateJar(uid: string): Promise<void> {
   await writeFile(jarPath, buffer);
 }
 
-export async function createMinecraftServer({ name }: { name: string }): Promise<string> {
+export async function createMinecraftServer({ name }: { name: string }) {
   const uid = randomUUID();
   const serverPath = resolveSafePath(uid, '');
   await mkdir(serverPath, { recursive: true });

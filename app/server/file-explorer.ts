@@ -10,6 +10,11 @@ import {
 import { getRelativePath, resolveSafePath } from '~/server/path-validation';
 import { unzipFile, zipFile, zipTree } from '~/server/zip-managment';
 
+export type FolderEntry = {
+  name: string;
+  type: 'folder' | 'archive' | 'file';
+};
+
 export async function getPath(uid: string, inputPath: string) {
   const fullPath = resolveSafePath(uid, inputPath);
   const s = await stat(fullPath);
@@ -89,11 +94,7 @@ export async function uploadFiles(uid: string, targetPath: string, file: File) {
   await writeFile(`${fullPath}/${file.name}`, Buffer.from(await file.arrayBuffer()));
 }
 
-export async function extractArchive(
-  uid: string,
-  targetPath: string,
-  destinationDir: string,
-): Promise<void> {
+export async function extractArchive(uid: string, targetPath: string, destinationDir: string) {
   const fullPath = resolveSafePath(uid, targetPath);
   if (!fullPath.endsWith('.zip')) {
     throw new Error('Invalid archive path, must end with .zip');

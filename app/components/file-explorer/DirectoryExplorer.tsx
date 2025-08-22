@@ -8,8 +8,8 @@ import {
   IconFileZip,
   IconFolder,
   IconFolderUp,
-  IconTrash,
   IconPencil,
+  IconTrash,
 } from '@tabler/icons-react';
 import { DownloadButton, UploadButton } from '~/components/file-explorer/buttons';
 import useExplorerLocation, { urlBuilder } from '~/hooks/file-explorer/useExplorerLocation';

@@ -128,7 +128,7 @@ export async function getServerIcon(server_folder: string) {
     .catch(defaultIfFileNotExist(pack_jpg));
 }
 
-export async function getSacProperties(server_folder: string): Promise<SacProperties> {
+export async function getSacProperties(server_folder: string) {
   const filePath = resolve(server_folder, 'sac.properties');
   const properties: SacProperties = {
     name: 'Unknown Server',
@@ -151,7 +151,7 @@ export async function getSacProperties(server_folder: string): Promise<SacProper
 export async function editServerProperties(
   server_folder: string,
   properties: Partial<ServerProperties>,
-): Promise<void> {
+) {
   const filePath = resolve(server_folder, 'server.properties');
 
   return readFile(filePath, 'utf8')
@@ -174,10 +174,7 @@ export async function editServerProperties(
     });
 }
 
-export async function editSacProperties(
-  server_folder: string,
-  properties: Partial<SacProperties>,
-): Promise<void> {
+export async function editSacProperties(server_folder: string, properties: Partial<SacProperties>) {
   const filePath = resolve(server_folder, 'sac.properties');
 
   return readFile(filePath, 'utf8')

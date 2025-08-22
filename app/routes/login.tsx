@@ -6,7 +6,7 @@ import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router
 import { getUser, loginUser } from '~/server/session';
 
 const schema = z.object({
-  pseudo: z.string().min(1, 'Pseudo is required'),
+  username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -21,12 +21,15 @@ export async function action({ request }: Route.ActionArgs) {
   if (result.error) {
     return validationError(result.error, result.submittedData);
   }
-  const login = await loginUser(request, result.data.pseudo, result.data.password);
+  const login = await loginUser(request, result.data.username, result.data.password);
   if (!login) {
     return validationError(
       {
         formId: result.formId,
-        fieldErrors: { user: 'Invalid pseudo or password', password: 'Invalid pseudo or password' },
+        fieldErrors: {
+          username: 'Invalid username or password',
+          password: 'Invalid username or password',
+        },
       },
       result.submittedData,
     );
@@ -42,30 +45,30 @@ export default function Login() {
   return (
     <Container size={420} my={40}>
       <Title ta="center" mb="md">
-        Connexion
+        Login
       </Title>
       <Paper withBorder shadow="sm" p="lg" radius="md">
-        <ValidatedForm method="post" schema={schema} defaultValues={{ pseudo: '', password: '' }}>
+        <ValidatedForm method="post" schema={schema} defaultValues={{ username: '', password: '' }}>
           {(form) => (
             <Stack>
               <TextInput
-                name="pseudo"
-                label="Pseudo"
+                name="username"
+                label="Username"
                 placeholder="admin"
                 required
-                error={form.error('pseudo')}
-                {...form.getInputProps('pseudo')}
+                error={form.error('username')}
+                {...form.getInputProps('username')}
               />
               <TextInput
                 name="password"
-                label="Mot de passe"
+                label="Password"
                 type="password"
                 required
                 error={form.error('password')}
                 {...form.getInputProps('password')}
               />
               <Button type="submit" loading={form.formState.isSubmitting}>
-                Se connecter
+                Log In
               </Button>
             </Stack>
           )}

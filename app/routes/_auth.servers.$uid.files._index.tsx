@@ -1,11 +1,11 @@
 import type { Route } from './+types/_auth.servers.$uid.files._index';
 import {
   deletePath,
-  getPath,
-  uploadFiles,
   extractArchive,
+  getPath,
   renamePath,
   saveFile,
+  uploadFiles,
 } from '~/server/file-explorer';
 import {
   ArchiveViewer,
@@ -17,8 +17,8 @@ import { z } from 'zod';
 import {
   deleteSchema,
   extractSchema,
-  uploadSchema,
   renameSchema,
+  uploadSchema,
 } from '~/components/file-explorer/modals';
 import { parseFormData, validationError } from '@rvf/react-router';
 

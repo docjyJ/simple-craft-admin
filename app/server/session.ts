@@ -30,15 +30,15 @@ export async function getUserId(request: Request) {
 export async function getUser(request: Request) {
   return getUserId(request).then((id) =>
     id !== null
-      ? prisma.user.findUnique({ select: { pseudo: true, name: true }, where: { id } })
+      ? prisma.user.findUnique({ select: { username: true, name: true }, where: { id } })
       : null,
   );
 }
 
-export async function loginUser(request: Request, pseudo: string, plainPassword: string) {
+export async function loginUser(request: Request, username: string, plainPassword: string) {
   const user = await prisma.user.findUnique({
     select: { id: true, password: true },
-    where: { pseudo },
+    where: { username },
   });
   if (!user) return null;
 

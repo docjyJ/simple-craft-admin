@@ -2,7 +2,7 @@ import JSZip from 'jszip';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-export async function zipTree(path: string): Promise<string[]> {
+export async function zipTree(path: string) {
   const buffer = await readFile(path);
   const zip = await JSZip.loadAsync(buffer);
   const tree: string[] = [];
@@ -10,7 +10,7 @@ export async function zipTree(path: string): Promise<string[]> {
   return tree;
 }
 
-export async function unzipFile(buffer: Buffer, outputPath: string): Promise<void> {
+export async function unzipFile(buffer: Buffer, outputPath: string) {
   const zip = await JSZip.loadAsync(buffer);
   for (const entry of Object.values(zip.files)) {
     const filePath = `${outputPath}/${entry.name}`;
@@ -36,7 +36,7 @@ async function addDirToZip(dir: string, zipFolder: JSZip) {
   }
 }
 
-export async function zipFile(inputPath: string): Promise<Buffer> {
+export async function zipFile(inputPath: string) {
   const zip = new JSZip();
   await addDirToZip(inputPath, zip);
   return zip.generateAsync({ type: 'nodebuffer' });

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { root, isValidUid, resolveSafePath, getRelativePath } from './path-validation';
+import { describe, expect, it } from 'vitest';
+import { getRelativePath, isValidUid, resolveSafePath, root } from './path-validation';
 
 describe('isValidUid', () => {
   it('valid uid', () => {

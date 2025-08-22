@@ -1,16 +1,16 @@
-import { fullListMinecraftServers, createMinecraftServer } from '~/server/minecraft-servers';
+import { createMinecraftServer, fullListMinecraftServers } from '~/server/minecraft-servers';
 import type { Route } from './+types/_auth.servers._index';
 import {
   ActionIcon,
   Badge,
   Button,
+  Group,
   Modal,
   Paper,
+  Stack,
   Table,
   Text,
   TextInput,
-  Group,
-  Stack,
 } from '@mantine/core';
 import { IconAccessPoint, IconAccessPointOff, IconEdit } from '@tabler/icons-react';
 import { Link, redirect } from 'react-router';
@@ -26,7 +26,7 @@ export async function loader() {
 }
 
 const schema = z.object({
-  serverName: z.string().min(1, 'Le nom est requis'),
+  serverName: z.string().min(1, 'Name is required'),
 });
 
 export async function action({ request }: { request: Request }) {

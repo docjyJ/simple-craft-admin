@@ -34,7 +34,7 @@ export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
             <div>SimpleCraftAdmin</div>
           </Group>
           <Group>
-            <div>{user.pseudo}</div>
+            <div>{user.username}</div>
             <Button component={Link} to="/logout" size="xs" variant="outline">
               Logout
             </Button>
