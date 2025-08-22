@@ -10,3 +10,6 @@
 /.vscode/
 
 /minecraft/
+/config/
+/app/generated/
+/.env
