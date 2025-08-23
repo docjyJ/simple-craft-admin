@@ -4,7 +4,6 @@ import { DownloadButton } from '~/components/file-explorer/buttons';
 import useExplorerLocation, { urlBuilder } from '~/hooks/file-explorer/useExplorerLocation';
 import CodeMirror from '@uiw/react-codemirror';
 import { loadLanguage } from '@uiw/codemirror-extensions-langs';
-import DeleteFileModal from '~/components/file-explorer/modals/DeleteFileModal';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Form } from 'react-router';
@@ -21,7 +20,7 @@ export const saveSchema = z.object({
 });
 
 export default function FileEditor({ fileContent }: FileEditorProps) {
-  const { pathArray, pathString, delete: del } = useExplorerLocation();
+  const { pathArray, pathString } = useExplorerLocation();
 
   const ext = pathString.split('.').pop();
 
@@ -56,12 +55,6 @@ export default function FileEditor({ fileContent }: FileEditorProps) {
         value={fileContent}
         extensions={lang ? [lang] : undefined}
         onChange={(value) => setValue(value)}
-      />
-
-      <DeleteFileModal
-        opened={del}
-        path={pathString}
-        closePath={urlBuilder({ path: pathString })}
       />
     </Stack>
   );

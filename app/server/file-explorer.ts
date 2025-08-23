@@ -3,7 +3,6 @@ import {
   readdir,
   readFile,
   rename as fsRename,
-  rm,
   stat,
   writeFile,
 } from 'node:fs/promises';
@@ -40,15 +39,6 @@ export async function getPath(uid: string, inputPath: string) {
     const content = await readFile(fullPath, 'utf-8');
     return { type: 'file' as const, content };
   }
-}
-
-export async function deletePath(uid: string, inputPath: string) {
-  const fullPath = resolveSafePath(uid, inputPath);
-  const relativePath = getRelativePath(uid, fullPath);
-  if (relativePath === '/') {
-    throw new Error('Cannot delete the root directory of a server');
-  }
-  await rm(fullPath, { recursive: true, force: true });
 }
 
 export async function downloadPath(uid: string, relPath: string) {

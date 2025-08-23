@@ -13,24 +13,16 @@ import {
 } from '@tabler/icons-react';
 import { DownloadButton, UploadButton } from '~/components/file-explorer/buttons';
 import useExplorerLocation, { urlBuilder } from '~/hooks/file-explorer/useExplorerLocation';
-import DeleteFileModal from '~/components/file-explorer/modals/DeleteFileModal';
 import UploadFilesModal from '~/components/file-explorer/modals/UploadFilesModal';
 import { ExtractArchiveModal, RenameFileModal } from '~/components/file-explorer/modals';
+import { encodePathParam } from '~/server/path-validation';
 
 type DirectoryExplorerProps = {
   entries: FolderEntry[];
 };
 
 export default function DirectoryExplorer({ entries }: DirectoryExplorerProps) {
-  const {
-    pathArray,
-    pathString,
-    fileParam,
-    upload,
-    delete: del,
-    extract,
-    rename,
-  } = useExplorerLocation();
+  const { pathArray, pathString, fileParam, upload, extract, rename } = useExplorerLocation();
   const navigate = useNavigate();
   return (
     <Stack miw={600}>
@@ -81,7 +73,7 @@ export default function DirectoryExplorer({ entries }: DirectoryExplorerProps) {
                   <Group>
                     <ActionIcon
                       component={Link}
-                      to={urlBuilder({ path: pathString, file: entry.name, delete: true })}
+                      to={`delete?path=${encodePathParam(filePath)}`}
                       color="red"
                       type="button"
                       aria-label="Delete file"
@@ -130,11 +122,6 @@ export default function DirectoryExplorer({ entries }: DirectoryExplorerProps) {
           })}
         </Table.Tbody>
       </Table>
-      <DeleteFileModal
-        opened={del}
-        path={fileParam ? `${pathString}/${fileParam}` : pathString}
-        closePath={urlBuilder({ path: pathString })}
-      />
       <UploadFilesModal
         opened={upload}
         path={fileParam ? `${pathString}/${fileParam}` : pathString}

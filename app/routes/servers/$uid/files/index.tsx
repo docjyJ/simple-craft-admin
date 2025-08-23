@@ -1,12 +1,5 @@
 import type { Route } from './+types/index';
-import {
-  deletePath,
-  extractArchive,
-  getPath,
-  renamePath,
-  saveFile,
-  uploadFiles,
-} from '~/server/file-explorer';
+import { extractArchive, getPath, renamePath, saveFile, uploadFiles } from '~/server/file-explorer';
 import {
   ArchiveViewer,
   DirectoryExplorer,
@@ -14,16 +7,10 @@ import {
   saveSchema,
 } from '~/components/file-explorer';
 import { z } from 'zod';
-import {
-  deleteSchema,
-  extractSchema,
-  renameSchema,
-  uploadSchema,
-} from '~/components/file-explorer/modals';
+import { extractSchema, renameSchema, uploadSchema } from '~/components/file-explorer/modals';
 import { parseFormData, validationError } from '@rvf/react-router';
 
 const schema = z.discriminatedUnion('type', [
-  deleteSchema,
   uploadSchema,
   extractSchema,
   renameSchema,
@@ -44,9 +31,6 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   switch (result.data.type) {
-    case 'delete':
-      await deletePath(params.uid, result.data.path);
-      break;
     case 'upload':
       await uploadFiles(params.uid, result.data.path, result.data.file);
       break;

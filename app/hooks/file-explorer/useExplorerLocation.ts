@@ -4,7 +4,6 @@ export function urlBuilder({
   path,
   download,
   upload,
-  delete: del,
   file,
   extract,
   rename,
@@ -13,16 +12,14 @@ export function urlBuilder({
   download?: boolean;
   upload?: boolean;
   file?: string;
-  delete?: boolean;
   extract?: boolean;
   rename?: boolean;
 }): string {
-  const builder = [];
-  if (download) builder.push(download);
+  const builder = [] as string[];
+  if (download) builder.push(download as any);
   builder.push(`?path=${encodeURIComponent(path).replace(/%2F/g, '/')}`);
   if (file) builder.push(`&file=${encodeURIComponent(file)}`);
   if (upload) builder.push('#upload');
-  if (del) builder.push('#delete');
   if (extract) builder.push('#extract');
   if (rename) builder.push('#rename');
   return builder.join('');
@@ -39,7 +36,6 @@ export default function useExplorerLocation() {
     pathString,
     fileParam,
     upload: location.hash === '#upload',
-    delete: location.hash === '#delete',
     extract: location.hash === '#extract',
     rename: location.hash === '#rename',
   };
