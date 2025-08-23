@@ -11,9 +11,15 @@ datasource db {
   url      = "file:../config/db.sqlite"
 }
 
+enum Role {
+  ADMIN
+  USER
+}
+
 model User {
   id       Int    @id @default(autoincrement())
   username String @unique
   name     String
   password String
+  role     Role   @default(USER)
 }

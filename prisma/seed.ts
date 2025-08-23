@@ -8,7 +8,7 @@ async function main() {
     if (!existing) {
       const password = await hash('admin');
       await prisma.user.create({
-        data: { username: 'admin', name: 'Administrator', password },
+        data: { username: 'admin', name: 'Administrator', password, role: 'ADMIN' },
       });
     }
   } finally {

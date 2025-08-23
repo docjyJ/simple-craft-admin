@@ -44,6 +44,7 @@ export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
 
       <AppShell.Navbar>
         <NavLink component={Link} to="/servers" label="Servers" leftSection={<IconServer />} />
+        {user.role === 'ADMIN' && <NavLink component={Link} to="/users/new" label="Add User" />}
       </AppShell.Navbar>
 
       <AppShell.Main>

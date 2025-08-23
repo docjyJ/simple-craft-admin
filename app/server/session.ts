@@ -1,5 +1,5 @@
 import { createCookieSessionStorage } from 'react-router';
-import { verify } from 'argon2';
+import { hash, verify } from 'argon2';
 import { PrismaClient } from '~/generated/prisma/client';
 
 let prisma: PrismaClient;
@@ -30,7 +30,10 @@ export async function getUserId(request: Request) {
 export async function getUser(request: Request) {
   return getUserId(request).then((id) =>
     id !== null
-      ? prisma.user.findUnique({ select: { username: true, name: true }, where: { id } })
+      ? prisma.user.findUnique({
+          select: { username: true, name: true, role: true },
+          where: { id },
+        })
       : null,
   );
 }
@@ -53,4 +56,20 @@ export async function loginUser(request: Request, username: string, plainPasswor
 export async function logoutUser(request: Request) {
   const session = await getSession(request.headers.get('Cookie'));
   return destroySession(session).then((cookie) => ({ cookie }));
+}
+
+export function getUserByUsername(username: string) {
+  return prisma.user.findUnique({ where: { username } });
+}
+
+export async function createNewUser({
+  password,
+  ...data
+}: {
+  username: string;
+  name: string;
+  password: string;
+  role: 'ADMIN' | 'USER';
+}) {
+  return hash(password).then((password) => prisma.user.create({ data: { password, ...data } }));
 }
