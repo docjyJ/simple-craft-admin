@@ -24,4 +24,3 @@ jobs:
           check_filenames: true
           check_hidden: true
           skip: './.git,pnpm-lock.yaml'
-          ignore_words_list: 'prisma'
