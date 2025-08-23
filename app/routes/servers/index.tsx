@@ -1,5 +1,5 @@
 import { createMinecraftServer, fullListMinecraftServers } from '~/server/minecraft-servers';
-import type { Route } from './+types/_auth.servers._index';
+import type { Route } from './+types/index';
 import {
   ActionIcon,
   Badge,

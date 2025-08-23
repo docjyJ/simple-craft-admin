@@ -1,4 +1,4 @@
-import type { Route } from './+types/_auth.servers.$uid';
+import type { Route } from './+types/$uid';
 import { Form, Outlet, useLocation, useNavigate } from 'react-router';
 import {
   forceKill,

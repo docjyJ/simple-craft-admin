@@ -1,6 +1,6 @@
 import { Alert, Button, NumberInput, Stack, TextInput } from '@mantine/core';
 import { getServerData, updateConfig } from '~/server/minecraft-servers';
-import type { Route } from './+types/_auth.servers.$uid.settings';
+import type { Route } from './+types/settings';
 import { IconAlertHexagon, IconDeviceFloppy, IconInfoHexagon } from '@tabler/icons-react';
 import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';

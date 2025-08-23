@@ -1,4 +1,4 @@
-import type { Route } from './+types/_auth.servers.$uid.files._index';
+import type { Route } from './+types/index';
 import {
   deletePath,
   extractArchive,

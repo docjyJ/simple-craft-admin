@@ -1,4 +1,4 @@
-import type { Route } from './+types/_auth.servers.$uid.log';
+import type { Route } from './+types/log';
 import { getMinecraftServerLog } from '~/server/minecraft-servers';
 
 export async function loader({ params, request }: Route.LoaderArgs) {

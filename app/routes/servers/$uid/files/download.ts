@@ -1,4 +1,4 @@
-import type { Route } from './+types/_auth.servers.$uid.files.download';
+import type { Route } from './+types/download';
 import { downloadPath } from '~/server/file-explorer';
 
 export async function loader({ request, params }: Route.LoaderArgs) {

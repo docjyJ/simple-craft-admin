@@ -1,4 +1,4 @@
-import type { Route } from './+types/_auth';
+import type { Route } from './+types/auth-layout';
 import { AppShell, Burger, Button, Group, NavLink } from '@mantine/core';
 import { Link, Outlet, redirect } from 'react-router';
 import { IconServer } from '@tabler/icons-react';

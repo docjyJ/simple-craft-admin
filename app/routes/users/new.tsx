@@ -1,5 +1,5 @@
 import { redirect } from 'react-router';
-import type { Route } from './+types/_auth.users.new';
+import type { Route } from './+types/new';
 import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { createNewUser, getUser, getUserByUsername } from '~/server/session';
