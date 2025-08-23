@@ -79,7 +79,7 @@ export default function NewUser() {
                 {...form.getInputProps('name')}
               />
               <PasswordInput
-                label="Mot de passe"
+                label="Password"
                 required
                 error={form.error('password')}
                 {...form.getInputProps('password')}
