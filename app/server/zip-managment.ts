@@ -1,6 +1,5 @@
 import JSZip from 'jszip';
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
 
 export async function zipTree(path: string) {
   const buffer = await readFile(path);
@@ -8,19 +7,6 @@ export async function zipTree(path: string) {
   const tree: string[] = [];
   zip.forEach((relativePath) => tree.push(relativePath));
   return tree;
-}
-
-export async function unzipFile(buffer: Buffer, outputPath: string) {
-  const zip = await JSZip.loadAsync(buffer);
-  for (const entry of Object.values(zip.files)) {
-    const filePath = `${outputPath}/${entry.name}`;
-    if (entry.dir) {
-      await mkdir(filePath, { recursive: true });
-    } else {
-      await mkdir(dirname(filePath), { recursive: true });
-      await writeFile(filePath, await entry.async('nodebuffer'));
-    }
-  }
 }
 
 async function addDirToZip(dir: string, zipFolder: JSZip) {

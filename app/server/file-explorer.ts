@@ -1,6 +1,6 @@
-import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { getRelativePath, resolveSafePath } from '~/server/path-validation';
-import { unzipFile, zipFile, zipTree } from '~/server/zip-managment';
+import { zipFile, zipTree } from '~/server/zip-managment';
 
 export type FolderEntry = {
   name: string;
@@ -64,15 +64,4 @@ export async function saveFile(uid: string, filePath: string, content: string) {
 export async function uploadFiles(uid: string, targetPath: string, file: File) {
   const fullPath = resolveSafePath(uid, targetPath);
   await writeFile(`${fullPath}/${file.name}`, Buffer.from(await file.arrayBuffer()));
-}
-
-export async function extractArchive(uid: string, targetPath: string, destinationDir: string) {
-  const fullPath = resolveSafePath(uid, targetPath);
-  if (!fullPath.endsWith('.zip')) {
-    throw new Error('Invalid archive path, must end with .zip');
-  }
-  const buffer = await readFile(fullPath);
-  const dest = resolveSafePath(uid, destinationDir);
-  await mkdir(dest, { recursive: true });
-  await unzipFile(buffer, dest);
 }

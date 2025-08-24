@@ -14,11 +14,10 @@ import {
 import { DownloadButton, UploadButton } from '~/components/file-explorer/buttons';
 import useExplorerLocation, { urlBuilder } from '~/hooks/file-explorer/useExplorerLocation';
 import UploadFilesModal from '~/components/file-explorer/modals/UploadFilesModal';
-import { ExtractArchiveModal } from '~/components/file-explorer/modals';
 import { encodePathParam } from '~/utils/path-utils';
 
 export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] }) {
-  const { pathArray, pathString, fileParam, upload, extract } = useExplorerLocation();
+  const { pathArray, pathString, upload } = useExplorerLocation();
   const navigate = useNavigate();
   return (
     <Stack miw={600}>
@@ -102,7 +101,7 @@ export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] 
                     {entry.type === 'archive' && (
                       <ActionIcon
                         component={Link}
-                        to={urlBuilder({ path: pathString, file: entry.name, extract: true })}
+                        to={`extract?path=${encodePathParam(filePath)}`}
                         color="blue"
                         type="button"
                         aria-label="Extract archive"
@@ -120,12 +119,7 @@ export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] 
       </Table>
       <UploadFilesModal
         opened={upload}
-        path={fileParam ? `${pathString}/${fileParam}` : pathString}
-        closePath={urlBuilder({ path: pathString })}
-      />
-      <ExtractArchiveModal
-        opened={extract}
-        path={fileParam ? `${pathString}/${fileParam}` : pathString}
+        path={pathString}
         closePath={urlBuilder({ path: pathString })}
       />
     </Stack>
