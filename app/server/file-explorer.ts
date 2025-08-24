@@ -1,11 +1,4 @@
-import {
-  mkdir,
-  readdir,
-  readFile,
-  rename as fsRename,
-  stat,
-  writeFile,
-} from 'node:fs/promises';
+import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { getRelativePath, resolveSafePath } from '~/server/path-validation';
 import { unzipFile, zipFile, zipTree } from '~/server/zip-managment';
 
@@ -61,17 +54,6 @@ export async function downloadPath(uid: string, relPath: string) {
       contentType: 'application/octet-stream',
     };
   }
-}
-
-export async function renamePath(uid: string, sourcePath: string, newName: string) {
-  if (newName.includes('/') || newName.includes('..')) {
-    throw new Error('Invalid new name.');
-  }
-  const srcFull = resolveSafePath(uid, sourcePath);
-  const parts = srcFull.split('/');
-  parts.pop();
-  const destFull = `${parts.join('/')}/${newName}`;
-  await fsRename(srcFull, destFull);
 }
 
 export async function saveFile(uid: string, filePath: string, content: string) {

@@ -6,14 +6,12 @@ export function urlBuilder({
   upload,
   file,
   extract,
-  rename,
 }: {
   path: string;
   download?: boolean;
   upload?: boolean;
   file?: string;
   extract?: boolean;
-  rename?: boolean;
 }): string {
   const builder = [] as string[];
   if (download) builder.push(download as any);
@@ -21,7 +19,6 @@ export function urlBuilder({
   if (file) builder.push(`&file=${encodeURIComponent(file)}`);
   if (upload) builder.push('#upload');
   if (extract) builder.push('#extract');
-  if (rename) builder.push('#rename');
   return builder.join('');
 }
 
@@ -37,6 +34,5 @@ export default function useExplorerLocation() {
     fileParam,
     upload: location.hash === '#upload',
     extract: location.hash === '#extract',
-    rename: location.hash === '#rename',
   };
 }

@@ -13,6 +13,7 @@ export default [
       route('files', './routes/servers/$uid/files/index.tsx'),
       route('files/download', './routes/servers/$uid/files/download.ts'),
       route('files/delete', './routes/servers/$uid/files/delete.tsx'),
+      route('files/rename', './routes/servers/$uid/files/rename.tsx'),
     ]),
     route('users/new', './routes/users/new.tsx'),
   ]),

@@ -14,15 +14,11 @@ import {
 import { DownloadButton, UploadButton } from '~/components/file-explorer/buttons';
 import useExplorerLocation, { urlBuilder } from '~/hooks/file-explorer/useExplorerLocation';
 import UploadFilesModal from '~/components/file-explorer/modals/UploadFilesModal';
-import { ExtractArchiveModal, RenameFileModal } from '~/components/file-explorer/modals';
+import { ExtractArchiveModal } from '~/components/file-explorer/modals';
 import { encodePathParam } from '~/server/path-validation';
 
-type DirectoryExplorerProps = {
-  entries: FolderEntry[];
-};
-
-export default function DirectoryExplorer({ entries }: DirectoryExplorerProps) {
-  const { pathArray, pathString, fileParam, upload, extract, rename } = useExplorerLocation();
+export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] }) {
+  const { pathArray, pathString, fileParam, upload, extract } = useExplorerLocation();
   const navigate = useNavigate();
   return (
     <Stack miw={600}>
@@ -95,7 +91,7 @@ export default function DirectoryExplorer({ entries }: DirectoryExplorerProps) {
                     </ActionIcon>
                     <ActionIcon
                       component={Link}
-                      to={urlBuilder({ path: pathString, file: entry.name, rename: true })}
+                      to={`rename?path=${encodePathParam(filePath)}`}
                       color="blue"
                       type="button"
                       aria-label="Rename"
@@ -129,11 +125,6 @@ export default function DirectoryExplorer({ entries }: DirectoryExplorerProps) {
       />
       <ExtractArchiveModal
         opened={extract}
-        path={fileParam ? `${pathString}/${fileParam}` : pathString}
-        closePath={urlBuilder({ path: pathString })}
-      />
-      <RenameFileModal
-        opened={rename}
         path={fileParam ? `${pathString}/${fileParam}` : pathString}
         closePath={urlBuilder({ path: pathString })}
       />

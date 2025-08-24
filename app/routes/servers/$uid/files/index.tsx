@@ -1,5 +1,5 @@
 import type { Route } from './+types/index';
-import { extractArchive, getPath, renamePath, saveFile, uploadFiles } from '~/server/file-explorer';
+import { extractArchive, getPath, saveFile, uploadFiles } from '~/server/file-explorer';
 import {
   ArchiveViewer,
   DirectoryExplorer,
@@ -7,15 +7,10 @@ import {
   saveSchema,
 } from '~/components/file-explorer';
 import { z } from 'zod';
-import { extractSchema, renameSchema, uploadSchema } from '~/components/file-explorer/modals';
+import { extractSchema, uploadSchema } from '~/components/file-explorer/modals';
 import { parseFormData, validationError } from '@rvf/react-router';
 
-const schema = z.discriminatedUnion('type', [
-  uploadSchema,
-  extractSchema,
-  renameSchema,
-  saveSchema,
-]);
+const schema = z.discriminatedUnion('type', [uploadSchema, extractSchema, saveSchema]);
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -36,9 +31,6 @@ export async function action({ request, params }: Route.ActionArgs) {
       break;
     case 'extract':
       await extractArchive(params.uid, result.data.path, result.data.destinationDir);
-      break;
-    case 'rename':
-      await renamePath(params.uid, result.data.path, result.data.newName);
       break;
     case 'save':
       await saveFile(params.uid, result.data.path, result.data.content);
