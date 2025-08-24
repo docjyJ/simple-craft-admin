@@ -2,7 +2,8 @@ import { Button, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { z } from 'zod';
-import { cleanPath, encodePathParam, parentPath, resolveSafePath } from '~/server/path-validation';
+import { resolveSafePath } from '~/server/path-validation';
+import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
 import { rm, stat } from 'node:fs/promises';
 import type { Route } from './+types/delete';
 
@@ -66,7 +67,7 @@ export default function DeleteFileRoute({
         >
           {(form) => (
             <>
-              <input {...form.getInputProps('path', {type: "hidden"})} />
+              <input {...form.getInputProps('path', { type: 'hidden' })} />
               <Group justify="center" mt="md">
                 <Button
                   component={Link}

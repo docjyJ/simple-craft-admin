@@ -1,7 +1,8 @@
 import { Button, Group, Paper, Stack, Text, TextInput, Title } from '@mantine/core';
 import { Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { cleanPath, encodePathParam, parentPath, resolveSafePath } from '~/server/path-validation';
+import { resolveSafePath } from '~/server/path-validation';
+import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
 import { stat, rename as fsRename } from 'node:fs/promises';
 import { z } from 'zod';
 import type { Route } from './+types/rename';

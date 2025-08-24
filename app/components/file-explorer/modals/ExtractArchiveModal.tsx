@@ -36,8 +36,8 @@ export default function ExtractArchiveModal({ opened, closePath, path }: Extract
       >
         {(form) => (
           <>
-            <input {...form.getInputProps('type', {type: "hidden"})} />
-            <input {...form.getInputProps('path', {type: "hidden"})} />
+            <input {...form.getInputProps('type', { type: 'hidden' })} />
+            <input {...form.getInputProps('path', { type: 'hidden' })} />
             <TextInput
               label="Destination folder"
               placeholder="/path/inside/server"
