@@ -66,7 +66,7 @@ export default function DeleteFileRoute({
         >
           {(form) => (
             <>
-              <input type="hidden" {...form.getInputProps('path')} />
+              <input {...form.getInputProps('path', {type: "hidden"})} />
               <Group justify="center" mt="md">
                 <Button
                   component={Link}
