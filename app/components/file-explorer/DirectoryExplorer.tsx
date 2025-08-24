@@ -15,7 +15,7 @@ import { DownloadButton, UploadButton } from '~/components/file-explorer/buttons
 import useExplorerLocation, { urlBuilder } from '~/hooks/file-explorer/useExplorerLocation';
 import UploadFilesModal from '~/components/file-explorer/modals/UploadFilesModal';
 import { ExtractArchiveModal } from '~/components/file-explorer/modals';
-import {encodePathParam} from "~/utils/path-utils";
+import { encodePathParam } from '~/utils/path-utils';
 
 export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] }) {
   const { pathArray, pathString, fileParam, upload, extract } = useExplorerLocation();

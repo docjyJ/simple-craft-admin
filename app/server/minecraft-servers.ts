@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'crypto';
 import {
@@ -11,7 +11,12 @@ import {
 } from '~/server/server-status';
 import { isValidUid, resolveSafePath, root } from '~/server/path-validation';
 
-const serverProcesses: Map<string, import('child_process').ChildProcess> = new Map();
+let serverProcesses: Map<string, ChildProcess>;
+
+if (!global.__MC_PROCESS__) {
+  global.__MC_PROCESS__ = new Map();
+}
+serverProcesses = global.__MC_PROCESS__;
 
 export async function listMinecraftServers() {
   const dirs = await readdir(root, { withFileTypes: true });
