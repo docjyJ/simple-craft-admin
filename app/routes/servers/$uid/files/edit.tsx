@@ -1,11 +1,11 @@
 import { Button, Paper, Stack } from '@mantine/core';
-import { Link, redirect, Form } from 'react-router';
+import { Form, Link, redirect } from 'react-router';
 import { parseFormData, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/edit';
-import {isText, resolveSafePath} from '~/server/path-validation';
+import { isText, resolveSafePath } from '~/server/path-validation';
 import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
-import { readFile, writeFile, stat } from 'node:fs/promises';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import CodeMirror from '@uiw/react-codemirror';
 import { loadLanguage } from '@uiw/codemirror-extensions-langs';
 import { useState } from 'react';
@@ -30,7 +30,7 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
     return { path, content };
   } catch (e: any) {
     if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
-    throw e
+    throw e;
   }
 }
 
@@ -45,14 +45,17 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
       return new Response('Bad Request: not a text file', { status: 400 });
     }
     await writeFile(fullPath, result.data.content, 'utf-8');
-		return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path) || '/')}`);
+    return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path) || '/')}`);
   } catch (e: any) {
     if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
     throw e;
   }
 }
 
-export default function EditFileRoute({ loaderData: { content, path }, params: { uid } }: Route.ComponentProps) {
+export default function EditFileRoute({
+  loaderData: { content, path },
+  params: { uid },
+}: Route.ComponentProps) {
   const ext = path.split('.').pop();
   const lang = ext ? loadLanguage(ext) : null;
   const [value, setValue] = useState(content);
@@ -75,7 +78,9 @@ export default function EditFileRoute({ loaderData: { content, path }, params: {
               >
                 Cancel
               </Button>
-              <Button color="green" type="submit" leftSection={<IconDeviceFloppy />}>Save</Button>
+              <Button color="green" type="submit" leftSection={<IconDeviceFloppy />}>
+                Save
+              </Button>
             </Stack>
           </Stack>
         </Form>

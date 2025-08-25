@@ -1,6 +1,6 @@
 import type { Route } from './+types/download';
 import { resolveSafePath } from '~/server/path-validation';
-import { stat, readFile, readdir } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import JSZip from 'jszip';
 
 async function addDirToZip(dir: string, zipFolder: JSZip) {

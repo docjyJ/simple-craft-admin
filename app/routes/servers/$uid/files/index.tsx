@@ -1,19 +1,30 @@
 import type { Route } from './+types/index';
-import {cleanPath, encodePathParam} from '~/utils/path-utils';
+import { cleanPath, encodePathParam } from '~/utils/path-utils';
 import { Link, useNavigate } from 'react-router';
-import { ActionIcon, Button, Group, Paper, Stack, Table, Anchor, Breadcrumbs, Text } from '@mantine/core';
-import {isArchive, isText, resolveSafePath} from '~/server/path-validation';
+import {
+  ActionIcon,
+  Anchor,
+  Breadcrumbs,
+  Button,
+  Group,
+  Paper,
+  Stack,
+  Table,
+  Text,
+} from '@mantine/core';
+import { isArchive, isText, resolveSafePath } from '~/server/path-validation';
 import { readdir, stat } from 'node:fs/promises';
 import {
-	IconDownload,
-	IconFile,
-	IconFileZip,
-	IconFolder,
-	IconFolderUp,
-	IconPencil,
-	IconTrash,
-	IconUpload,
-	IconEdit, IconFileText,
+  IconDownload,
+  IconEdit,
+  IconFile,
+  IconFileText,
+  IconFileZip,
+  IconFolder,
+  IconFolderUp,
+  IconPencil,
+  IconTrash,
+  IconUpload,
 } from '@tabler/icons-react';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
@@ -35,10 +46,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
           : isArchive(entry.name)
             ? ('archive' as const)
             : isText(entry.name)
-							? ('text' as const)
-							: ('binary' as const),
+              ? ('text' as const)
+              : ('binary' as const),
       }))
-      .sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1));
+      .sort((a, b) =>
+        a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1,
+      );
     return { entries, path };
   } catch (e: any) {
     if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
@@ -55,7 +68,7 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
         <Paper withBorder style={{ flexGrow: 1, overflowX: 'auto' }}>
           <Breadcrumbs m="sm" style={{ flexWrap: 'nowrap' }}>
             {[...pathArray].map((seg, idx, arr) => {
-              const target = pathArray.slice(0, idx+1).join('/');
+              const target = pathArray.slice(0, idx + 1).join('/');
               return idx === arr.length - 1 ? (
                 <Text key={idx}>{idx === 0 ? 'Root' : seg}</Text>
               ) : (
@@ -106,7 +119,9 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
               return (
                 <Table.Tr
                   key={entry.name}
-                  onClick={() => entry.type === 'folder' && navigate(`?path=${encodePathParam(filePath)}`)}
+                  onClick={() =>
+                    entry.type === 'folder' && navigate(`?path=${encodePathParam(filePath)}`)
+                  }
                   style={{ cursor: entry.type === 'folder' ? 'pointer' : 'default' }}
                 >
                   <Table.Td>
@@ -115,8 +130,8 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
                     ) : entry.type === 'archive' ? (
                       <IconFileZip />
                     ) : entry.type === 'text' ? (
-											<IconFileText />
-										) : (
+                      <IconFileText />
+                    ) : (
                       <IconFile />
                     )}{' '}
                     {entry.name}

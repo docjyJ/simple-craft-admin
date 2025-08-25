@@ -3,7 +3,7 @@ import { Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { resolveSafePath } from '~/server/path-validation';
 import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
-import { stat, rename as fsRename } from 'node:fs/promises';
+import { rename as fsRename, stat } from 'node:fs/promises';
 import { z } from 'zod';
 import type { Route } from './+types/rename';
 
@@ -56,9 +56,9 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
       const parts = srcFull.split('/');
       parts.pop();
       const destFull = `${parts.join('/')}/${newName}`;
-      await fsRename(srcFull, destFull)
+      await fsRename(srcFull, destFull);
     } catch (e: any) {
-			if (e?.code === 'ENOENT') throw new Response('Not Found', { status: 404 });
+      if (e?.code === 'ENOENT') throw new Response('Not Found', { status: 404 });
       throw e;
     }
   }

@@ -1,5 +1,5 @@
 import { Button, FileInput, Group, Paper, Stack, Title } from '@mantine/core';
-import { Link, Form, redirect } from 'react-router';
+import { Form, Link, redirect } from 'react-router';
 import { parseFormData, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/upload';
@@ -40,15 +40,21 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
     if (!s.isDirectory()) {
       return new Response('Bad Request: not a directory', { status: 400 });
     }
-    await writeFile(`${dirFull}/${result.data.file.name}`, Buffer.from(await result.data.file.arrayBuffer()));
+    await writeFile(
+      `${dirFull}/${result.data.file.name}`,
+      Buffer.from(await result.data.file.arrayBuffer()),
+    );
   } catch (e: any) {
     if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
-		throw e;
+    throw e;
   }
   return redirect(`/servers/${uid}/files?path=${encodePathParam(dirPath)}`);
 }
 
-export default function UploadFileRoute({ loaderData: { path, folderName }, params: { uid } }: Route.ComponentProps) {
+export default function UploadFileRoute({
+  loaderData: { path, folderName },
+  params: { uid },
+}: Route.ComponentProps) {
   return (
     <Paper withBorder maw={500}>
       <Stack gap="lg" m="md">

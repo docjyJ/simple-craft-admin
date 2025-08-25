@@ -25,8 +25,8 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
     const fileName = path.split('/').pop() || 'Unknown';
     return { isFolder: s.isDirectory(), parent, fileName };
   } catch (e: any) {
-		if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
-		throw e
+    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+    throw e;
   }
 }
 
@@ -40,10 +40,10 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   try {
     const fullPath = resolveSafePath(uid, path);
     await rm(fullPath, { recursive: true, force: false });
-		return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path))}`);
+    return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path))}`);
   } catch (e: any) {
     if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
-		throw e;
+    throw e;
   }
 }
 

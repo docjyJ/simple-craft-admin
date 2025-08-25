@@ -4,9 +4,9 @@ import { Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/extract';
-import {isArchive, resolveSafePath} from '~/server/path-validation';
+import { isArchive, resolveSafePath } from '~/server/path-validation';
 import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
-import { stat, readFile, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 const schema = z.object({
@@ -60,7 +60,7 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
         await writeFile(filePath, await entry.async('nodebuffer'));
       }
     }
-		return redirect(`/servers/${uid}/files?path=${encodePathParam(destinationDir)}`);
+    return redirect(`/servers/${uid}/files?path=${encodePathParam(destinationDir)}`);
   } catch (e: any) {
     if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
     throw e;
