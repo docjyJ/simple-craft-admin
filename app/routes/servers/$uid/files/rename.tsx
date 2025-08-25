@@ -1,5 +1,5 @@
 import { Button, Group, Paper, Stack, Text, TextInput, Title } from '@mantine/core';
-import { Link, redirect } from 'react-router';
+import { data, Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { resolveSafePath } from '~/server/path-validation';
 import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
@@ -17,18 +17,16 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   const raw = url.searchParams.get('path') || '/';
   const path = cleanPath(raw);
   if (path === '/') {
-    return new Response('Forbidden: cannot rename root', { status: 403 });
+    throw data('Forbidden: cannot rename root', { status: 403 });
   }
-  try {
-    const fullPath = resolveSafePath(uid, path);
-    const s = await stat(fullPath);
-    const parent = parentPath(path);
-    const fileName = path.split('/').pop() || 'Unknown';
-    return { isFolder: s.isDirectory(), parent, fileName, path };
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+  const fullPath = resolveSafePath(uid, path);
+  const s = await stat(fullPath).catch((e) => {
+    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
     throw e;
-  }
+  });
+  const parent = parentPath(path);
+  const fileName = path.split('/').pop() || 'Unknown';
+  return { isFolder: s.isDirectory(), parent, fileName, path };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
@@ -36,7 +34,7 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   if (result.error) return validationError(result.error, result.submittedData);
   const sourcePath = cleanPath(result.data.path);
   if (sourcePath === '/') {
-    return new Response('Forbidden: cannot rename root', { status: 403 });
+    throw data('Forbidden: cannot rename root', { status: 403 });
   }
   const parent = parentPath(sourcePath);
   const currentName = sourcePath.split('/').pop();

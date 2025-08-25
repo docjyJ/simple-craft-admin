@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import { Button, Group, Paper, Stack, Text, TextInput, Title } from '@mantine/core';
-import { Link, redirect } from 'react-router';
+import { data, Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/extract';
@@ -18,21 +18,19 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const raw = url.searchParams.get('path') || '/';
   const path = cleanPath(raw);
-  try {
-    const fullPath = resolveSafePath(uid, path);
-    const s = await stat(fullPath);
-    if (!s.isFile() || !isArchive(fullPath)) {
-      return new Response('Bad Request: not an archive', { status: 400 });
-    }
-    const parent = parentPath(path);
-    const fileName = path.split('/').pop() || 'archive.zip';
-    const baseName = fileName.endsWith('.zip') ? fileName.slice(0, -4) : fileName;
-    const defaultDestination = `${parent}/${baseName}`;
-    return { parent, fileName, path, defaultDestination };
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
-    return new Response('Not Found', { status: 404 });
+  const fullPath = resolveSafePath(uid, path);
+  const s = await stat(fullPath).catch((e) => {
+    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
+    throw e;
+  });
+  if (!s.isFile() || !isArchive(fullPath)) {
+    throw data('Bad Request: not an archive', { status: 400 });
   }
+  const parent = parentPath(path);
+  const fileName = path.split('/').pop() || 'archive.zip';
+  const baseName = fileName.endsWith('.zip') ? fileName.slice(0, -4) : fileName;
+  const defaultDestination = `${parent}/${baseName}`;
+  return { parent, fileName, path, defaultDestination };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
@@ -40,31 +38,29 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   if (result.error) return validationError(result.error, result.submittedData);
   const archivePath = cleanPath(result.data.path);
   const destinationDir = cleanPath(result.data.destinationDir);
-  try {
-    const fullArchivePath = resolveSafePath(uid, archivePath);
-    const s = await stat(fullArchivePath);
-    if (!s.isFile() || !isArchive(fullArchivePath)) {
-      return new Response('Bad Request: not an archive', { status: 400 });
-    }
-    const buffer = await readFile(fullArchivePath);
-    const destinationFull = resolveSafePath(uid, destinationDir);
-    await mkdir(destinationFull, { recursive: true });
-
-    const zip = await JSZip.loadAsync(buffer);
-    for (const entry of Object.values(zip.files)) {
-      const filePath = `${destinationFull}/${entry.name}`;
-      if (entry.dir) {
-        await mkdir(filePath, { recursive: true });
-      } else {
-        await mkdir(dirname(filePath), { recursive: true });
-        await writeFile(filePath, await entry.async('nodebuffer'));
-      }
-    }
-    return redirect(`/servers/${uid}/files?path=${encodePathParam(destinationDir)}`);
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+  const fullArchivePath = resolveSafePath(uid, archivePath);
+  const s = await stat(fullArchivePath).catch((e) => {
+    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
     throw e;
+  });
+  if (!s.isFile() || !isArchive(fullArchivePath)) {
+    throw data('Bad Request: not an archive', { status: 400 });
   }
+  const buffer = await readFile(fullArchivePath);
+  const destinationFull = resolveSafePath(uid, destinationDir);
+  await mkdir(destinationFull, { recursive: true });
+
+  const zip = await JSZip.loadAsync(buffer);
+  for (const entry of Object.values(zip.files)) {
+    const filePath = `${destinationFull}/${entry.name}`;
+    if (entry.dir) {
+      await mkdir(filePath, { recursive: true });
+    } else {
+      await mkdir(dirname(filePath), { recursive: true });
+      await writeFile(filePath, await entry.async('nodebuffer'));
+    }
+  }
+  return redirect(`/servers/${uid}/files?path=${encodePathParam(destinationDir)}`);
 }
 
 export default function ExtractArchiveRoute({

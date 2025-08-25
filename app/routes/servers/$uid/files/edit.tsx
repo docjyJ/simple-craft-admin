@@ -1,5 +1,5 @@
 import { Button, Paper, Stack } from '@mantine/core';
-import { Form, Link, redirect } from 'react-router';
+import { data, Form, Link, redirect } from 'react-router';
 import { parseFormData, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/edit';
@@ -20,36 +20,32 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const raw = url.searchParams.get('path') || '/';
   const path = cleanPath(raw);
-  try {
-    const fullPath = resolveSafePath(uid, path);
-    const s = await stat(fullPath);
-    if (!s.isFile() || !isText(path)) {
-      return new Response('Bad Request: not a text file', { status: 400 });
-    }
-    const content = await readFile(fullPath, 'utf-8');
-    return { path, content };
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+  const fullPath = resolveSafePath(uid, path);
+  const s = await stat(fullPath).catch((e) => {
+    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
     throw e;
+  });
+  if (!s.isFile() || !isText(path)) {
+    throw data('Bad Request: not a text file', { status: 400 });
   }
+  const content = await readFile(fullPath, 'utf-8');
+  return { path, content };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
   const result = await parseFormData(request, saveSchema);
   if (result.error) return validationError(result.error, result.submittedData);
   const path = cleanPath(result.data.path);
-  try {
-    const fullPath = resolveSafePath(uid, path);
-    const s = await stat(fullPath);
-    if (!s.isFile() || !isText(path)) {
-      return new Response('Bad Request: not a text file', { status: 400 });
-    }
-    await writeFile(fullPath, result.data.content, 'utf-8');
-    return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path) || '/')}`);
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+  const fullPath = resolveSafePath(uid, path);
+  const s = await stat(fullPath).catch((e) => {
+    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
     throw e;
+  });
+  if (!s.isFile() || !isText(path)) {
+    throw data('Bad Request: not a text file', { status: 400 });
   }
+  await writeFile(fullPath, result.data.content, 'utf-8');
+  return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path) || '/')}`);
 }
 
 export default function EditFileRoute({

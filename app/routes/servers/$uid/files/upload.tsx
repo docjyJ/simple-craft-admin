@@ -1,5 +1,5 @@
 import { Button, FileInput, Group, Paper, Stack, Title } from '@mantine/core';
-import { Form, Link, redirect } from 'react-router';
+import { data, Form, Link, redirect } from 'react-router';
 import { parseFormData, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/upload';
@@ -16,38 +16,34 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const raw = url.searchParams.get('path') || '/';
   const path = cleanPath(raw);
-  try {
-    const fullPath = resolveSafePath(uid, path);
-    const s = await stat(fullPath);
-    if (!s.isDirectory()) {
-      return new Response('Bad Request: not a directory', { status: 400 });
-    }
-    const folderName = path === '/' ? 'Root' : path.split('/').pop() || 'Folder';
-    return { path, folderName };
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+  const fullPath = resolveSafePath(uid, path);
+  const s = await stat(fullPath).catch((e) => {
+    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
     throw e;
+  });
+  if (!s.isDirectory()) {
+    throw data('Bad Request: not a directory', { status: 400 });
   }
+  const folderName = path === '/' ? 'Root' : path.split('/').pop() || 'Folder';
+  return { path, folderName };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
   const result = await parseFormData(request, schema);
   if (result.error) return validationError(result.error, result.submittedData);
   const dirPath = cleanPath(result.data.path);
-  try {
-    const dirFull = resolveSafePath(uid, dirPath);
-    const s = await stat(dirFull);
-    if (!s.isDirectory()) {
-      return new Response('Bad Request: not a directory', { status: 400 });
-    }
-    await writeFile(
-      `${dirFull}/${result.data.file.name}`,
-      Buffer.from(await result.data.file.arrayBuffer()),
-    );
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+  const dirFull = resolveSafePath(uid, dirPath);
+  const s = await stat(dirFull).catch((e) => {
+    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
     throw e;
+  });
+  if (!s.isDirectory()) {
+    throw data('Bad Request: not a directory', { status: 400 });
   }
+  await writeFile(
+    `${dirFull}/${result.data.file.name}`,
+    Buffer.from(await result.data.file.arrayBuffer()),
+  );
   return redirect(`/servers/${uid}/files?path=${encodePathParam(dirPath)}`);
 }
 

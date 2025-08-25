@@ -1,6 +1,6 @@
 import type { Route } from './+types/index';
 import { cleanPath, encodePathParam } from '~/utils/path-utils';
-import { Link, useNavigate } from 'react-router';
+import { data, Link, useNavigate } from 'react-router';
 import {
   ActionIcon,
   Anchor,
@@ -31,32 +31,30 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const rawPath = url.searchParams.get('path') || '';
   const path = cleanPath(rawPath);
-  try {
-    const fullPath = resolveSafePath(params.uid, path);
-    const s = await stat(fullPath);
-    if (!s.isDirectory()) {
-      return new Response('Bad Request: not a directory', { status: 400 });
-    }
-    const dirEntries = await readdir(fullPath, { withFileTypes: true });
-    const entries = dirEntries
-      .map((entry) => ({
-        name: entry.name,
-        type: entry.isDirectory()
-          ? ('folder' as const)
-          : isArchive(entry.name)
-            ? ('archive' as const)
-            : isText(entry.name)
-              ? ('text' as const)
-              : ('binary' as const),
-      }))
-      .sort((a, b) =>
-        a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1,
-      );
-    return { entries, path };
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+  const fullPath = resolveSafePath(params.uid, path);
+  const s = await stat(fullPath).catch((e) => {
+    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
     throw e;
+  });
+  if (!s.isDirectory()) {
+    throw data('Bad Request: not a directory', { status: 400 });
   }
+  const dirEntries = await readdir(fullPath, { withFileTypes: true });
+  const entries = dirEntries
+    .map((entry) => ({
+      name: entry.name,
+      type: entry.isDirectory()
+        ? ('folder' as const)
+        : isArchive(entry.name)
+          ? ('archive' as const)
+          : isText(entry.name)
+            ? ('text' as const)
+            : ('binary' as const),
+    }))
+    .sort((a, b) =>
+      a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1,
+    );
+  return { entries, path };
 }
 
 export default function FileExplorerIndex({ loaderData: { entries, path } }: Route.ComponentProps) {
