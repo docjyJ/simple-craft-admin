@@ -27,24 +27,16 @@ export class ServerMinecraft {
     this.path = resolveSafePath(uid, '');
   }
 
-  private serverPropertiesFile() {
-    return resolveSafePath(this.uid, 'server.properties');
-  }
-  private sacPropertiesFile() {
-    return resolveSafePath(this.uid, 'sac.properties');
-  }
-  private serverIconFile() {
-    return resolveSafePath(this.uid, 'server-icon.png');
+  get history(): LogLine[] {
+    return this.logHistory;
   }
 
   async init({ name }: { name: string }) {
     await mkdir(this.path, { recursive: true });
-    await writeFile(this.sacPropertiesFile(), `name=${name}\njar_url=\n`, { flag: 'w' });
-    await writeFile(this.serverPropertiesFile(), `motd=${name}\nmax-players=20\nserver-port=25565\n`, { flag: 'w' });
-  }
-
-  get history(): LogLine[] {
-    return this.logHistory;
+    await writeFile(`${this.path}/sac.properties`, `name=${name}\njar_url=\n`, { flag: 'w' });
+    await writeFile(`${this.path}/server.properties`, `motd=${name}\nmax-players=20\nserver-port=25565\n`, {
+      flag: 'w',
+    });
   }
 
   isRunning() {
@@ -52,8 +44,8 @@ export class ServerMinecraft {
   }
 
   async getServerData() {
-    const serverProperties = await getServerProperties(this.serverPropertiesFile());
-    const sacProperties = await getSacProperties(this.sacPropertiesFile());
+    const serverProperties = await getServerProperties(`${this.path}/server.properties`);
+    const sacProperties = await getSacProperties(`${this.path}/sac.properties`);
     const serverStatus = this.isRunning() ? await getServerStatus(serverProperties.server_port) : null;
     if (serverStatus) {
       return {
@@ -72,7 +64,7 @@ export class ServerMinecraft {
       is_online: false,
       motd: serverProperties.motd,
       max_players: serverProperties.max_players,
-      server_icon: await getServerIcon(this.serverIconFile()),
+      server_icon: await getServerIcon(`${this.path}/server-icon.png`),
       name: sacProperties.name,
       server_port: serverProperties.server_port,
       jar_url: sacProperties.jar_url,
@@ -80,40 +72,8 @@ export class ServerMinecraft {
   }
 
   async updateConfig({ name, server_port, jar_url }: { name: string; server_port: number; jar_url: string }) {
-    await editServerProperties(this.serverPropertiesFile(), { server_port });
-    await editSacProperties(this.sacPropertiesFile(), { name: name.trim(), jar_url });
-  }
-
-  private pushLine(line: LogLine) {
-    this.logHistory.push(line);
-    this.emitter.emit('line', line);
-  }
-
-  private handleErrChunk(chunk: string) {
-    this.stderrBuf += chunk.replace(/\r/g, '');
-    let idx: number;
-    while ((idx = this.stderrBuf.indexOf('\n')) !== -1) {
-      const line = this.stderrBuf.slice(0, idx).replace(/\r$/, '');
-      this.stderrBuf = this.stderrBuf.slice(idx + 1);
-      this.pushLine({ err: line });
-    }
-  }
-
-  private handleOutChunk(chunk: string) {
-    this.stdoutBuf += chunk.replace(/\r/g, '');
-    let idx: number;
-    while ((idx = this.stdoutBuf.indexOf('\n')) !== -1) {
-      const line = this.stdoutBuf.slice(0, idx);
-      this.stdoutBuf = this.stdoutBuf.slice(idx + 1);
-      this.pushLine({ out: line });
-    }
-  }
-
-  private clean() {
-    this.proc = null;
-    this.logHistory = [];
-    this.stdoutBuf = '';
-    this.stderrBuf = '';
+    await editServerProperties(`${this.path}/server.properties`, { server_port });
+    await editSacProperties(`${this.path}/sac.properties`, { name: name.trim(), jar_url });
   }
 
   start() {
@@ -160,6 +120,38 @@ export class ServerMinecraft {
   onLine(listener: (line: LogLine) => void) {
     this.emitter.on('line', listener);
     return () => this.emitter.off('line', listener);
+  }
+
+  private pushLine(line: LogLine) {
+    this.logHistory.push(line);
+    this.emitter.emit('line', line);
+  }
+
+  private handleErrChunk(chunk: string) {
+    this.stderrBuf += chunk.replace(/\r/g, '');
+    let idx: number;
+    while ((idx = this.stderrBuf.indexOf('\n')) !== -1) {
+      const line = this.stderrBuf.slice(0, idx).replace(/\r$/, '');
+      this.stderrBuf = this.stderrBuf.slice(idx + 1);
+      this.pushLine({ err: line });
+    }
+  }
+
+  private handleOutChunk(chunk: string) {
+    this.stdoutBuf += chunk.replace(/\r/g, '');
+    let idx: number;
+    while ((idx = this.stdoutBuf.indexOf('\n')) !== -1) {
+      const line = this.stdoutBuf.slice(0, idx);
+      this.stdoutBuf = this.stdoutBuf.slice(idx + 1);
+      this.pushLine({ out: line });
+    }
+  }
+
+  private clean() {
+    this.proc = null;
+    this.logHistory = [];
+    this.stdoutBuf = '';
+    this.stderrBuf = '';
   }
 }
 

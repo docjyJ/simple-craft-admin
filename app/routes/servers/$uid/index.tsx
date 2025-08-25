@@ -1,4 +1,4 @@
-import { Button, Group, Stack, TextInput, Text, Paper } from '@mantine/core';
+import { Button, Group, Paper, Stack, Text, TextInput } from '@mantine/core';
 import { IconSend } from '@tabler/icons-react';
 import type { Route } from './+types/index';
 import { useCallback, useEffect, useRef, useState } from 'react';
