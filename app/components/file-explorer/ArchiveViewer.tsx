@@ -1,21 +1,33 @@
-import { DownloadButton } from '~/components/file-explorer/buttons';
-import { Stack, Text } from '@mantine/core';
+import { Stack, Text, Button } from '@mantine/core';
 import HeaderExplorer from '~/components/file-explorer/HeaderExplorer';
-import useExplorerLocation, { urlBuilder } from '~/hooks/file-explorer/useExplorerLocation';
+import { useLocation, Link } from 'react-router';
+import { IconDownload } from '@tabler/icons-react';
+import { encodePathParam } from '~/utils/path-utils';
 
 type ArchiveViewerProps = {
   archiveFiles: string[];
 };
 
 export default function ArchiveViewer({ archiveFiles }: ArchiveViewerProps) {
-  const { pathString, pathArray } = useExplorerLocation();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const pathArray = (searchParams.get('path') ?? '').split('/').filter(Boolean);
+  const pathString = '/' + pathArray.join('/');
   return (
     <Stack>
       <HeaderExplorer
         leftSection={
-          <>
-            <DownloadButton isFile={true} to={urlBuilder({ path: pathString, download: true })} />
-          </>
+          <Button
+            component={Link}
+            to={`download?path=${encodePathParam(pathString)}`}
+            download
+            reloadDocument
+            color="blue"
+            aria-label="Download archive"
+            leftSection={<IconDownload />}
+          >
+            Download
+          </Button>
         }
         pathArray={pathArray}
       />

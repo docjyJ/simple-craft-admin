@@ -1,13 +1,12 @@
 import { Button, Stack } from '@mantine/core';
 import HeaderExplorer from '~/components/file-explorer/HeaderExplorer';
-import { DownloadButton } from '~/components/file-explorer/buttons';
-import useExplorerLocation, { urlBuilder } from '~/hooks/file-explorer/useExplorerLocation';
 import CodeMirror from '@uiw/react-codemirror';
 import { loadLanguage } from '@uiw/codemirror-extensions-langs';
 import { useState } from 'react';
 import { z } from 'zod';
-import { Form } from 'react-router';
-import { IconDeviceFloppy } from '@tabler/icons-react';
+import { Form, Link, useLocation } from 'react-router';
+import { IconDeviceFloppy, IconDownload } from '@tabler/icons-react';
+import { encodePathParam } from '~/utils/path-utils';
 
 type FileEditorProps = {
   fileContent: string;
@@ -20,7 +19,10 @@ export const saveSchema = z.object({
 });
 
 export default function FileEditor({ fileContent }: FileEditorProps) {
-  const { pathArray, pathString } = useExplorerLocation();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const pathArray = (searchParams.get('path') ?? '').split('/').filter(Boolean);
+  const pathString = '/' + pathArray.join('/');
 
   const ext = pathString.split('.').pop();
 
@@ -33,8 +35,18 @@ export default function FileEditor({ fileContent }: FileEditorProps) {
       <HeaderExplorer
         leftSection={
           <>
-            <DownloadButton isFile={true} to={urlBuilder({ path: pathString, download: true })} />
-            <Form action={urlBuilder({ path: pathString })} method="POST">
+            <Button
+              component={Link}
+              to={`download?path=${encodePathParam(pathString)}`}
+              download
+              reloadDocument
+              color="blue"
+              aria-label="Download file"
+              leftSection={<IconDownload />}
+            >
+              Download
+            </Button>
+            <Form action={`?path=${encodePathParam(pathString)}`} method="POST">
               <input type="hidden" name="type" value="save" />
               <input type="hidden" name="path" value={pathString} />
               <input type="hidden" name="content" value={value} />

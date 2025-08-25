@@ -1,5 +1,5 @@
 import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
-import { getRelativePath, resolveSafePath } from '~/server/path-validation';
+import { resolveSafePath } from '~/server/path-validation';
 import JSZip from 'jszip';
 
 export type FolderEntry = {
@@ -13,25 +13,6 @@ async function buildZipTree(path: string) {
   const tree: string[] = [];
   zip.forEach((relativePath) => tree.push(relativePath));
   return tree;
-}
-
-async function addDirToZip(dir: string, zipFolder: JSZip) {
-  const entries = await readdir(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const entryPath = `${dir}/${entry.name}`;
-    if (entry.isDirectory()) {
-      await addDirToZip(entryPath, zipFolder.folder(entry.name)!);
-    } else {
-      const fileData = await readFile(entryPath);
-      zipFolder.file(entry.name, fileData);
-    }
-  }
-}
-
-async function createZipFromDir(inputPath: string) {
-  const zip = new JSZip();
-  await addDirToZip(inputPath, zip);
-  return zip.generateAsync({ type: 'nodebuffer' });
 }
 
 export async function getPath(uid: string, inputPath: string) {
@@ -58,28 +39,6 @@ export async function getPath(uid: string, inputPath: string) {
   } else {
     const content = await readFile(fullPath, 'utf-8');
     return { type: 'file' as const, content };
-  }
-}
-
-export async function downloadPath(uid: string, relPath: string) {
-  const fullPath = resolveSafePath(uid, relPath);
-  const relativePath = getRelativePath(uid, fullPath);
-  const fileName = relativePath === '/' ? 'Root' : relativePath.split('/').pop() || 'Unknown';
-  const s = await stat(fullPath);
-  if (s.isDirectory()) {
-    const content = await createZipFromDir(fullPath);
-    return {
-      content,
-      name: `${fileName}.zip`,
-      contentType: 'application/zip',
-    };
-  } else {
-    const content = await readFile(fullPath);
-    return {
-      content,
-      name: fileName,
-      contentType: 'application/octet-stream',
-    };
   }
 }
 

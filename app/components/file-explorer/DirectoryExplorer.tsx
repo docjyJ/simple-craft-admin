@@ -1,5 +1,5 @@
 import type { FolderEntry } from '~/server/file-explorer';
-import { Link, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { ActionIcon, Group, Stack, Table, Button } from '@mantine/core';
 import HeaderExplorer from '~/components/file-explorer/HeaderExplorer';
 import {
@@ -12,19 +12,30 @@ import {
   IconTrash,
   IconUpload,
 } from '@tabler/icons-react';
-import { DownloadButton } from '~/components/file-explorer/buttons';
-import useExplorerLocation, { urlBuilder } from '~/hooks/file-explorer/useExplorerLocation';
 import { encodePathParam } from '~/utils/path-utils';
 
 export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] }) {
-  const { pathArray, pathString } = useExplorerLocation();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const pathArray = (searchParams.get('path') ?? '').split('/').filter(Boolean);
+  const pathString = '/' + pathArray.join('/');
   const navigate = useNavigate();
   return (
     <Stack miw={600}>
       <HeaderExplorer
         leftSection={
           <>
-            <DownloadButton isFile={false} to={urlBuilder({ path: pathString, download: true })} />
+            <Button
+              component={Link}
+              to={`download?path=${encodePathParam(pathString)}`}
+              download
+              reloadDocument
+              color="blue"
+              aria-label="Download folder"
+              leftSection={<IconDownload />}
+            >
+              Download
+            </Button>
             <Button
               component={Link}
               to={`upload?path=${encodePathParam(pathString)}`}
@@ -52,7 +63,7 @@ export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] 
             return (
               <Table.Tr
                 key={entry.name}
-                onClick={() => navigate(urlBuilder({ path: filePath }))}
+                onClick={() => navigate(`?path=${encodePathParam(filePath)}`)}
                 style={{ cursor: 'pointer' }}
               >
                 <Table.Td>
@@ -86,7 +97,7 @@ export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] 
                     </ActionIcon>
                     <ActionIcon
                       component={Link}
-                      to={urlBuilder({ path: filePath, download: true })}
+                      to={`download?path=${encodePathParam(filePath)}`}
                       download
                       reloadDocument
                       color="blue"
