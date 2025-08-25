@@ -166,9 +166,6 @@ export async function createMinecraftServer({ name }: { name: string }) {
   // Fichier sac.properties minimal
   await writeFile(resolveSafePath(uid, 'sac.properties'), `name=${name}\njar_url=\n`);
   // Fichier server.properties minimal
-  await writeFile(
-    resolveSafePath(uid, 'server.properties'),
-    `motd=${name}\nmax-players=20\nserver-port=25565\n`,
-  );
+  await writeFile(resolveSafePath(uid, 'server.properties'), `motd=${name}\nmax-players=20\nserver-port=25565\n`);
   return uid;
 }

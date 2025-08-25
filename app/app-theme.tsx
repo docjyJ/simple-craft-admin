@@ -1,9 +1,4 @@
-import {
-  createTheme,
-  DEFAULT_THEME,
-  MantineProvider,
-  type MantineProviderProps,
-} from '@mantine/core';
+import { createTheme, DEFAULT_THEME, MantineProvider, type MantineProviderProps } from '@mantine/core';
 
 export const appTheme = createTheme({
   colors: {

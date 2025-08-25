@@ -16,9 +16,7 @@ describe('isValidUid', () => {
 describe('resolveSafePath', () => {
   it('valid path', () => {
     expect(resolveSafePath('abc-123', '/server.jar')).toBe(`${root}/abc-123/server.jar`);
-    expect(resolveSafePath('abc-123', 'plugins/plugin.jar')).toBe(
-      `${root}/abc-123/plugins/plugin.jar`,
-    );
+    expect(resolveSafePath('abc-123', 'plugins/plugin.jar')).toBe(`${root}/abc-123/plugins/plugin.jar`);
     expect(resolveSafePath('abc-123', './config.yml')).toBe(`${root}/abc-123/config.yml`);
     expect(resolveSafePath('abc-123', 'data/../server.jar')).toBe(`${root}/abc-123/server.jar`);
   });
@@ -46,9 +44,7 @@ describe('resolveSafePath', () => {
 describe('relativePath', () => {
   it('valid relative path', () => {
     expect(getRelativePath('abc-123', `${root}/abc-123/server.jar`)).toBe('/server.jar');
-    expect(getRelativePath('abc-123', `${root}/abc-123/plugins/plugin.jar`)).toBe(
-      '/plugins/plugin.jar',
-    );
+    expect(getRelativePath('abc-123', `${root}/abc-123/plugins/plugin.jar`)).toBe('/plugins/plugin.jar');
     expect(getRelativePath('abc-123', `${root}/abc-123/config.yml`)).toBe('/config.yml');
     expect(getRelativePath('abc-123', `${root}/abc-123`)).toBe('/');
   });

@@ -3,16 +3,7 @@ import type { Route } from './+types/new';
 import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { createNewUser, getUser, getUserByUsername } from '~/server/session';
-import {
-  Button,
-  Container,
-  Paper,
-  PasswordInput,
-  Radio,
-  Stack,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Button, Container, Paper, PasswordInput, Radio, Stack, TextInput, Title } from '@mantine/core';
 
 const schema = z.object({
   username: z.string().min(1, 'The username is required'),

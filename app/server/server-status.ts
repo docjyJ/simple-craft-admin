@@ -148,10 +148,7 @@ export async function getSacProperties(server_folder: string) {
     .catch(defaultIfFileNotExist(properties));
 }
 
-export async function editServerProperties(
-  server_folder: string,
-  properties: Partial<ServerProperties>,
-) {
+export async function editServerProperties(server_folder: string, properties: Partial<ServerProperties>) {
   const filePath = resolve(server_folder, 'server.properties');
 
   return readFile(filePath, 'utf8')

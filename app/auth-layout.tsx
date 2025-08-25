@@ -25,12 +25,7 @@ export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
       <AppShell.Header>
         <Group justify="space-between" w="100%" px="md">
           <Group>
-            <Burger
-              opened={opened}
-              onClick={() => setOpened((o) => !o)}
-              hiddenFrom="sm"
-              size="sm"
-            />
+            <Burger opened={opened} onClick={() => setOpened((o) => !o)} hiddenFrom="sm" size="sm" />
             <div>SimpleCraftAdmin</div>
           </Group>
           <Group>

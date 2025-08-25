@@ -1,11 +1,6 @@
 import type { Route } from './+types/$uid';
 import { Form, Outlet, useLocation, useNavigate } from 'react-router';
-import {
-  forceKill,
-  getServerData,
-  isRunning,
-  startMinecraftServer,
-} from '~/server/minecraft-servers';
+import { forceKill, getServerData, isRunning, startMinecraftServer } from '~/server/minecraft-servers';
 import { Button, Group, Paper, Stack, Tabs, Text } from '@mantine/core';
 import { IconPlayerStop, IconPower } from '@tabler/icons-react';
 import ServerUser from '~/components/ServerUser';
@@ -41,15 +36,8 @@ export default function ServerLayout({
     <Stack h="100%" justify="space-between" p="md">
       <Paper withBorder p="md">
         <Group justify="space-between">
-          <ServerUser
-            name={server_data.name}
-            motd={server_data.motd}
-            icon={server_data.server_icon}
-          />
-          <ServerPlayerCount
-            max_players={server_data.max_players}
-            online_players={server_data.online_players}
-          />
+          <ServerUser name={server_data.name} motd={server_data.motd} icon={server_data.server_icon} />
+          <ServerPlayerCount max_players={server_data.max_players} online_players={server_data.online_players} />
           <Text fz="sm">{server_data.server_version ?? 'Unknown'}</Text>
           <Form method="post">
             <Button

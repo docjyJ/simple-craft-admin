@@ -69,11 +69,7 @@ export default function SettingsServer({ loaderData: { serverData } }: Route.Com
               error={form.error('jar_url')}
               {...form.getInputProps('jar_url')}
             />
-            <Button
-              type="submit"
-              leftSection={<IconDeviceFloppy size={18} />}
-              loading={form.formState.isSubmitting}
-            >
+            <Button type="submit" leftSection={<IconDeviceFloppy size={18} />} loading={form.formState.isSubmitting}>
               Save Settings
             </Button>
 

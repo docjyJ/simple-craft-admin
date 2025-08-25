@@ -1,17 +1,6 @@
 import { createMinecraftServer, fullListMinecraftServers } from '~/server/minecraft-servers';
 import type { Route } from './+types/index';
-import {
-  ActionIcon,
-  Badge,
-  Button,
-  Group,
-  Modal,
-  Paper,
-  Stack,
-  Table,
-  Text,
-  TextInput,
-} from '@mantine/core';
+import { ActionIcon, Badge, Button, Group, Modal, Paper, Stack, Table, Text, TextInput } from '@mantine/core';
 import { IconAccessPoint, IconAccessPointOff, IconEdit } from '@tabler/icons-react';
 import { Link, redirect } from 'react-router';
 import ServerUser from '~/components/ServerUser';
@@ -43,17 +32,10 @@ export default function ServersIndex({ loaderData: { servers } }: Route.Componen
   const rows = servers.map(({ uid, server_data }) => (
     <Table.Tr key={uid}>
       <Table.Td>
-        <ServerUser
-          name={server_data.name}
-          motd={server_data.motd}
-          icon={server_data.server_icon}
-        />
+        <ServerUser name={server_data.name} motd={server_data.motd} icon={server_data.server_icon} />
       </Table.Td>
       <Table.Td>
-        <ServerPlayerCount
-          max_players={server_data.max_players}
-          online_players={server_data.online_players}
-        />
+        <ServerPlayerCount max_players={server_data.max_players} online_players={server_data.online_players} />
       </Table.Td>
       <Table.Td>
         <Text fz="sm">{server_data.server_version ?? 'Unknown'}</Text>
@@ -101,11 +83,7 @@ export default function ServersIndex({ loaderData: { servers } }: Route.Componen
                 <Button type="submit" color="blue" loading={form.formState.isSubmitting}>
                   Create
                 </Button>
-                <Button
-                  variant="outline"
-                  loading={form.formState.isSubmitting}
-                  onClick={() => setOpened(false)}
-                >
+                <Button variant="outline" loading={form.formState.isSubmitting} onClick={() => setOpened(false)}>
                   Cancel
                 </Button>
               </Group>

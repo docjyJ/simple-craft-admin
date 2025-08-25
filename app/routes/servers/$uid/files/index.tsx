@@ -1,17 +1,7 @@
 import type { Route } from './+types/index';
 import { cleanPath, encodePathParam, isArchive, isText } from '~/utils/path-utils';
 import { data, Link, useNavigate } from 'react-router';
-import {
-  ActionIcon,
-  Anchor,
-  Breadcrumbs,
-  Button,
-  Group,
-  Paper,
-  Stack,
-  Table,
-  Text,
-} from '@mantine/core';
+import { ActionIcon, Anchor, Breadcrumbs, Button, Group, Paper, Stack, Table, Text } from '@mantine/core';
 import { getStat, resolveSafePath } from '~/server/path-validation';
 import { readdir } from 'node:fs/promises';
 import {
@@ -48,9 +38,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             ? ('text' as const)
             : ('binary' as const),
     }))
-    .sort((a, b) =>
-      a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1,
-    );
+    .sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1));
   return { entries, path };
 }
 
@@ -67,11 +55,7 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
               return idx === arr.length - 1 ? (
                 <Text key={idx}>{idx === 0 ? 'Root' : seg}</Text>
               ) : (
-                <Anchor
-                  key={idx}
-                  component={Link}
-                  to={`?path=${encodePathParam(target === '' ? '/' : target)}`}
-                >
+                <Anchor key={idx} component={Link} to={`?path=${encodePathParam(target === '' ? '/' : target)}`}>
                   {idx === 0 ? 'Root' : seg}
                 </Anchor>
               );
@@ -114,9 +98,7 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
               return (
                 <Table.Tr
                   key={entry.name}
-                  onClick={() =>
-                    entry.type === 'folder' && navigate(`?path=${encodePathParam(filePath)}`)
-                  }
+                  onClick={() => entry.type === 'folder' && navigate(`?path=${encodePathParam(filePath)}`)}
                   style={{ cursor: entry.type === 'folder' ? 'pointer' : 'default' }}
                 >
                   <Table.Td>
