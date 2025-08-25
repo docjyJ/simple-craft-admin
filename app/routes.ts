@@ -14,6 +14,7 @@ export default [
       route('files/download', './routes/servers/$uid/files/download.ts'),
       route('files/delete', './routes/servers/$uid/files/delete.tsx'),
       route('files/rename', './routes/servers/$uid/files/rename.tsx'),
+      route('files/edit', './routes/servers/$uid/files/edit.tsx'),
       route('files/extract', './routes/servers/$uid/files/extract.tsx'),
       route('files/upload', './routes/servers/$uid/files/upload.tsx'),
     ]),

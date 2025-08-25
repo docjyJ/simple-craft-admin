@@ -1,38 +1,28 @@
 import type { Route } from './+types/index';
-import { getPath, saveFile } from '~/server/file-explorer';
-import {
-  ArchiveViewer,
-  DirectoryExplorer,
-  FileEditor,
-  saveSchema,
-} from '~/components/file-explorer';
-import { parseFormData, validationError } from '@rvf/react-router';
-
-const schema = saveSchema; // Only save handled here now
+import { getPath } from '~/server/file-explorer';
+import { ArchiveViewer, DirectoryExplorer } from '~/components/file-explorer';
+import { encodePathParam } from '~/utils/path-utils';
+import { redirect } from 'react-router';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const path = url.searchParams.get('path') || '';
   const file = await getPath(params.uid, path);
+  if (file.type === 'file') {
+    return redirect(`edit?path=${encodePathParam(path)}`);
+  }
   return { file };
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
-  const result = await parseFormData(request, schema);
-  if (result.error) {
-    return validationError(result.error, result.submittedData);
-  }
-  await saveFile(params.uid, result.data.path, result.data.content);
-  return null;
-}
+// Action supprimée (plus de sauvegarde inline)
 
-export default function FileExplorer({ loaderData: { file } }: Route.ComponentProps) {
+export default function FileExplorer({ loaderData }: Route.ComponentProps) {
+  const file = loaderData.file;
   switch (file.type) {
     case 'folder':
       return <DirectoryExplorer entries={file.entries} />;
     case 'archive':
       return <ArchiveViewer archiveFiles={file.tree} />;
-    case 'file':
-      return <FileEditor fileContent={file.content} />;
   }
+  return null;
 }
