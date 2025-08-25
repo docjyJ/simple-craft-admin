@@ -1,16 +1,14 @@
 import type { Route } from './+types/index';
-import { getPath, saveFile, uploadFiles } from '~/server/file-explorer';
+import { getPath, saveFile } from '~/server/file-explorer';
 import {
   ArchiveViewer,
   DirectoryExplorer,
   FileEditor,
   saveSchema,
 } from '~/components/file-explorer';
-import { z } from 'zod';
-import { uploadSchema } from '~/components/file-explorer/modals';
 import { parseFormData, validationError } from '@rvf/react-router';
 
-const schema = z.discriminatedUnion('type', [uploadSchema, saveSchema]);
+const schema = saveSchema; // Only save handled here now
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -24,15 +22,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   if (result.error) {
     return validationError(result.error, result.submittedData);
   }
-
-  switch (result.data.type) {
-    case 'upload':
-      await uploadFiles(params.uid, result.data.path, result.data.file);
-      break;
-    case 'save':
-      await saveFile(params.uid, result.data.path, result.data.content);
-      break;
-  }
+  await saveFile(params.uid, result.data.path, result.data.content);
   return null;
 }
 

@@ -1,6 +1,6 @@
 import type { FolderEntry } from '~/server/file-explorer';
 import { Link, useNavigate } from 'react-router';
-import { ActionIcon, Group, Stack, Table } from '@mantine/core';
+import { ActionIcon, Group, Stack, Table, Button } from '@mantine/core';
 import HeaderExplorer from '~/components/file-explorer/HeaderExplorer';
 import {
   IconDownload,
@@ -10,14 +10,14 @@ import {
   IconFolderUp,
   IconPencil,
   IconTrash,
+  IconUpload,
 } from '@tabler/icons-react';
-import { DownloadButton, UploadButton } from '~/components/file-explorer/buttons';
+import { DownloadButton } from '~/components/file-explorer/buttons';
 import useExplorerLocation, { urlBuilder } from '~/hooks/file-explorer/useExplorerLocation';
-import UploadFilesModal from '~/components/file-explorer/modals/UploadFilesModal';
 import { encodePathParam } from '~/utils/path-utils';
 
 export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] }) {
-  const { pathArray, pathString, upload } = useExplorerLocation();
+  const { pathArray, pathString } = useExplorerLocation();
   const navigate = useNavigate();
   return (
     <Stack miw={600}>
@@ -25,7 +25,15 @@ export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] 
         leftSection={
           <>
             <DownloadButton isFile={false} to={urlBuilder({ path: pathString, download: true })} />
-            <UploadButton to={urlBuilder({ path: pathString, upload: true })} />
+            <Button
+              component={Link}
+              to={`upload?path=${encodePathParam(pathString)}`}
+              color="blue"
+              aria-label="Upload file"
+              leftSection={<IconUpload />}
+            >
+              Upload
+            </Button>
           </>
         }
         pathArray={pathArray}
@@ -117,11 +125,6 @@ export default function DirectoryExplorer({ entries }: { entries: FolderEntry[] 
           })}
         </Table.Tbody>
       </Table>
-      <UploadFilesModal
-        opened={upload}
-        path={pathString}
-        closePath={urlBuilder({ path: pathString })}
-      />
     </Stack>
   );
 }

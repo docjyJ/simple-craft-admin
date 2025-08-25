@@ -87,8 +87,3 @@ export async function saveFile(uid: string, filePath: string, content: string) {
   const fullPath = resolveSafePath(uid, filePath);
   await writeFile(fullPath, content, 'utf-8');
 }
-
-export async function uploadFiles(uid: string, targetPath: string, file: File) {
-  const fullPath = resolveSafePath(uid, targetPath);
-  await writeFile(`${fullPath}/${file.name}`, Buffer.from(await file.arrayBuffer()));
-}

@@ -3,16 +3,13 @@ import { useLocation } from 'react-router';
 export function urlBuilder({
   path,
   download,
-  upload,
 }: {
   path: string;
   download?: boolean;
-  upload?: boolean;
 }): string {
   const builder = [] as string[];
   if (download) builder.push(download as any);
   builder.push(`?path=${encodeURIComponent(path).replace(/%2F/g, '/')}`);
-  if (upload) builder.push('#upload');
   return builder.join('');
 }
 
@@ -24,6 +21,5 @@ export default function useExplorerLocation() {
   return {
     pathArray,
     pathString,
-    upload: location.hash === '#upload',
   };
 }
