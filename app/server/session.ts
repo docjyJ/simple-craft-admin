@@ -1,29 +1,8 @@
-import { createCookieSessionStorage } from 'react-router';
 import { hash, verify } from 'argon2';
-import { PrismaClient } from '~/generated/prisma/client';
-
-let prisma: PrismaClient;
-
-if (!global.__PRISMA__) {
-  global.__PRISMA__ = new PrismaClient();
-}
-prisma = global.__PRISMA__;
-
-const { getSession, commitSession, destroySession } = createCookieSessionStorage<{
-  userId: number;
-}>({
-  cookie: {
-    name: '__session',
-    httpOnly: true,
-    maxAge: 60,
-    path: '/',
-    sameSite: 'lax',
-    secure: true,
-  },
-});
+import { prisma, sessionStore } from '~/server/global';
 
 export async function getUserId(request: Request) {
-  const session = await getSession(request.headers.get('Cookie'));
+  const session = await sessionStore.getSession(request.headers.get('Cookie'));
   return session.get('userId') || null;
 }
 
@@ -48,14 +27,14 @@ export async function loginUser(request: Request, username: string, plainPasswor
   const valid = await verify(user.password, plainPassword);
   if (!valid) return null;
 
-  const session = await getSession(request.headers.get('Cookie'));
+  const session = await sessionStore.getSession(request.headers.get('Cookie'));
   session.set('userId', user.id);
-  return commitSession(session).then((cookie) => ({ cookie }));
+  return sessionStore.commitSession(session).then((cookie) => ({ cookie }));
 }
 
 export async function logoutUser(request: Request) {
-  const session = await getSession(request.headers.get('Cookie'));
-  return destroySession(session).then((cookie) => ({ cookie }));
+  const session = await sessionStore.getSession(request.headers.get('Cookie'));
+  return sessionStore.destroySession(session).then((cookie) => ({ cookie }));
 }
 
 export function getUserByUsername(username: string) {

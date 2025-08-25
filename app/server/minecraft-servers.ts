@@ -10,13 +10,7 @@ import {
   getServerStatus,
 } from '~/server/server-status';
 import { isValidUid, resolveSafePath, root } from '~/server/path-validation';
-
-let serverProcesses: Map<string, ChildProcess>;
-
-if (!global.__MC_PROCESS__) {
-  global.__MC_PROCESS__ = new Map();
-}
-serverProcesses = global.__MC_PROCESS__;
+import { serverProcesses } from '~/server/global';
 
 export async function listMinecraftServers() {
   const dirs = await readdir(root, { withFileTypes: true });
