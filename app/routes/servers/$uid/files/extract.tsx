@@ -4,7 +4,7 @@ import { data, Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/extract';
-import { getPathFromUrl, getStat, resolveSafePath } from '~/server/path-validation';
+import { getPathFromUrl, getStat, resolveSafePath } from '~/utils.server/path-validation';
 import { cleanPath, encodePathParam, isArchive, parentPath } from '~/utils/path-utils';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';

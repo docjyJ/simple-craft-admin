@@ -8,9 +8,9 @@ import {
   getServerIcon,
   getServerProperties,
   getServerStatus,
-} from '~/server/server-status';
-import { isValidUid, resolveSafePath, root } from '~/server/path-validation';
-import { serverProcesses } from '~/server/global';
+} from '~/utils.server/server-status';
+import { isValidUid, resolveSafePath, root } from '~/utils.server/path-validation';
+import { serverProcesses } from '~/utils.server/global';
 
 export async function listMinecraftServers() {
   const dirs = await readdir(root, { withFileTypes: true });

@@ -1,6 +1,6 @@
 import type { Route } from './+types/$uid';
 import { Form, Outlet, useLocation, useNavigate } from 'react-router';
-import { forceKill, getServerData, isRunning, startMinecraftServer } from '~/server/minecraft-servers';
+import { forceKill, getServerData, isRunning, startMinecraftServer } from '~/utils.server/minecraft-servers';
 import { Button, Group, Paper, Stack, Tabs, Text } from '@mantine/core';
 import { IconPlayerStop, IconPower } from '@tabler/icons-react';
 import ServerUser from '~/components/ServerUser';

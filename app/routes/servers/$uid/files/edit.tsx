@@ -3,7 +3,7 @@ import { data, Form, Link, redirect } from 'react-router';
 import { parseFormData, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/edit';
-import { getPathFromUrl, getStat, resolveSafePath } from '~/server/path-validation';
+import { getPathFromUrl, getStat, resolveSafePath } from '~/utils.server/path-validation';
 import { cleanPath, encodePathParam, isText, parentPath } from '~/utils/path-utils';
 import { readFile, writeFile } from 'node:fs/promises';
 import CodeMirror from '@uiw/react-codemirror';

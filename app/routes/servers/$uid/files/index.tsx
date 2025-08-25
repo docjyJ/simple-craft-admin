@@ -2,7 +2,7 @@ import type { Route } from './+types/index';
 import { cleanPath, encodePathParam, isArchive, isText } from '~/utils/path-utils';
 import { data, Link, useNavigate } from 'react-router';
 import { ActionIcon, Anchor, Breadcrumbs, Button, Group, Paper, Stack, Table, Text } from '@mantine/core';
-import { getStat, resolveSafePath } from '~/server/path-validation';
+import { getStat, resolveSafePath } from '~/utils.server/path-validation';
 import { readdir } from 'node:fs/promises';
 import {
   IconDownload,

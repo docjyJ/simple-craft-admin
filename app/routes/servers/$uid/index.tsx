@@ -1,6 +1,6 @@
 import { Button, Group, Stack, Textarea, TextInput } from '@mantine/core';
 import { IconSend } from '@tabler/icons-react';
-import { sendCommandToServer } from '~/server/minecraft-servers';
+import { sendCommandToServer } from '~/utils.server/minecraft-servers';
 import { Form } from 'react-router';
 import type { Route } from './+types/index';
 import { useEffect, useState } from 'react';

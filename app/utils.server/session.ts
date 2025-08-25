@@ -1,5 +1,5 @@
 import { hash, verify } from 'argon2';
-import { prisma, sessionStore } from '~/server/global';
+import { prisma, sessionStore } from '~/utils.server/global';
 
 export async function getUserId(request: Request) {
   const session = await sessionStore.getSession(request.headers.get('Cookie'));

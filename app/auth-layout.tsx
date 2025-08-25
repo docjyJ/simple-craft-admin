@@ -3,7 +3,7 @@ import { AppShell, Burger, Button, Group, NavLink } from '@mantine/core';
 import { Link, Outlet, redirect } from 'react-router';
 import { IconServer } from '@tabler/icons-react';
 import { useState } from 'react';
-import { getUser } from '~/server/session';
+import { getUser } from '~/utils.server/session';
 
 export async function loader({ request }: Route.LoaderArgs) {
   return getUser(request).then((user) => (user ? { user } : redirect('/login')));

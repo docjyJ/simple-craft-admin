@@ -1,5 +1,5 @@
 import type { Route } from './+types/log';
-import { getMinecraftServerLog } from '~/server/minecraft-servers';
+import { getMinecraftServerLog } from '~/utils.server/minecraft-servers';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const { uid } = params;

@@ -2,7 +2,7 @@ import { redirect } from 'react-router';
 import type { Route } from './+types/new';
 import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { createNewUser, getUser, getUserByUsername } from '~/server/session';
+import { createNewUser, getUser, getUserByUsername } from '~/utils.server/session';
 import { Button, Container, Paper, PasswordInput, Radio, Stack, TextInput, Title } from '@mantine/core';
 
 const schema = z.object({

@@ -1,5 +1,5 @@
 import type { Route } from './+types/download';
-import { getPathFromUrl, getStat, resolveSafePath } from '~/server/path-validation';
+import { getPathFromUrl, getStat, resolveSafePath } from '~/utils.server/path-validation';
 import { readdir, readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { data } from 'react-router';

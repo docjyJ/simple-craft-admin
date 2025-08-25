@@ -1,5 +1,5 @@
 import { Alert, Button, NumberInput, Stack, TextInput } from '@mantine/core';
-import { getServerData, updateConfig } from '~/server/minecraft-servers';
+import { getServerData, updateConfig } from '~/utils.server/minecraft-servers';
 import type { Route } from './+types/settings';
 import { IconAlertHexagon, IconDeviceFloppy, IconInfoHexagon } from '@tabler/icons-react';
 import { z } from 'zod';

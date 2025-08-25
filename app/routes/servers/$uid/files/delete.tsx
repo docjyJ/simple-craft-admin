@@ -2,7 +2,7 @@ import { Button, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { data, Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { z } from 'zod';
-import { getPathFromUrl, getStat, resolveSafePath } from '~/server/path-validation';
+import { getPathFromUrl, getStat, resolveSafePath } from '~/utils.server/path-validation';
 import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
 import { rm } from 'node:fs/promises';
 import type { Route } from './+types/delete';

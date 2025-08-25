@@ -1,4 +1,4 @@
-import { createMinecraftServer, fullListMinecraftServers } from '~/server/minecraft-servers';
+import { createMinecraftServer, fullListMinecraftServers } from '~/utils.server/minecraft-servers';
 import type { Route } from './+types/index';
 import { ActionIcon, Badge, Button, Group, Modal, Paper, Stack, Table, Text, TextInput } from '@mantine/core';
 import { IconAccessPoint, IconAccessPointOff, IconEdit } from '@tabler/icons-react';
