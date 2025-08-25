@@ -4,7 +4,7 @@ import { Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/extract';
-import { resolveSafePath } from '~/server/path-validation';
+import {isArchive, resolveSafePath} from '~/server/path-validation';
 import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
 import { stat, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
@@ -18,21 +18,20 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const raw = url.searchParams.get('path') || '/';
   const path = cleanPath(raw);
-  if (path === '/') return redirect(`/servers/${uid}/files?path=/`);
   try {
     const fullPath = resolveSafePath(uid, path);
     const s = await stat(fullPath);
-    if (!s.isFile() || !fullPath.endsWith('.zip')) {
-      return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path))}`);
+    if (!s.isFile() || !isArchive(fullPath)) {
+      return new Response('Bad Request: not an archive', { status: 400 });
     }
     const parent = parentPath(path);
     const fileName = path.split('/').pop() || 'archive.zip';
     const baseName = fileName.endsWith('.zip') ? fileName.slice(0, -4) : fileName;
     const defaultDestination = `${parent}/${baseName}`;
     return { parent, fileName, path, defaultDestination };
-  } catch (e) {
-    console.warn(e);
-    return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path))}`);
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+    return new Response('Not Found', { status: 404 });
   }
 }
 
@@ -41,23 +40,11 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   if (result.error) return validationError(result.error, result.submittedData);
   const archivePath = cleanPath(result.data.path);
   const destinationDir = cleanPath(result.data.destinationDir);
-  if (archivePath === '/' || !archivePath.endsWith('.zip')) {
-    return validationError(
-      {
-        formId: result.formId,
-        fieldErrors: { path: 'Invalid archive path' },
-      },
-      result.submittedData,
-    );
-  }
   try {
     const fullArchivePath = resolveSafePath(uid, archivePath);
     const s = await stat(fullArchivePath);
-    if (!s.isFile()) {
-      return validationError(
-        { formId: result.formId, fieldErrors: { path: 'Archive not found' } },
-        result.submittedData,
-      );
+    if (!s.isFile() || !isArchive(fullArchivePath)) {
+      return new Response('Bad Request: not an archive', { status: 400 });
     }
     const buffer = await readFile(fullArchivePath);
     const destinationFull = resolveSafePath(uid, destinationDir);
@@ -73,14 +60,11 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
         await writeFile(filePath, await entry.async('nodebuffer'));
       }
     }
-  } catch (e) {
-    console.warn(e);
-    return validationError(
-      { formId: result.formId, fieldErrors: { destinationDir: 'Extraction failed' } },
-      result.submittedData,
-    );
+		return redirect(`/servers/${uid}/files?path=${encodePathParam(destinationDir)}`);
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+    throw e;
   }
-  return redirect(`/servers/${uid}/files?path=${encodePathParam(destinationDir)}`);
 }
 
 export default function ExtractArchiveRoute({

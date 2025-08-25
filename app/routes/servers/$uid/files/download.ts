@@ -19,28 +19,32 @@ async function addDirToZip(dir: string, zipFolder: JSZip) {
 export async function loader({ request, params }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const path = url.searchParams.get('path') || '';
-  const fullPath = resolveSafePath(params.uid, path);
-  const s = await stat(fullPath);
-
-  if (s.isDirectory()) {
-    const zip = new JSZip();
-    await addDirToZip(fullPath, zip);
-    const content = await zip.generateAsync({ type: 'nodebuffer' });
-    const folderName = path === '' || path === '/' ? 'Root' : path.split('/').pop() || 'folder';
-    return new Response(new Uint8Array(content), {
-      headers: {
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${folderName}.zip"`,
-      },
-    });
-  } else {
-    const content = await readFile(fullPath);
-    const fileName = path === '' || path === '/' ? 'Root' : path.split('/').pop() || 'file';
-    return new Response(new Uint8Array(content), {
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
-      },
-    });
+  try {
+    const fullPath = resolveSafePath(params.uid, path);
+    const s = await stat(fullPath);
+    if (s.isDirectory()) {
+      const zip = new JSZip();
+      await addDirToZip(fullPath, zip);
+      const content = await zip.generateAsync({ type: 'nodebuffer' });
+      const folderName = path === '' || path === '/' ? 'Root' : path.split('/').pop() || 'folder';
+      return new Response(new Uint8Array(content), {
+        headers: {
+          'Content-Type': 'application/zip',
+          'Content-Disposition': `attachment; filename="${folderName}.zip"`,
+        },
+      });
+    } else {
+      const content = await readFile(fullPath);
+      const fileName = path === '' || path === '/' ? 'Root' : path.split('/').pop() || 'file';
+      return new Response(new Uint8Array(content), {
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Disposition': `attachment; filename="${fileName}"`,
+        },
+      });
+    }
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+    throw e;
   }
 }

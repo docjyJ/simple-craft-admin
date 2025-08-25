@@ -16,7 +16,7 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   const raw = url.searchParams.get('path') || '/';
   const path = cleanPath(raw);
   if (path === '/') {
-    return redirect(`/servers/${uid}/files?path=/`);
+    return new Response('Forbidden: cannot delete root', { status: 403 });
   }
   try {
     const fullPath = resolveSafePath(uid, path);
@@ -24,9 +24,9 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
     const parent = parentPath(path);
     const fileName = path.split('/').pop() || 'Unknown';
     return { isFolder: s.isDirectory(), parent, fileName };
-  } catch (e) {
-    console.warn(e);
-    return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path))}`);
+  } catch (e: any) {
+		if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+		throw e
   }
 }
 
@@ -35,15 +35,16 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   if (result.error) return validationError(result.error, result.submittedData);
   const path = cleanPath(result.data.path);
   if (path === '/') {
-    return redirect(`/servers/${uid}/files?path=/`);
+    return new Response('Forbidden: cannot delete root', { status: 403 });
   }
   try {
     const fullPath = resolveSafePath(uid, path);
-    await rm(fullPath, { recursive: true, force: true });
-  } catch (e) {
-    console.warn(e);
+    await rm(fullPath, { recursive: true, force: false });
+		return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path))}`);
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+		throw e;
   }
-  return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path))}`);
 }
 
 export default function DeleteFileRoute({

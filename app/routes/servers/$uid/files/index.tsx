@@ -1,31 +1,30 @@
 import type { Route } from './+types/index';
-import { encodePathParam, parentPath } from '~/utils/path-utils';
-import { Link, useNavigate, redirect } from 'react-router';
+import {cleanPath, encodePathParam} from '~/utils/path-utils';
+import { Link, useNavigate } from 'react-router';
 import { ActionIcon, Button, Group, Paper, Stack, Table, Anchor, Breadcrumbs, Text } from '@mantine/core';
-import { resolveSafePath } from '~/server/path-validation';
+import {isArchive, isText, resolveSafePath} from '~/server/path-validation';
 import { readdir, stat } from 'node:fs/promises';
 import {
-  IconDownload,
-  IconFile,
-  IconFileZip,
-  IconFolder,
-  IconFolderUp,
-  IconPencil,
-  IconTrash,
-  IconUpload,
-  IconEdit,
+	IconDownload,
+	IconFile,
+	IconFileZip,
+	IconFolder,
+	IconFolderUp,
+	IconPencil,
+	IconTrash,
+	IconUpload,
+	IconEdit, IconFileText,
 } from '@tabler/icons-react';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const rawPath = url.searchParams.get('path') || '';
-  const path = rawPath === '/' ? '' : rawPath; // normalisation simple
+  const path = cleanPath(rawPath);
   try {
     const fullPath = resolveSafePath(params.uid, path);
     const s = await stat(fullPath);
     if (!s.isDirectory()) {
-      const parent = parentPath(path) || '/';
-      return redirect(`?path=${encodePathParam(parent)}`);
+      return new Response('Bad Request: not a directory', { status: 400 });
     }
     const dirEntries = await readdir(fullPath, { withFileTypes: true });
     const entries = dirEntries
@@ -33,63 +32,37 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         name: entry.name,
         type: entry.isDirectory()
           ? ('folder' as const)
-          : entry.name.endsWith('.zip')
+          : isArchive(entry.name)
             ? ('archive' as const)
-            : ('file' as const),
+            : isText(entry.name)
+							? ('text' as const)
+							: ('binary' as const),
       }))
       .sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1));
     return { entries, path };
-  } catch (e) {
-    console.warn(e);
-    return { entries: [], path: '' };
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+    throw e;
   }
 }
 
-// Pas d'action ici
-
-function isTextFile(name: string) {
-  const ext = name.split('.').pop()?.toLowerCase();
-  if (!ext) return false;
-  const textExts = [
-    'txt',
-    'json',
-    'yml',
-    'yaml',
-    'properties',
-    'log',
-    'md',
-    'ts',
-    'tsx',
-    'js',
-    'jsx',
-    'css',
-    'html',
-    'env',
-    'conf',
-    'ini',
-  ];
-  return textExts.includes(ext);
-}
-
 export default function FileExplorerIndex({ loaderData: { entries, path } }: Route.ComponentProps) {
-  const pathArray = path.split('/').filter(Boolean);
-  const pathString = '/' + pathArray.join('/');
+  const pathArray = path === '/' ? [''] : path.split('/');
   const navigate = useNavigate();
   return (
     <Stack miw={600}>
       <Group style={{ flexWrap: 'nowrap' }}>
         <Paper withBorder style={{ flexGrow: 1, overflowX: 'auto' }}>
           <Breadcrumbs m="sm" style={{ flexWrap: 'nowrap' }}>
-            {['', ...pathArray].map((seg, idx, arr) => {
-              const isLast = idx === arr.length - 1;
-              const target = '/' + pathArray.slice(0, idx).join('/');
-              return isLast ? (
+            {[...pathArray].map((seg, idx, arr) => {
+              const target = pathArray.slice(0, idx+1).join('/');
+              return idx === arr.length - 1 ? (
                 <Text key={idx}>{idx === 0 ? 'Root' : seg}</Text>
               ) : (
                 <Anchor
                   key={idx}
                   component={Link}
-                  to={`?path=${encodePathParam(target === '//' ? '/' : target)}`}
+                  to={`?path=${encodePathParam(target === '' ? '/' : target)}`}
                 >
                   {idx === 0 ? 'Root' : seg}
                 </Anchor>
@@ -99,7 +72,7 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
         </Paper>
         <Button
           component={Link}
-          to={`download?path=${encodePathParam(pathString)}`}
+          to={`download?path=${encodePathParam(path)}`}
           download
           reloadDocument
           color="blue"
@@ -110,7 +83,7 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
         </Button>
         <Button
           component={Link}
-          to={`upload?path=${encodePathParam(pathString)}`}
+          to={`upload?path=${encodePathParam(path)}`}
           color="blue"
           aria-label="Upload file"
           leftSection={<IconUpload />}
@@ -129,21 +102,21 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
           </Table.Thead>
           <Table.Tbody>
             {entries.map((entry) => {
-              const filePath = ['', ...pathArray, entry.name].join('/');
-              const clickable = entry.type === 'folder';
-              const textFile = entry.type === 'file' && isTextFile(entry.name);
+              const filePath = [...pathArray, entry.name].join('/');
               return (
                 <Table.Tr
                   key={entry.name}
-                  onClick={() => clickable && navigate(`?path=${encodePathParam(filePath)}`)}
-                  style={{ cursor: clickable ? 'pointer' : 'default' }}
+                  onClick={() => entry.type === 'folder' && navigate(`?path=${encodePathParam(filePath)}`)}
+                  style={{ cursor: entry.type === 'folder' ? 'pointer' : 'default' }}
                 >
                   <Table.Td>
                     {entry.type === 'folder' ? (
                       <IconFolder />
                     ) : entry.type === 'archive' ? (
                       <IconFileZip />
-                    ) : (
+                    ) : entry.type === 'text' ? (
+											<IconFileText />
+										) : (
                       <IconFile />
                     )}{' '}
                     {entry.name}
@@ -153,7 +126,7 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
                       ? 'Folder'
                       : entry.type === 'archive'
                         ? 'Archive'
-                        : textFile
+                        : entry.type === 'text'
                           ? 'Text file'
                           : 'Binary file'}
                   </Table.Td>
@@ -203,11 +176,11 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
                           <IconFolderUp />
                         </ActionIcon>
                       )}
-                      {textFile && (
+                      {entry.type === 'text' && (
                         <ActionIcon
                           component={Link}
                           to={`edit?path=${encodePathParam(filePath)}`}
-                          color="green"
+                          color="blue"
                           type="button"
                           aria-label="Edit file"
                           onClick={(e) => e.stopPropagation()}

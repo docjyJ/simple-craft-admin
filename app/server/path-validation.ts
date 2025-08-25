@@ -36,4 +36,18 @@ export function getRelativePath(uid: string, fullPath: string) {
   return '/' + relative(resolve(root, uid), fullPath);
 }
 
-// Note: client helpers (parentPath, cleanPath, encodePathParam) moved to ~/utils/path-utils
+const TEXT_EXTENSIONS = new Set([
+	'txt','json','yml','yaml','properties','log','md','ts','tsx','js','jsx','css','html','env','conf','ini'
+]);
+
+const ARCHIVE_EXTENSIONS = new Set(['zip']);
+
+export function isText(path: string) {
+	const ext = path.split('.').pop()?.toLowerCase();
+	return !!ext && TEXT_EXTENSIONS.has(ext);
+}
+
+export function isArchive(path: string) {
+	const ext = path.split('.').pop()?.toLowerCase();
+	return !!ext && ARCHIVE_EXTENSIONS.has(ext);
+}

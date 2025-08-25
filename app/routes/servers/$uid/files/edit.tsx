@@ -3,7 +3,7 @@ import { Link, redirect, Form } from 'react-router';
 import { parseFormData, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/edit';
-import { resolveSafePath } from '~/server/path-validation';
+import {isText, resolveSafePath} from '~/server/path-validation';
 import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
 import { readFile, writeFile, stat } from 'node:fs/promises';
 import CodeMirror from '@uiw/react-codemirror';
@@ -23,14 +23,14 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   try {
     const fullPath = resolveSafePath(uid, path);
     const s = await stat(fullPath);
-    if (!s.isFile()) {
-      return redirect(`/servers/${uid}/files?path=${encodePathParam(path)}`);
+    if (!s.isFile() || !isText(path)) {
+      return new Response('Bad Request: not a text file', { status: 400 });
     }
     const content = await readFile(fullPath, 'utf-8');
     return { path, content };
-  } catch (e) {
-    console.warn(e);
-    return redirect(`/servers/${uid}/files?path=/`);
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+    throw e
   }
 }
 
@@ -40,11 +40,16 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   const path = cleanPath(result.data.path);
   try {
     const fullPath = resolveSafePath(uid, path);
+    const s = await stat(fullPath);
+    if (!s.isFile() || !isText(path)) {
+      return new Response('Bad Request: not a text file', { status: 400 });
+    }
     await writeFile(fullPath, result.data.content, 'utf-8');
-  } catch (e) {
-    console.warn(e);
+		return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path) || '/')}`);
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+    throw e;
   }
-  return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path) || '/')}`);
 }
 
 export default function EditFileRoute({ loaderData: { content, path }, params: { uid } }: Route.ComponentProps) {

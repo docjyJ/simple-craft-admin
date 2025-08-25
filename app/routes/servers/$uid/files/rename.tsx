@@ -16,16 +16,18 @@ export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const raw = url.searchParams.get('path') || '/';
   const path = cleanPath(raw);
-  if (path === '/') return redirect(`/servers/${uid}/files?path=/`);
+  if (path === '/') {
+    return new Response('Forbidden: cannot rename root', { status: 403 });
+  }
   try {
     const fullPath = resolveSafePath(uid, path);
     const s = await stat(fullPath);
     const parent = parentPath(path);
     const fileName = path.split('/').pop() || 'Unknown';
     return { isFolder: s.isDirectory(), parent, fileName, path };
-  } catch (e) {
-    console.warn(e);
-    return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path))}`);
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') return new Response('Not Found', { status: 404 });
+    throw e;
   }
 }
 
@@ -33,7 +35,9 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   const result = await parseFormData(request, schema);
   if (result.error) return validationError(result.error, result.submittedData);
   const sourcePath = cleanPath(result.data.path);
-  if (sourcePath === '/') return redirect(`/servers/${uid}/files?path=/`);
+  if (sourcePath === '/') {
+    return new Response('Forbidden: cannot rename root', { status: 403 });
+  }
   const parent = parentPath(sourcePath);
   const currentName = sourcePath.split('/').pop();
   const newName = result.data.newName;
@@ -52,9 +56,10 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
       const parts = srcFull.split('/');
       parts.pop();
       const destFull = `${parts.join('/')}/${newName}`;
-      await fsRename(srcFull, destFull);
-    } catch (e) {
-      console.warn(e);
+      await fsRename(srcFull, destFull)
+    } catch (e: any) {
+			if (e?.code === 'ENOENT') throw new Response('Not Found', { status: 404 });
+      throw e;
     }
   }
   return redirect(`/servers/${uid}/files?path=${encodePathParam(parent === '' ? '/' : parent)}`);
