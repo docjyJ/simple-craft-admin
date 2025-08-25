@@ -32,7 +32,7 @@ export function resolveSafePath(uid: string, pathInput: string) {
   if (outOfRoot(pathInput)) {
     throw data(`Path '${pathInput}' is outside the root directory.`, { status: 400 });
   }
-  return resolve(root, uid, pathInput);
+  return resolve(root, `${uid}/${pathInput}`);
 }
 
 export function getRelativePath(uid: string, fullPath: string) {
