@@ -1,5 +1,5 @@
 import type { Route } from './+types/index';
-import { cleanPath, encodePathParam } from '~/utils/path-utils';
+import { cleanPath, encodePathParam, isArchive, isText } from '~/utils/path-utils';
 import { data, Link, useNavigate } from 'react-router';
 import {
   ActionIcon,
@@ -12,8 +12,8 @@ import {
   Table,
   Text,
 } from '@mantine/core';
-import { isArchive, isText, resolveSafePath } from '~/server/path-validation';
-import { readdir, stat } from 'node:fs/promises';
+import { getStat, resolveSafePath } from '~/server/path-validation';
+import { readdir } from 'node:fs/promises';
 import {
   IconDownload,
   IconEdit,
@@ -32,11 +32,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const rawPath = url.searchParams.get('path') || '';
   const path = cleanPath(rawPath);
   const fullPath = resolveSafePath(params.uid, path);
-  const s = await stat(fullPath).catch((e) => {
-    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
-    throw e;
-  });
-  if (!s.isDirectory()) {
+  const stats = await getStat(fullPath);
+  if (!stats.isDirectory()) {
     throw data('Bad Request: not a directory', { status: 400 });
   }
   const dirEntries = await readdir(fullPath, { withFileTypes: true });

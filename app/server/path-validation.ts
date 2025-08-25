@@ -1,4 +1,7 @@
 import { relative, resolve } from 'node:path';
+import { cleanPath } from '~/utils/path-utils';
+import { stat } from 'node:fs/promises';
+import { data } from 'react-router';
 
 export const root = resolve('./minecraft/servers');
 
@@ -22,47 +25,29 @@ function outOfRoot(path: string) {
 
 export function resolveSafePath(uid: string, pathInput: string) {
   if (!isValidUid(uid)) {
-    throw new Error(
-      `Invalid uid: '${uid}'. Only alphanumeric characters, and hyphens are allowed.`,
-    );
+    throw data(`Invalid uid: '${uid}'. Only alphanumeric characters, and hyphens are allowed.`, {
+      status: 400,
+    });
   }
   if (outOfRoot(pathInput)) {
-    throw new Error(`Path '${pathInput}' is outside the root directory.`);
+    throw data(`Path '${pathInput}' is outside the root directory.`, { status: 400 });
   }
-  return resolve([root, uid, pathInput].join('/'));
+  return resolve(root, uid, pathInput);
 }
 
 export function getRelativePath(uid: string, fullPath: string) {
   return '/' + relative(resolve(root, uid), fullPath);
 }
 
-const TEXT_EXTENSIONS = new Set([
-  'txt',
-  'json',
-  'yml',
-  'yaml',
-  'properties',
-  'log',
-  'md',
-  'ts',
-  'tsx',
-  'js',
-  'jsx',
-  'css',
-  'html',
-  'env',
-  'conf',
-  'ini',
-]);
-
-const ARCHIVE_EXTENSIONS = new Set(['zip']);
-
-export function isText(path: string) {
-  const ext = path.split('.').pop()?.toLowerCase();
-  return !!ext && TEXT_EXTENSIONS.has(ext);
+export function getPathFromUrl(url: string): string {
+  const parsedUrl = new URL(url);
+  const raw = parsedUrl.searchParams.get('path') || '/';
+  return cleanPath(raw);
 }
 
-export function isArchive(path: string) {
-  const ext = path.split('.').pop()?.toLowerCase();
-  return !!ext && ARCHIVE_EXTENSIONS.has(ext);
+export async function getStat(path: string) {
+  return stat(path).catch((e) => {
+    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
+    throw e;
+  });
 }

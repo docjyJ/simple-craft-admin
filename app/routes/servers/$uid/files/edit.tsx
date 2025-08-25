@@ -3,9 +3,9 @@ import { data, Form, Link, redirect } from 'react-router';
 import { parseFormData, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/edit';
-import { isText, resolveSafePath } from '~/server/path-validation';
-import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
-import { readFile, stat, writeFile } from 'node:fs/promises';
+import { getPathFromUrl, getStat, resolveSafePath } from '~/server/path-validation';
+import { cleanPath, encodePathParam, isText, parentPath } from '~/utils/path-utils';
+import { readFile, writeFile } from 'node:fs/promises';
 import CodeMirror from '@uiw/react-codemirror';
 import { loadLanguage } from '@uiw/codemirror-extensions-langs';
 import { useState } from 'react';
@@ -17,15 +17,10 @@ const saveSchema = z.object({
 });
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const raw = url.searchParams.get('path') || '/';
-  const path = cleanPath(raw);
+  const path = getPathFromUrl(request.url);
   const fullPath = resolveSafePath(uid, path);
-  const s = await stat(fullPath).catch((e) => {
-    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
-    throw e;
-  });
-  if (!s.isFile() || !isText(path)) {
+  const stats = await getStat(fullPath);
+  if (!stats.isFile() || !isText(path)) {
     throw data('Bad Request: not a text file', { status: 400 });
   }
   const content = await readFile(fullPath, 'utf-8');
@@ -37,21 +32,15 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   if (result.error) return validationError(result.error, result.submittedData);
   const path = cleanPath(result.data.path);
   const fullPath = resolveSafePath(uid, path);
-  const s = await stat(fullPath).catch((e) => {
-    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
-    throw e;
-  });
-  if (!s.isFile() || !isText(path)) {
+  const stats = await getStat(fullPath);
+  if (!stats.isFile() || !isText(path)) {
     throw data('Bad Request: not a text file', { status: 400 });
   }
   await writeFile(fullPath, result.data.content, 'utf-8');
   return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path) || '/')}`);
 }
 
-export default function EditFileRoute({
-  loaderData: { content, path },
-  params: { uid },
-}: Route.ComponentProps) {
+export default function EditFileRoute({ loaderData: { content, path }, params: { uid } }: Route.ComponentProps) {
   const ext = path.split('.').pop();
   const lang = ext ? loadLanguage(ext) : null;
   const [value, setValue] = useState(content);

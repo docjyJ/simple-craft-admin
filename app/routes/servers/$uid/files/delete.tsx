@@ -2,9 +2,9 @@ import { Button, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { data, Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { z } from 'zod';
-import { resolveSafePath } from '~/server/path-validation';
+import { getPathFromUrl, getStat, resolveSafePath } from '~/server/path-validation';
 import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
-import { rm, stat } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import type { Route } from './+types/delete';
 
 const schema = z.object({
@@ -12,20 +12,15 @@ const schema = z.object({
 });
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const raw = url.searchParams.get('path') || '/';
-  const path = cleanPath(raw);
+  const path = getPathFromUrl(request.url);
   if (path === '/') {
     throw data('Forbidden: cannot delete root', { status: 403 });
   }
   const fullPath = resolveSafePath(uid, path);
-  const s = await stat(fullPath).catch((e) => {
-    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
-    throw e;
-  });
+  const stats = await getStat(fullPath);
   const parent = parentPath(path);
   const fileName = path.split('/').pop() || 'Unknown';
-  return { isFolder: s.isDirectory(), parent, fileName };
+  return { isFolder: stats.isDirectory(), parent, fileName };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
@@ -57,11 +52,7 @@ export default function DeleteFileRoute({
             : `Are you sure you want to delete the file '${fileName}'?`}
         </Text>
         <Text>This action cannot be undone.</Text>
-        <ValidatedForm
-          method="post"
-          schema={schema}
-          defaultValues={{ path: parent + '/' + fileName }}
-        >
+        <ValidatedForm method="post" schema={schema} defaultValues={{ path: parent + '/' + fileName }}>
           {(form) => (
             <>
               <input {...form.getInputProps('path', { type: 'hidden' })} />

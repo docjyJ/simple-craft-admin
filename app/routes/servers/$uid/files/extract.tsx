@@ -4,9 +4,9 @@ import { data, Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/extract';
-import { isArchive, resolveSafePath } from '~/server/path-validation';
-import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { getPathFromUrl, getStat, resolveSafePath } from '~/server/path-validation';
+import { cleanPath, encodePathParam, isArchive, parentPath } from '~/utils/path-utils';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 const schema = z.object({
@@ -15,15 +15,10 @@ const schema = z.object({
 });
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const raw = url.searchParams.get('path') || '/';
-  const path = cleanPath(raw);
+  const path = getPathFromUrl(request.url);
   const fullPath = resolveSafePath(uid, path);
-  const s = await stat(fullPath).catch((e) => {
-    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
-    throw e;
-  });
-  if (!s.isFile() || !isArchive(fullPath)) {
+  const stats = await getStat(fullPath);
+  if (!stats.isFile() || !isArchive(fullPath)) {
     throw data('Bad Request: not an archive', { status: 400 });
   }
   const parent = parentPath(path);
@@ -39,11 +34,8 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   const archivePath = cleanPath(result.data.path);
   const destinationDir = cleanPath(result.data.destinationDir);
   const fullArchivePath = resolveSafePath(uid, archivePath);
-  const s = await stat(fullArchivePath).catch((e) => {
-    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
-    throw e;
-  });
-  if (!s.isFile() || !isArchive(fullArchivePath)) {
+  const stats = await getStat(fullArchivePath);
+  if (!stats.isFile() || !isArchive(fullArchivePath)) {
     throw data('Bad Request: not an archive', { status: 400 });
   }
   const buffer = await readFile(fullArchivePath);
@@ -72,14 +64,9 @@ export default function ExtractArchiveRoute({
       <Stack gap="lg" m="md">
         <Title order={3}>Extract archive</Title>
         <Text>
-          You are about to extract the archive '{fileName}'. Its contents will be placed into the
-          destination folder.
+          You are about to extract the archive '{fileName}'. Its contents will be placed into the destination folder.
         </Text>
-        <ValidatedForm
-          method="post"
-          schema={schema}
-          defaultValues={{ path, destinationDir: defaultDestination }}
-        >
+        <ValidatedForm method="post" schema={schema} defaultValues={{ path, destinationDir: defaultDestination }}>
           {(form) => (
             <>
               <input {...form.getInputProps('path', { type: 'hidden' })} />

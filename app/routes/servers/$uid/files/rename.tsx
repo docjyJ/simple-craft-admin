@@ -1,9 +1,9 @@
 import { Button, Group, Paper, Stack, Text, TextInput, Title } from '@mantine/core';
 import { data, Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { resolveSafePath } from '~/server/path-validation';
+import { getPathFromUrl, getStat, resolveSafePath } from '~/server/path-validation';
 import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
-import { rename as fsRename, stat } from 'node:fs/promises';
+import { rename as fsRename } from 'node:fs/promises';
 import { z } from 'zod';
 import type { Route } from './+types/rename';
 
@@ -13,20 +13,15 @@ const schema = z.object({
 });
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const raw = url.searchParams.get('path') || '/';
-  const path = cleanPath(raw);
+  const path = getPathFromUrl(request.url);
   if (path === '/') {
     throw data('Forbidden: cannot rename root', { status: 403 });
   }
   const fullPath = resolveSafePath(uid, path);
-  const s = await stat(fullPath).catch((e) => {
-    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
-    throw e;
-  });
+  const stats = await getStat(fullPath);
   const parent = parentPath(path);
   const fileName = path.split('/').pop() || 'Unknown';
-  return { isFolder: s.isDirectory(), parent, fileName, path };
+  return { isFolder: stats.isDirectory(), parent, fileName, path };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
@@ -72,20 +67,13 @@ export default function RenameFileRoute({
       <Stack gap="lg" m="md">
         <Title order={3}>Rename {isFolder ? 'folder' : 'file'}</Title>
         <Text>
-          {isFolder
-            ? `Enter a new name for the folder '${fileName}'.`
-            : `Enter a new name for the file '${fileName}'.`}
+          {isFolder ? `Enter a new name for the folder '${fileName}'.` : `Enter a new name for the file '${fileName}'.`}
         </Text>
         <ValidatedForm method="post" schema={schema} defaultValues={{ path, newName: fileName }}>
           {(form) => (
             <>
               <input {...form.getInputProps('path', { type: 'hidden' })} />
-              <TextInput
-                label="New name"
-                required
-                {...form.getInputProps('newName')}
-                error={form.error('newName')}
-              />
+              <TextInput label="New name" required {...form.getInputProps('newName')} error={form.error('newName')} />
               <Group justify="center" mt="md">
                 <Button
                   component={Link}
