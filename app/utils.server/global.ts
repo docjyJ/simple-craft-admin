@@ -1,12 +1,12 @@
 import { PrismaClient } from '~/generated/prisma/client';
 import { createCookieSessionStorage, type SessionStorage } from 'react-router';
-import type { ChildProcess } from 'node:child_process';
+import type { ServerMinecraft } from '~/utils.server/server-minecraft';
 
-let serverProcesses: Map<string, ChildProcess>;
-if (!global.__MC_PROCESS__) {
-  global.__MC_PROCESS__ = new Map();
+let serverMinecraftInstances: Map<string, ServerMinecraft>;
+if (!global.__MC_INSTANCE__) {
+  global.__MC_INSTANCE__ = new Map();
 }
-serverProcesses = global.__MC_PROCESS__;
+serverMinecraftInstances = global.__MC_INSTANCE__;
 
 let prisma: PrismaClient;
 if (!global.__PRISMA__) {
@@ -20,9 +20,10 @@ if (!global.__SESSION_STORE__) {
     cookie: {
       name: '__session',
       httpOnly: true,
-      maxAge: 60,
+      maxAge: 3600,
       path: '/',
-      sameSite: 'lax',
+      sameSite: 'strict',
+      secrets: ['ecd0da9f-0133-4a0f-84c9-aca66208a78b'],
       secure: true,
     },
   });
@@ -30,4 +31,4 @@ if (!global.__SESSION_STORE__) {
 
 sessionStore = global.__SESSION_STORE__;
 
-export { serverProcesses, prisma, sessionStore };
+export { prisma, sessionStore, serverMinecraftInstances };

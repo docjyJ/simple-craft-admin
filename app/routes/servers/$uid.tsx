@@ -1,28 +1,25 @@
 import type { Route } from './+types/$uid';
 import { Form, Outlet, useLocation, useNavigate } from 'react-router';
-import { forceKill, getServerData, isRunning, startMinecraftServer } from '~/utils.server/minecraft-servers';
 import { Button, Group, Paper, Stack, Tabs, Text } from '@mantine/core';
 import { IconPlayerStop, IconPower } from '@tabler/icons-react';
 import ServerUser from '~/components/ServerUser';
 import ServerPlayerCount from '~/components/ServerPlayerCount';
+import { getOrCreateServer } from '~/utils.server/server-minecraft';
 
 export async function loader({ params: { uid } }: Route.LoaderArgs) {
+  const instance = getOrCreateServer(uid);
   return {
-    server_data: await getServerData(uid),
-    is_online: isRunning(uid),
+    server_data: await instance.getServerData(),
+    is_online: instance.isRunning(),
   };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
   const formData = await request.formData();
-  const actionType = formData.get('running-action'); // "start" ou "stop"
-
-  if (actionType === 'start') {
-    startMinecraftServer(uid);
-  }
-  if (actionType === 'stop') {
-    forceKill(uid);
-  }
+  const actionType = formData.get('running-action');
+  const instance = getOrCreateServer(uid);
+  if (actionType === 'start') instance.start();
+  if (actionType === 'stop') instance.forceKill();
 }
 
 export default function ServerLayout({

@@ -1,9 +1,9 @@
 import { Alert, Button, NumberInput, Stack, TextInput } from '@mantine/core';
-import { getServerData, updateConfig } from '~/utils.server/minecraft-servers';
 import type { Route } from './+types/settings';
 import { IconAlertHexagon, IconDeviceFloppy, IconInfoHexagon } from '@tabler/icons-react';
 import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
+import { getOrCreateServer } from '~/utils.server/server-minecraft';
 
 const schema = z.object({
   name: z.coerce.string().min(1, 'Server name is required'),
@@ -19,7 +19,8 @@ const schema = z.object({
 });
 
 export async function loader({ params: { uid } }: Route.LoaderArgs) {
-  return getServerData(uid).then((serverData) => ({ serverData }));
+  const instance = getOrCreateServer(uid);
+  return { serverData: await instance.getServerData() };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
@@ -27,7 +28,9 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   if (result.error) {
     return validationError(result.error, result.submittedData);
   }
-  return updateConfig(uid, result.data);
+  const instance = getOrCreateServer(uid);
+  await instance.updateConfig(result.data);
+  return null;
 }
 
 export default function SettingsServer({ loaderData: { serverData } }: Route.ComponentProps) {
