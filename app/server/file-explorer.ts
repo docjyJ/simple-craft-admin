@@ -1,11 +1,38 @@
 import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { getRelativePath, resolveSafePath } from '~/server/path-validation';
-import { zipFile, zipTree } from '~/server/zip-managment';
+import JSZip from 'jszip';
 
 export type FolderEntry = {
   name: string;
   type: 'folder' | 'archive' | 'file';
 };
+
+async function buildZipTree(path: string) {
+  const buffer = await readFile(path);
+  const zip = await JSZip.loadAsync(buffer);
+  const tree: string[] = [];
+  zip.forEach((relativePath) => tree.push(relativePath));
+  return tree;
+}
+
+async function addDirToZip(dir: string, zipFolder: JSZip) {
+  const entries = await readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const entryPath = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) {
+      await addDirToZip(entryPath, zipFolder.folder(entry.name)!);
+    } else {
+      const fileData = await readFile(entryPath);
+      zipFolder.file(entry.name, fileData);
+    }
+  }
+}
+
+async function createZipFromDir(inputPath: string) {
+  const zip = new JSZip();
+  await addDirToZip(inputPath, zip);
+  return zip.generateAsync({ type: 'nodebuffer' });
+}
 
 export async function getPath(uid: string, inputPath: string) {
   const fullPath = resolveSafePath(uid, inputPath);
@@ -26,7 +53,7 @@ export async function getPath(uid: string, inputPath: string) {
       });
     return { type: 'folder' as const, entries };
   } else if (fullPath.endsWith('.zip')) {
-    const tree = await zipTree(fullPath);
+    const tree = await buildZipTree(fullPath);
     return { type: 'archive' as const, tree };
   } else {
     const content = await readFile(fullPath, 'utf-8');
@@ -40,7 +67,7 @@ export async function downloadPath(uid: string, relPath: string) {
   const fileName = relativePath === '/' ? 'Root' : relativePath.split('/').pop() || 'Unknown';
   const s = await stat(fullPath);
   if (s.isDirectory()) {
-    const content = await zipFile(fullPath);
+    const content = await createZipFromDir(fullPath);
     return {
       content,
       name: `${fileName}.zip`,
