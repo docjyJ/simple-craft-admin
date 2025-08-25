@@ -79,9 +79,7 @@ export default function ServerLayout({
           </Tabs.List>
         </Tabs>
       </Paper>
-      <Paper withBorder p="md" style={{ flexGrow: 1, overflow: 'auto' }}>
-        <Outlet />
-      </Paper>
+      <Outlet />
     </Stack>
   );
 }
