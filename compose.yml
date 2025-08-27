@@ -1,5 +1,8 @@
 services:
   app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: ghcr.io/docjyj/simple-craft-admin:main
     container_name: simple-craft-admin
     environment:
@@ -7,10 +10,6 @@ services:
     ports:
       - '80:3000'
     volumes:
-      - simple_craft_admin_config:/app/config
-      - simple_craft_admin_minecraft:/app/minecraft
+      - ./config:/app/config
+      - ./minecraft:/app/minecraft
     restart: unless-stopped
-
-volumes:
-  simple_craft_admin_config:
-  simple_craft_admin_minecraft:

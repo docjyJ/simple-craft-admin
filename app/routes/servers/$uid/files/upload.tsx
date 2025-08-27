@@ -38,7 +38,7 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 
 export default function UploadFileRoute({ loaderData: { path, folderName }, params: { uid } }: Route.ComponentProps) {
   return (
-    <Paper withBorder maw={500}>
+    <Paper withBorder maw={500} m="auto">
       <Stack gap="lg" m="md">
         <Title order={3}>Upload file</Title>
         <div>Choose a file to upload into '{folderName}'.</div>

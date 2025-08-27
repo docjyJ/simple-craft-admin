@@ -1,4 +1,4 @@
-import { Alert, Button, NumberInput, Select, Stack, TextInput } from '@mantine/core';
+import { Alert, Button, NumberInput, Paper, Select, Stack, TextInput, Title } from '@mantine/core';
 import type { Route } from './+types/settings';
 import { IconAlertHexagon, IconDeviceFloppy, IconInfoHexagon } from '@tabler/icons-react';
 import { z } from 'zod';
@@ -36,25 +36,25 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 
 export default function SettingsServer({ loaderData: { serverData } }: Route.ComponentProps) {
   return (
-    <Stack>
-      <ValidatedForm
-        id="settings-form"
-        method="post"
-        schema={schema}
-        defaultValues={{
-          name: serverData.name,
-          server_port: serverData.server_port,
-          jar_url: serverData.jar_url,
-          java_version: serverData.java_version,
-        }}
-      >
-        {(form) => {
-          const { value, ...selectInputProps } = form.getInputProps('java_version');
-          const cleanValue =
-            typeof value === 'number' ? value.toString() : typeof value === 'object' ? undefined : value;
-          const cleanSelectInputProps = { value: cleanValue, ...selectInputProps };
-          return (
+    <ValidatedForm
+      id="settings-form"
+      method="post"
+      schema={schema}
+      defaultValues={{
+        name: serverData.name,
+        server_port: serverData.server_port,
+        jar_url: serverData.jar_url,
+        java_version: serverData.java_version,
+      }}
+    >
+      {(form) => {
+        const { value, ...selectInputProps } = form.getInputProps('java_version');
+        const cleanValue = typeof value === 'number' ? value.toString() : typeof value === 'object' ? undefined : value;
+        const cleanSelectInputProps = { value: cleanValue, ...selectInputProps };
+        return (
+          <Paper withBorder p="md">
             <Stack justify="left">
+              <Title order={3}>Server Settings</Title>
               <input name="type" type="hidden" value="settings" />
               <TextInput name="name" label="Server Name" error={form.error('name')} {...form.getInputProps('name')} />
               <NumberInput
@@ -75,11 +75,11 @@ export default function SettingsServer({ loaderData: { serverData } }: Route.Com
                 name="java_version"
                 label="Version Java"
                 data={[
-                  { value: '', label: 'Use default (Java 21)' },
-                  { value: '8', label: 'Java 8' },
-                  { value: '11', label: 'Java 11' },
-                  { value: '17', label: 'Java 17' },
+                  { value: 'default', label: 'Use default (Java 21)' },
                   { value: '21', label: 'Java 21' },
+                  { value: '17', label: 'Java 17' },
+                  { value: '11', label: 'Java 11' },
+                  { value: '8', label: 'Java 8' },
                 ]}
                 error={form.error('java_version')}
                 {...cleanSelectInputProps}
@@ -99,9 +99,9 @@ export default function SettingsServer({ loaderData: { serverData } }: Route.Com
                 </Alert>
               )}
             </Stack>
-          );
-        }}
-      </ValidatedForm>
-    </Stack>
+          </Paper>
+        );
+      }}
+    </ValidatedForm>
   );
 }

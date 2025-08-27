@@ -60,7 +60,7 @@ export default function ExtractArchiveRoute({
   params: { uid },
 }: Route.ComponentProps) {
   return (
-    <Paper withBorder maw={500}>
+    <Paper withBorder maw={500} m="auto">
       <Stack gap="lg" m="md">
         <Title order={3}>Extract archive</Title>
         <Text>

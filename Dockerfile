@@ -6,6 +6,8 @@ RUN apk add --no-cache \
     openjdk11-jre-headless=11.0.28_p6-r0 \
     openjdk17-jre-headless=17.0.16_p8-r0 \
     openjdk21-jre-headless=21.0.8_p9-r0
+ENV DATABASE_URL="file:/app/config/db.sqlite"
+RUN mkdir -p /app/config /app/minecraft && chmod 755 /app/config /app/minecraft
 COPY . /app
 WORKDIR /app
 
@@ -19,5 +21,5 @@ RUN pnpm run build
 FROM base
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/build /app/build
-EXPOSE 8000
+EXPOSE 3000
 CMD [ "pnpm", "start" ]
