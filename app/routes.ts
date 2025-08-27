@@ -18,6 +18,8 @@ export default [
       route('files/extract', './routes/servers/$uid/files/extract.tsx'),
       route('files/upload', './routes/servers/$uid/files/upload.tsx'),
     ]),
+    route('users', './routes/users/index.tsx'),
     route('users/new', './routes/users/new.tsx'),
+    route('users/:uid/edit', './routes/users/$uid/edit.tsx'),
   ]),
 ] satisfies RouteConfig;

@@ -86,7 +86,7 @@ export default function NewUser() {
                 label="Administrator"
               />
               <Button type="submit" loading={form.formState.isSubmitting}>
-                Créer
+                Create
               </Button>
             </Stack>
           )}

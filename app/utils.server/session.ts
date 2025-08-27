@@ -52,3 +52,20 @@ export async function createNewUser({
 }) {
   return hash(password).then((password) => prisma.user.create({ data: { password, ...data } }));
 }
+
+export function listUsers() {
+  return prisma.user.findMany({ select: { id: true, username: true, name: true, role: true }, orderBy: { id: 'asc' } });
+}
+
+export function getUserById(id: number) {
+  return prisma.user.findUnique({ select: { id: true, username: true, name: true, role: true }, where: { id } });
+}
+
+export async function updateUser(id: number, data: { name: string; role: 'ADMIN' | 'USER'; password?: string | null }) {
+  const { password, ...rest } = data;
+  if (password && password.length > 0) {
+    const hashed = await hash(password);
+    return prisma.user.update({ where: { id }, data: { ...rest, password: hashed } });
+  }
+  return prisma.user.update({ where: { id }, data: rest });
+}
