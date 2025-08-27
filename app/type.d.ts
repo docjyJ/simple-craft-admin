@@ -20,4 +20,5 @@ export type ServerProperties = {
 export type SacProperties = {
   name: string;
   jar_url: string;
+  java_version: number;
 };

@@ -148,6 +148,7 @@ export async function getSacProperties(sacPropertiesFile: string) {
   const properties: SacProperties = {
     name: 'Unknown Server',
     jar_url: '',
+    java_version: 21,
   };
   return readFile(sacPropertiesFile, 'utf8')
     .then(getProperties)
@@ -157,6 +158,12 @@ export async function getSacProperties(sacPropertiesFile: string) {
       }
       if (data['jar-url']) {
         properties.jar_url = data['jar-url'];
+      }
+      if (data['java-version']) {
+        const v = parseInt(data['java-version'], 10);
+        if ([8, 11, 17, 21].includes(v)) {
+          properties.java_version = v;
+        }
       }
       return properties;
     })
@@ -192,6 +199,9 @@ export async function editSacProperties(sacPropertiesFile: string, properties: P
       }
       if (properties.jar_url !== undefined) {
         editor.upsert('jar-url', properties.jar_url);
+      }
+      if (properties.java_version !== undefined) {
+        editor.upsert('java-version', properties.java_version.toString());
       }
       return editor.format();
     })

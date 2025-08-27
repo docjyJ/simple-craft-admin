@@ -33,7 +33,7 @@ export class ServerMinecraft {
 
   async init({ name }: { name: string }) {
     await mkdir(this.path, { recursive: true });
-    await writeFile(`${this.path}/sac.properties`, `name=${name}\njar_url=\n`, { flag: 'w' });
+    await writeFile(`${this.path}/sac.properties`, `name=${name}\njar-url=\njava-version=21\n`, { flag: 'w' });
     await writeFile(`${this.path}/server.properties`, `motd=${name}\nmax-players=20\nserver-port=25565\n`, {
       flag: 'w',
     });
@@ -58,6 +58,7 @@ export class ServerMinecraft {
         name: sacProperties.name,
         server_port: serverProperties.server_port,
         jar_url: sacProperties.jar_url,
+        java_version: sacProperties.java_version,
       };
     }
     return {
@@ -68,18 +69,38 @@ export class ServerMinecraft {
       name: sacProperties.name,
       server_port: serverProperties.server_port,
       jar_url: sacProperties.jar_url,
+      java_version: sacProperties.java_version,
     };
   }
 
-  async updateConfig({ name, server_port, jar_url }: { name: string; server_port: number; jar_url: string }) {
+  async updateConfig({
+    name,
+    server_port,
+    jar_url,
+    java_version,
+  }: {
+    name: string;
+    server_port: number;
+    jar_url: string;
+    java_version: number;
+  }) {
     await editServerProperties(`${this.path}/server.properties`, { server_port });
-    await editSacProperties(`${this.path}/sac.properties`, { name: name.trim(), jar_url });
+    await editSacProperties(`${this.path}/sac.properties`, { name: name.trim(), jar_url, java_version });
   }
 
-  start() {
+  async start() {
     if (this.isRunning()) return;
+    const sacProperties = await getSacProperties(`${this.path}/sac.properties`);
+    const version = sacProperties.java_version;
+    const javaPathMap: Record<number, string> = {
+      8: '/usr/lib/jvm/java-1.8-openjdk/bin/java',
+      11: '/usr/lib/jvm/java-11-openjdk/bin/java',
+      17: '/usr/lib/jvm/java-17-openjdk/bin/java',
+      21: '/usr/lib/jvm/java-21-openjdk/bin/java',
+    };
+    const javaBin = javaPathMap[version] || 'java';
     const javaArgs = ['-Xmx1024M', '-Xms1024M', '-jar', 'server.jar', 'nogui'];
-    const proc = spawn('java', javaArgs, {
+    const proc = spawn(javaBin, javaArgs, {
       cwd: this.path,
       detached: true,
       stdio: ['pipe', 'pipe', 'pipe'],

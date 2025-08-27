@@ -1,4 +1,4 @@
-import { Alert, Button, NumberInput, Stack, TextInput } from '@mantine/core';
+import { Alert, Button, NumberInput, Select, Stack, TextInput } from '@mantine/core';
 import type { Route } from './+types/settings';
 import { IconAlertHexagon, IconDeviceFloppy, IconInfoHexagon } from '@tabler/icons-react';
 import { z } from 'zod';
@@ -16,6 +16,7 @@ const schema = z.object({
     protocol: /^https?$/,
     hostname: z.regexes.domain,
   }),
+  java_version: z.coerce.number(),
 });
 
 export async function loader({ params: { uid } }: Route.LoaderArgs) {
@@ -44,50 +45,70 @@ export default function SettingsServer({ loaderData: { serverData } }: Route.Com
           name: serverData.name,
           server_port: serverData.server_port,
           jar_url: serverData.jar_url,
+          java_version: serverData.java_version,
         }}
       >
-        {(form) => (
-          <Stack justify="left">
-            <input name="type" type="hidden" value="settings" />
-            <TextInput
-              name="name"
-              label="Server Name"
-              required
-              error={form.error('name')}
-              {...form.getInputProps('name')}
-            />
-            <NumberInput
-              name="server_port"
-              label="Server Port"
-              required
-              min={1}
-              max={65535}
-              error={form.error('server_port')}
-              {...form.getInputProps('server_port')}
-            />
-            <TextInput
-              label="Jar URL"
-              required
-              placeholder="https://example.com/path/to/server.jar"
-              error={form.error('jar_url')}
-              {...form.getInputProps('jar_url')}
-            />
-            <Button type="submit" leftSection={<IconDeviceFloppy size={18} />} loading={form.formState.isSubmitting}>
-              Save Settings
-            </Button>
+        {(form) => {
+          const { value, ...selectInputProps } = form.getInputProps('java_version');
+          const cleanValue =
+            typeof value === 'number' ? value.toString() : typeof value === 'object' ? undefined : value;
+          const cleanSelectInputProps = { value: cleanValue, ...selectInputProps };
+          return (
+            <Stack justify="left">
+              <input name="type" type="hidden" value="settings" />
+              <TextInput
+                name="name"
+                label="Server Name"
+                required
+                error={form.error('name')}
+                {...form.getInputProps('name')}
+              />
+              <NumberInput
+                name="server_port"
+                label="Server Port"
+                required
+                min={1}
+                max={65535}
+                error={form.error('server_port')}
+                {...form.getInputProps('server_port')}
+              />
+              <TextInput
+                label="Jar URL"
+                required
+                placeholder="https://example.com/path/to/server.jar"
+                error={form.error('jar_url')}
+                {...form.getInputProps('jar_url')}
+              />
+              <Select
+                name="java_version"
+                label="Version Java"
+                required
+                data={[
+                  { value: '8', label: 'Java 8' },
+                  { value: '11', label: 'Java 11' },
+                  { value: '17', label: 'Java 17' },
+                  { value: '21', label: 'Java 21' },
+                ]}
+                error={form.error('java_version')}
+                {...cleanSelectInputProps}
+              />
+              <Button type="submit" leftSection={<IconDeviceFloppy size={18} />} loading={form.formState.isSubmitting}>
+                Save Settings
+              </Button>
 
-            {form.formState.submitStatus === 'success' && (
-              <Alert title="Settings Updated" color="green" icon={<IconInfoHexagon />}>
-                The server settings have been updated successfully.
-              </Alert>
-            )}
-            {form.formState.submitStatus === 'error' && (
-              <Alert title="Error Updating Settings" color="red" icon={<IconAlertHexagon />}>
-                There was an error updating the server settings. Please check the form for errors.
-              </Alert>
-            )}
-          </Stack>
-        )}
+              {form.formState.submitStatus === 'success' && (
+                <Alert title="Settings Updated" color="green" icon={<IconInfoHexagon />}>
+                  The server settings have been updated successfully.
+                </Alert>
+              )}
+              {form.formState.submitStatus === 'error' && (
+                <Alert title="Error Updating Settings" color="red" icon={<IconAlertHexagon />}>
+                  There was an error updating the server settings. Please check the form for errors.
+                </Alert>
+              )}
+            </Stack>
+          );
+        }}
       </ValidatedForm>
     </Stack>
   );
