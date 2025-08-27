@@ -1,34 +1,17 @@
-import { createMinecraftServer, fullListMinecraftServers } from '~/utils.server/minecraft-servers';
+import { fullListMinecraftServers } from '~/utils.server/minecraft-servers';
 import type { Route } from './+types/index';
-import { ActionIcon, Badge, Button, Group, Modal, Paper, Stack, Table, Text, TextInput } from '@mantine/core';
+import { ActionIcon, Badge, Button, Group, Paper, Table, Text, Title } from '@mantine/core';
 import { IconAccessPoint, IconAccessPointOff, IconEdit } from '@tabler/icons-react';
-import { Link, redirect } from 'react-router';
+import { Link } from 'react-router';
 import ServerUser from '~/components/ServerUser';
 import ServerPlayerCount from '~/components/ServerPlayerCount';
-import { useState } from 'react';
-import { z } from 'zod';
-import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 
 export async function loader() {
   const servers = await fullListMinecraftServers();
   return { servers };
 }
 
-const schema = z.object({
-  serverName: z.string().min(1, 'Name is required'),
-});
-
-export async function action({ request }: { request: Request }) {
-  const result = await parseFormData(request, schema);
-  if (result.error) {
-    return validationError(result.error, result.submittedData);
-  }
-  const uid = await createMinecraftServer({ name: result.data.serverName });
-  return redirect(`/servers/${uid}`);
-}
-
 export default function ServersIndex({ loaderData: { servers } }: Route.ComponentProps) {
-  const [opened, setOpened] = useState(false);
   const rows = servers.map(({ uid, server_data }) => (
     <Table.Tr key={uid}>
       <Table.Td>
@@ -60,37 +43,12 @@ export default function ServersIndex({ loaderData: { servers } }: Route.Componen
   ));
   return (
     <>
-      <h1>List of Minecraft Servers</h1>
-      <Button onClick={() => setOpened(true)} mb="md">
-        Create New Server
-      </Button>
-      <Modal opened={opened} onClose={() => setOpened(false)} title="Create New Server" centered>
-        <ValidatedForm
-          schema={schema}
-          method="post"
-          defaultValues={{ serverName: '' }}
-          onSubmit={() => setOpened(false)}
-        >
-          {(form) => (
-            <Stack>
-              <TextInput
-                label="Server Name"
-                placeholder="Enter server name"
-                required
-                {...form.getInputProps('serverName')}
-              />
-              <Group justify="flex-end">
-                <Button type="submit" color="blue" loading={form.formState.isSubmitting}>
-                  Create
-                </Button>
-                <Button variant="outline" loading={form.formState.isSubmitting} onClick={() => setOpened(false)}>
-                  Cancel
-                </Button>
-              </Group>
-            </Stack>
-          )}
-        </ValidatedForm>
-      </Modal>
+      <Group justify="space-between" mb="md">
+        <Title order={2}>Servers</Title>
+        <Button component={Link} to="/servers/new">
+          New Server
+        </Button>
+      </Group>
       <Paper withBorder>
         <Table.ScrollContainer minWidth={800} type="native">
           <Table verticalSpacing="sm">

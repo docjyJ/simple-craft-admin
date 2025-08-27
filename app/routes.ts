@@ -6,6 +6,7 @@ export default [
   route('logout', './routes/logout.ts'),
   layout('./auth-layout.tsx', [
     route('servers', './routes/servers/index.tsx'),
+    route('servers/new', './routes/servers/new.tsx'),
     route('servers/:uid', './routes/servers/$uid.tsx', [
       index('./routes/servers/$uid/index.tsx'),
       route('log', './routes/servers/$uid/log.ts'),
