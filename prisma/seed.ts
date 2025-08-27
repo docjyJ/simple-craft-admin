@@ -6,7 +6,7 @@ async function main() {
   try {
     const existing = await prisma.user.findUnique({ where: { username: 'admin' } });
     if (!existing) {
-      const password = await hash('admin');
+      const password = await hash(process.env.ADMIN_PASSWORD || 'admin');
       await prisma.user.create({
         data: { username: 'admin', name: 'Administrator', password, role: 'ADMIN' },
       });
