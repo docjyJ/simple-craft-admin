@@ -5,7 +5,7 @@ services:
     environment:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     ports:
-      - "80:3000"
+      - '80:3000'
     volumes:
       - simple_craft_admin_config:/app/config
       - simple_craft_admin_minecraft:/app/minecraft
