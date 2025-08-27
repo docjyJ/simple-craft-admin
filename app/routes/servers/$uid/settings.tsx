@@ -12,10 +12,13 @@ const schema = z.object({
     .int()
     .min(1, 'Port must be between 1 and 65535')
     .max(65535, 'Port must be between 1 and 65535'),
-  jar_url: z.url({
-    protocol: /^https?$/,
-    hostname: z.regexes.domain,
-  }),
+  jar_url: z.union([
+    z.url({
+      protocol: /^https?$/,
+      hostname: z.regexes.domain,
+    }),
+    z.literal(''),
+  ]),
   java_version: z.string().min(1, 'Select a Java version'),
 });
 

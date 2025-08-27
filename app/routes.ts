@@ -11,6 +11,7 @@ export default [
       index('./routes/servers/$uid/index.tsx'),
       route('log', './routes/servers/$uid/log.ts'),
       route('settings', './routes/servers/$uid/settings.tsx'),
+      route('management', './routes/servers/$uid/management.tsx'),
       route('files', './routes/servers/$uid/files/index.tsx'),
       route('files/download', './routes/servers/$uid/files/download.ts'),
       route('files/delete', './routes/servers/$uid/files/delete.tsx'),

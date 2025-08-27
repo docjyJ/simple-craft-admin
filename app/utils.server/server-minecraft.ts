@@ -174,6 +174,17 @@ export class ServerMinecraft {
     this.stdoutBuf = '';
     this.stderrBuf = '';
   }
+
+  async updateJar() {
+    const scaProperties = await getScaProperties(`${this.path}/sca.properties`);
+    const url = scaProperties.jar_url?.trim();
+    if (!url) throw new Error('No jar_url configured');
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to download jar: ${res.status} ${res.statusText}`);
+    const arr = await res.arrayBuffer();
+    await writeFile(`${this.path}/server.jar`, Buffer.from(arr));
+    return true;
+  }
 }
 
 export function getOrCreateServer(uid: string): ServerMinecraft {
