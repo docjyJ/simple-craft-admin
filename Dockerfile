@@ -1,5 +1,6 @@
-FROM alpine:3.22 AS base
+FROM alpine:3.22.1 AS base
 RUN apk add --no-cache \
+    openssl=3.5.2-r0 \
     nodejs=22.16.0-r2  \
     pnpm=10.9.0-r0 \
     openjdk8-jre-base=8.452.09-r0 \
