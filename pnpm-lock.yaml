@@ -45,8 +45,8 @@ importers:
         specifier: ^6.14.0
         version: 6.14.0(typescript@5.9.2)
       properties-file:
-        specifier: ^3.5.13
-        version: 3.5.13
+        specifier: ^3.6.0
+        version: 3.6.0
       react:
         specifier: ^19.1.1
         version: 19.1.1
@@ -1862,8 +1862,8 @@ packages:
     resolution: {integrity: sha512-y+WKFlBR8BGXnsNlIHFGPZmyDf3DFMoLhaflAnyZgV6rG6xu+JwesTo2Q9R6XwYmtmwAFCkAk3e35jEdoeh/3g==}
     engines: {node: '>=10'}
 
-  properties-file@3.5.13:
-    resolution: {integrity: sha512-Zm0MkGfj4Mefz4J2GO1U5ux8iNd5/w/Pk7KnurarzN9dJBhHtL1/SVTm8PGdEKDFagD9qWeDlEkRMKpYhpGwfQ==}
+  properties-file@3.6.0:
+    resolution: {integrity: sha512-bpR0vxUlpjiVHaMDCr/x3RFVbR+6eN5BeLGK9ZZ3qEfSLFUNK5FJqjinulKfrkpcr0GqyOeWW58I+hDOWiA7ag==}
 
   proxy-addr@2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
@@ -4488,7 +4488,7 @@ snapshots:
       err-code: 2.0.3
       retry: 0.12.0
 
-  properties-file@3.5.13: {}
+  properties-file@3.6.0: {}
 
   proxy-addr@2.0.7:
     dependencies:
