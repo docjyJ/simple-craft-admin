@@ -5,9 +5,9 @@ import { serverMinecraftInstances } from '~/utils.server/global';
 import { mkdir, writeFile } from 'node:fs/promises';
 import type { LogLine } from '~/type';
 import {
-  editSacProperties,
+  editScaProperties,
   editServerProperties,
-  getSacProperties,
+  getScaProperties,
   getServerIcon,
   getServerProperties,
   getServerStatus,
@@ -33,7 +33,7 @@ export class ServerMinecraft {
 
   async init({ name }: { name: string }) {
     await mkdir(this.path, { recursive: true });
-    await writeFile(`${this.path}/sac.properties`, `name=${name}\njar-url=\njava-version=21\n`, { flag: 'w' });
+    await writeFile(`${this.path}/sca.properties`, `name=${name}\njar-url=\njava-version=21\n`, { flag: 'w' });
     await writeFile(`${this.path}/server.properties`, `motd=${name}\nmax-players=20\nserver-port=25565\n`, {
       flag: 'w',
     });
@@ -45,7 +45,7 @@ export class ServerMinecraft {
 
   async getServerData() {
     const serverProperties = await getServerProperties(`${this.path}/server.properties`);
-    const sacProperties = await getSacProperties(`${this.path}/sac.properties`);
+    const scaProperties = await getScaProperties(`${this.path}/sca.properties`);
     const serverStatus = this.isRunning() ? await getServerStatus(serverProperties.server_port) : null;
     if (serverStatus) {
       return {
@@ -55,10 +55,10 @@ export class ServerMinecraft {
         online_players: serverStatus.online_players,
         server_icon: serverStatus.icon,
         server_version: serverStatus.version,
-        name: sacProperties.name,
+        name: scaProperties.name,
         server_port: serverProperties.server_port,
-        jar_url: sacProperties.jar_url,
-        java_version: sacProperties.java_version,
+        jar_url: scaProperties.jar_url,
+        java_version: scaProperties.java_version,
       };
     }
     return {
@@ -66,10 +66,10 @@ export class ServerMinecraft {
       motd: serverProperties.motd,
       max_players: serverProperties.max_players,
       server_icon: await getServerIcon(`${this.path}/server-icon.png`),
-      name: sacProperties.name,
+      name: scaProperties.name,
       server_port: serverProperties.server_port,
-      jar_url: sacProperties.jar_url,
-      java_version: sacProperties.java_version,
+      jar_url: scaProperties.jar_url,
+      java_version: scaProperties.java_version,
     };
   }
 
@@ -82,23 +82,23 @@ export class ServerMinecraft {
     name: string;
     server_port: number;
     jar_url: string;
-    java_version: number;
+    java_version: string;
   }) {
     await editServerProperties(`${this.path}/server.properties`, { server_port });
-    await editSacProperties(`${this.path}/sac.properties`, { name: name.trim(), jar_url, java_version });
+    await editScaProperties(`${this.path}/sca.properties`, { name: name.trim(), jar_url, java_version });
   }
 
   async start() {
     if (this.isRunning()) return;
-    const sacProperties = await getSacProperties(`${this.path}/sac.properties`);
-    const version = sacProperties.java_version;
-    const javaPathMap: Record<number, string> = {
-      8: '/usr/lib/jvm/java-1.8-openjdk/bin/java',
-      11: '/usr/lib/jvm/java-11-openjdk/bin/java',
-      17: '/usr/lib/jvm/java-17-openjdk/bin/java',
-      21: '/usr/lib/jvm/java-21-openjdk/bin/java',
+    const scaProperties = await getScaProperties(`${this.path}/sca.properties`);
+    const version = scaProperties.java_version;
+    const javaPathMap: Record<string, string> = {
+      '8': '/usr/lib/jvm/java-1.8-openjdk/bin/java',
+      '11': '/usr/lib/jvm/java-11-openjdk/bin/java',
+      '17': '/usr/lib/jvm/java-17-openjdk/bin/java',
+      default: '/usr/lib/jvm/java-21-openjdk/bin/java',
     };
-    const javaBin = javaPathMap[version] || 'java';
+    const javaBin = version in javaPathMap ? javaPathMap[version] : javaPathMap['default'];
     const javaArgs = ['-Xmx1024M', '-Xms1024M', '-jar', 'server.jar', 'nogui'];
     const proc = spawn(javaBin, javaArgs, {
       cwd: this.path,

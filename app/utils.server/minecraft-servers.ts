@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { isValidUid, resolveSafePath, root } from '~/utils.server/path-validation';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import { getProperties } from 'properties-file';
-import type { SacProperties, ServerProperties, ServerStatus } from '~/type';
+import type { ScaProperties, ServerProperties, ServerStatus } from '~/type';
 import { Socket } from 'node:net';
 import pack_jpg from '~/assets/pack_png';
 import { PropertiesEditor } from 'properties-file/editor';
@@ -28,7 +28,7 @@ export async function fullListMinecraftServers() {
 
 export async function updateJar(uid: string) {
   const fullPath = resolveSafePath(uid, '');
-  const { jar_url } = await getSacProperties(fullPath);
+  const { jar_url } = await getScaProperties(fullPath);
   const jarPath = resolveSafePath(uid, 'server.jar');
   const response = await fetch(jar_url);
   if (!response.ok) {
@@ -144,13 +144,13 @@ export async function getServerIcon(serverIconFile: string) {
     .catch(defaultIfFileNotExist(pack_jpg));
 }
 
-export async function getSacProperties(sacPropertiesFile: string) {
-  const properties: SacProperties = {
+export async function getScaProperties(ScaPropertiesFile: string) {
+  const properties: ScaProperties = {
     name: 'Unknown Server',
     jar_url: '',
-    java_version: 21,
+    java_version: 'default',
   };
-  return readFile(sacPropertiesFile, 'utf8')
+  return readFile(ScaPropertiesFile, 'utf8')
     .then(getProperties)
     .then((data) => {
       if (data['name']) {
@@ -160,10 +160,7 @@ export async function getSacProperties(sacPropertiesFile: string) {
         properties.jar_url = data['jar-url'];
       }
       if (data['java-version']) {
-        const v = parseInt(data['java-version'], 10);
-        if ([8, 11, 17, 21].includes(v)) {
-          properties.java_version = v;
-        }
+        properties.java_version = data['java-version'];
       }
       return properties;
     })
@@ -189,8 +186,8 @@ export async function editServerProperties(serverPropertiesFile: string, propert
     .then((formattedData) => writeFile(serverPropertiesFile, formattedData, 'utf8'));
 }
 
-export async function editSacProperties(sacPropertiesFile: string, properties: Partial<SacProperties>) {
-  return readFile(sacPropertiesFile, 'utf8')
+export async function editScaProperties(scaPropertiesFile: string, properties: Partial<ScaProperties>) {
+  return readFile(scaPropertiesFile, 'utf8')
     .catch(defaultIfFileNotExist(''))
     .then((data) => new PropertiesEditor(data))
     .then((editor) => {
@@ -205,5 +202,5 @@ export async function editSacProperties(sacPropertiesFile: string, properties: P
       }
       return editor.format();
     })
-    .then((formattedData) => writeFile(sacPropertiesFile, formattedData, 'utf8'));
+    .then((formattedData) => writeFile(scaPropertiesFile, formattedData, 'utf8'));
 }

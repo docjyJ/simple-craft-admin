@@ -16,7 +16,7 @@ const schema = z.object({
     protocol: /^https?$/,
     hostname: z.regexes.domain,
   }),
-  java_version: z.coerce.number(),
+  java_version: z.string().min(1, 'Select a Java version'),
 });
 
 export async function loader({ params: { uid } }: Route.LoaderArgs) {
@@ -56,17 +56,10 @@ export default function SettingsServer({ loaderData: { serverData } }: Route.Com
           return (
             <Stack justify="left">
               <input name="type" type="hidden" value="settings" />
-              <TextInput
-                name="name"
-                label="Server Name"
-                required
-                error={form.error('name')}
-                {...form.getInputProps('name')}
-              />
+              <TextInput name="name" label="Server Name" error={form.error('name')} {...form.getInputProps('name')} />
               <NumberInput
                 name="server_port"
                 label="Server Port"
-                required
                 min={1}
                 max={65535}
                 error={form.error('server_port')}
@@ -74,7 +67,6 @@ export default function SettingsServer({ loaderData: { serverData } }: Route.Com
               />
               <TextInput
                 label="Jar URL"
-                required
                 placeholder="https://example.com/path/to/server.jar"
                 error={form.error('jar_url')}
                 {...form.getInputProps('jar_url')}
@@ -82,8 +74,8 @@ export default function SettingsServer({ loaderData: { serverData } }: Route.Com
               <Select
                 name="java_version"
                 label="Version Java"
-                required
                 data={[
+                  { value: '', label: 'Use default (Java 21)' },
                   { value: '8', label: 'Java 8' },
                   { value: '11', label: 'Java 11' },
                   { value: '17', label: 'Java 17' },

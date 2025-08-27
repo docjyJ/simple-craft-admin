@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "prisma generate && react-router build && mv ./app/generated/prisma/*.so.node ./build/server/",
+    "build": "prisma generate && react-router build && cp ./app/generated/prisma/*.so.node ./build/server/",
     "dev": "react-router dev",
     "start": "prisma migrate deploy && react-router-serve ./build/server/index.js",
     "test": "vitest",
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@mantine/core": "^8.2.7",
-    "@prisma/client": "^6.14.0",
+    "@prisma/client": "^6.15.0",
     "@react-router/node": "^7.8.2",
     "@react-router/serve": "^7.8.2",
     "@rvf/react-router": "^8.0.0",
@@ -26,7 +26,7 @@
     "argon2": "^0.44.0",
     "isbot": "^5.1.30",
     "jszip": "^3.10.1",
-    "prisma": "^6.14.0",
+    "prisma": "^6.15.0",
     "properties-file": "^3.6.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

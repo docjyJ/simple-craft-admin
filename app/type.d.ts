@@ -17,8 +17,8 @@ export type ServerProperties = {
   server_port: number;
 };
 
-export type SacProperties = {
+export type ScaProperties = {
   name: string;
   jar_url: string;
-  java_version: number;
+  java_version: string;
 };
