@@ -5,7 +5,7 @@ RUN corepack enable && corepack prepare pnpm@latest-10 --activate
 COPY . /app
 WORKDIR /app
 RUN apk add --no-cache \
-    openjdk8-jre-headless \
+    openjdk8-jre-base \
     openjdk11-jre-headless \
     openjdk17-jre-headless \
     openjdk21-jre-headless
