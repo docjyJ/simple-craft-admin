@@ -1,8 +1,20 @@
-.react-router
-build
-node_modules
-.git
-.gitignore
+.DS_Store
+/node_modules/
+/.git/
+
+# React Router
+/.react-router/
+/build/
+
+# IDEs
+/.idea/
+/.vscode/
+
+/minecraft/
+/config/
+/app/generated/
+/.env
+/.gitignore
 *.md
-compose.yaml
-Dockerfile
+/compose.yaml
+/Dockerfile

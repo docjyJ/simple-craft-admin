@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "prisma generate && react-router build",
+    "build": "prisma generate && react-router build && mv ./app/generated/prisma/*.so.node ./build/server/",
     "dev": "react-router dev",
     "start": "prisma migrate deploy && react-router-serve ./build/server/index.js",
     "test": "vitest",
