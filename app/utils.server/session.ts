@@ -1,5 +1,6 @@
 import { hash, verify } from 'argon2';
 import { prisma, sessionStore } from '~/utils.server/global';
+import { data, redirect } from 'react-router';
 
 export async function getUserId(request: Request) {
   const session = await sessionStore.getSession(request.headers.get('Cookie'));
@@ -68,4 +69,16 @@ export async function updateUser(id: number, data: { name: string; role: 'ADMIN'
     return prisma.user.update({ where: { id }, data: { ...rest, password: hashed } });
   }
   return prisma.user.update({ where: { id }, data: rest });
+}
+
+export async function requireAuth(request: Request, permission?: { admin?: boolean }) {
+  const user = await getUser(request);
+  if (!user) {
+    const url = new URL(request.url);
+    throw redirect(`/login?redirect=${encodeURIComponent(url.pathname + url.search)}`);
+  }
+  if (permission?.admin && user.role !== 'ADMIN') {
+    throw data('bad right', { status: 403 });
+  }
+  return user;
 }

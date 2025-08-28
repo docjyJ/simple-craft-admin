@@ -1,8 +1,8 @@
 import type { Route } from './+types/index';
-import { cleanPath, encodePathParam, isArchive, isText } from '~/utils/path-utils';
-import { data, Link, useNavigate } from 'react-router';
+import { encodePathParam, isArchive, isText } from '~/utils/path-utils';
+import { Link, useNavigate } from 'react-router';
 import { ActionIcon, Anchor, Breadcrumbs, Button, Group, Paper, Stack, Table, Text } from '@mantine/core';
-import { getStat, resolveSafePath } from '~/utils.server/path-validation';
+import { getPathFromUrl, requireDirectory, resolveSafePath } from '~/utils.server/path-validation';
 import { readdir } from 'node:fs/promises';
 import {
   IconDownload,
@@ -16,16 +16,13 @@ import {
   IconTrash,
   IconUpload,
 } from '@tabler/icons-react';
+import { requireAuth } from '~/utils.server/session';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const rawPath = url.searchParams.get('path') || '';
-  const path = cleanPath(rawPath);
+  await requireAuth(request);
+  const path = getPathFromUrl(request.url);
   const fullPath = resolveSafePath(params.uid, path);
-  const stats = await getStat(fullPath);
-  if (!stats.isDirectory()) {
-    throw data('Bad Request: not a directory', { status: 400 });
-  }
+  await requireDirectory(fullPath);
   const dirEntries = await readdir(fullPath, { withFileTypes: true });
   const entries = dirEntries
     .map((entry) => ({

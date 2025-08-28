@@ -119,12 +119,10 @@ export class ServerMinecraft {
   }
 
   sendCommand(command: string) {
-    const trimmed = command.trim();
-    if (trimmed.length === 0) return;
-    if (this.proc?.stdin) {
-      this.pushLine({ in: trimmed });
-      this.proc.stdin.write(trimmed + '\n');
-    }
+    if (!this.proc?.stdin) return false;
+    this.pushLine({ in: command });
+    this.proc.stdin.write(command + '\n');
+    return true;
   }
 
   forceKill(): boolean {
@@ -141,6 +139,17 @@ export class ServerMinecraft {
   onLine(listener: (line: LogLine) => void) {
     this.emitter.on('line', listener);
     return () => this.emitter.off('line', listener);
+  }
+
+  async updateJar() {
+    const scaProperties = await getScaProperties(`${this.path}/sca.properties`);
+    const url = scaProperties.jar_url?.trim();
+    if (!url) throw new Error('No jar_url configured');
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to download jar: ${res.status} ${res.statusText}`);
+    const arr = await res.arrayBuffer();
+    await writeFile(`${this.path}/server.jar`, Buffer.from(arr));
+    return true;
   }
 
   private pushLine(line: LogLine) {
@@ -173,17 +182,6 @@ export class ServerMinecraft {
     this.logHistory = [];
     this.stdoutBuf = '';
     this.stderrBuf = '';
-  }
-
-  async updateJar() {
-    const scaProperties = await getScaProperties(`${this.path}/sca.properties`);
-    const url = scaProperties.jar_url?.trim();
-    if (!url) throw new Error('No jar_url configured');
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Failed to download jar: ${res.status} ${res.statusText}`);
-    const arr = await res.arrayBuffer();
-    await writeFile(`${this.path}/server.jar`, Buffer.from(arr));
-    return true;
   }
 }
 

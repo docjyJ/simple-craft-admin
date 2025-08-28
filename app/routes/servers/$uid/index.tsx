@@ -6,23 +6,30 @@ import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router
 import { z } from 'zod';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import type { LogLine } from '~/type';
+import { requireAuth } from '~/utils.server/session';
 
 const commandSchema = z.object({
   command: z
     .string()
+    .trim()
+    .min(1, 'Command cannot be empty')
     .max(32767, 'Command too long')
     .transform((s) => s.trim()),
 });
 
-export async function action({ request, params }: Route.ActionArgs) {
-  const { uid } = params;
+export async function action({ request, params: { uid } }: Route.ActionArgs) {
+  await requireAuth(request);
   const result = await parseFormData(request, commandSchema);
   if (result.error) return validationError(result.error, result.submittedData);
-  const { command } = result.data;
-  if (uid && command.length > 0) getOrCreateServer(uid).sendCommand(command);
-  return null;
+  if (!getOrCreateServer(uid).sendCommand(result.data.command)) {
+    return validationError(
+      { formId: result.formId, fieldErrors: { command: 'Failed to send command, is the server running?' } },
+      result.submittedData,
+    );
+  }
 }
 
+// TODO: clean code, create hooks for log stream
 export default function ServerConsole({ params: { uid } }: Route.ComponentProps) {
   const [log, setLog] = useState<LogLine[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -130,25 +137,32 @@ export default function ServerConsole({ params: { uid } }: Route.ComponentProps)
       >
         {(form) => {
           resetRef.current = () => form.resetField('command');
+          const errorCommand = form.error('command');
           return (
-            <Group align="end">
-              <TextInput
-                placeholder="Enter a command..."
-                autoComplete="off"
-                {...form.getInputProps('command')}
-                error={form.error('command')}
-                style={{ flexGrow: 1 }}
-              />
-              <Button
-                variant="outline"
-                color="blue"
-                type="submit"
-                leftSection={<IconSend />}
-                loading={form.formState.isSubmitting}
-              >
-                Send
-              </Button>
-            </Group>
+            <Stack>
+              <Group align="end">
+                <TextInput
+                  placeholder="Enter a command..."
+                  autoComplete="off"
+                  {...form.getInputProps('command')}
+                  style={{ flexGrow: 1 }}
+                />
+                <Button
+                  variant="outline"
+                  color="blue"
+                  type="submit"
+                  leftSection={<IconSend />}
+                  loading={form.formState.isSubmitting}
+                >
+                  Send
+                </Button>
+              </Group>
+              {form.formState.submitStatus === 'error' && errorCommand && (
+                <Text c="red" fz="sm">
+                  {errorCommand}
+                </Text>
+              )}
+            </Stack>
           );
         }}
       </ValidatedForm>

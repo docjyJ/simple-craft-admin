@@ -1,9 +1,22 @@
 import type { Route } from './+types/edit';
-import { redirect, Link } from 'react-router';
+import { data, Link } from 'react-router';
 import { z } from 'zod';
-import { getUser, getUserById, updateUser } from '~/utils.server/session';
+import { getUserById, requireAuth, updateUser } from '~/utils.server/session';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { Button, Container, Group, Paper, PasswordInput, Radio, Stack, Text, TextInput, Title } from '@mantine/core';
+import {
+  Alert,
+  Button,
+  Container,
+  Group,
+  Paper,
+  PasswordInput,
+  Radio,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
+import { IconAlertHexagon, IconInfoHexagon } from '@tabler/icons-react';
 
 const schema = z.object({
   name: z.string().min(1, 'The full name is required'),
@@ -11,29 +24,27 @@ const schema = z.object({
   password: z.union([z.string().min(6, 'The password must be at least 6 characters long'), z.literal('')]),
 });
 
-export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
-  const current = await getUser(request);
-  if (!current) return redirect('/login');
-  if (current.role !== 'ADMIN') return redirect('/servers');
+async function getUserByStringId(uid: string) {
   const id = Number(uid);
-  if (Number.isNaN(id)) return redirect('/users');
+  if (Number.isNaN(id)) throw data('Invalid user ID', { status: 400 });
   const user = await getUserById(id);
-  if (!user) return redirect('/users');
+  if (!user) throw data('User not found', { status: 404 });
+  return { id, user };
+}
+
+export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
+  await requireAuth(request, { admin: true });
+  const { user } = await getUserByStringId(uid);
   return { user };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
-  const current = await getUser(request);
-  if (!current) return redirect('/login');
-  if (current.role !== 'ADMIN') return redirect('/servers');
-  const id = Number(uid);
-  if (Number.isNaN(id)) return redirect('/users');
-  const existing = await getUserById(id);
-  if (!existing) return redirect('/users');
+  await requireAuth(request, { admin: true });
+  const { id } = await getUserByStringId(uid);
   const result = await parseFormData(request, schema);
   if (result.error) return validationError(result.error, result.submittedData);
-  await updateUser(id, { name: result.data.name, role: result.data.role, password: result.data.password });
-  return redirect('/users');
+  await updateUser(id, result.data);
+  return null;
 }
 
 export default function EditUser({ loaderData: { user } }: Route.ComponentProps) {
@@ -78,6 +89,17 @@ export default function EditUser({ loaderData: { user } }: Route.ComponentProps)
                   Save
                 </Button>
               </Group>
+
+              {form.formState.submitStatus === 'success' && (
+                <Alert title="User Updated" color="green" icon={<IconInfoHexagon />}>
+                  The user have been updated successfully.
+                </Alert>
+              )}
+              {form.formState.submitStatus === 'error' && (
+                <Alert title="Error Updating User" color="red" icon={<IconAlertHexagon />}>
+                  There was an error updating the user. Please check the form for errors.
+                </Alert>
+              )}
             </Stack>
           )}
         </ValidatedForm>

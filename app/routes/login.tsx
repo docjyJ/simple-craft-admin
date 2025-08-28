@@ -13,10 +13,12 @@ const schema = z.object({
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await getUser(request);
   if (user) return redirect('/servers');
-  return {};
+  return null;
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  const url = new URL(request.url);
+  const redirectParam = url.searchParams.get('redirect') ?? '/';
   const result = await parseFormData(request, schema);
   if (result.error) {
     return validationError(result.error, result.submittedData);
@@ -34,7 +36,7 @@ export async function action({ request }: Route.ActionArgs) {
       result.submittedData,
     );
   }
-  return redirect('/servers', {
+  return redirect(redirectParam, {
     headers: {
       'Set-Cookie': login.cookie,
     },

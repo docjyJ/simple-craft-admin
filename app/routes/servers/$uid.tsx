@@ -5,8 +5,10 @@ import { IconPlayerStop, IconPower } from '@tabler/icons-react';
 import ServerUser from '~/components/ServerUser';
 import ServerPlayerCount from '~/components/ServerPlayerCount';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
+import { requireAuth } from '~/utils.server/session';
 
-export async function loader({ params: { uid } }: Route.LoaderArgs) {
+export async function loader({ params: { uid }, request }: Route.LoaderArgs) {
+  await requireAuth(request);
   const instance = getOrCreateServer(uid);
   return {
     server_data: await instance.getServerData(),
@@ -15,10 +17,11 @@ export async function loader({ params: { uid } }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
+  await requireAuth(request);
   const formData = await request.formData();
   const actionType = formData.get('running-action');
   const instance = getOrCreateServer(uid);
-  if (actionType === 'start') instance.start();
+  if (actionType === 'start') await instance.start();
   if (actionType === 'stop') instance.forceKill();
 }
 

@@ -1,13 +1,11 @@
 import type { Route } from './+types/index';
-import { redirect, Link } from 'react-router';
-import { getUser, listUsers } from '~/utils.server/session';
+import { Link } from 'react-router';
+import { listUsers, requireAuth } from '~/utils.server/session';
 import { ActionIcon, Button, Group, Paper, Table, Title } from '@mantine/core';
 import { IconEdit } from '@tabler/icons-react';
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const current = await getUser(request);
-  if (!current) return redirect('/login');
-  if (current.role !== 'ADMIN') return redirect('/servers');
+  await requireAuth(request, { admin: true });
   const users = await listUsers();
   return { users };
 }

@@ -4,6 +4,7 @@ import { IconAlertHexagon, IconDeviceFloppy, IconInfoHexagon } from '@tabler/ico
 import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
+import { requireAuth } from '~/utils.server/session';
 
 const schema = z.object({
   name: z.coerce.string().min(1, 'Server name is required'),
@@ -22,12 +23,14 @@ const schema = z.object({
   java_version: z.string().min(1, 'Select a Java version'),
 });
 
-export async function loader({ params: { uid } }: Route.LoaderArgs) {
+export async function loader({ params: { uid }, request }: Route.LoaderArgs) {
+  await requireAuth(request);
   const instance = getOrCreateServer(uid);
   return { serverData: await instance.getServerData() };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
+  await requireAuth(request);
   const result = await parseFormData(request, schema);
   if (result.error) {
     return validationError(result.error, result.submittedData);

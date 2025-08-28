@@ -1,10 +1,10 @@
 import type { Route } from './+types/log';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
+import { requireAuth } from '~/utils.server/session';
 
-export async function loader({ params, request }: Route.LoaderArgs) {
-  const { uid } = params;
-  if (!uid) return new Response('Missing uid', { status: 400 });
-
+// TODO Clean (see index.tsx)
+export async function loader({ params: { uid }, request }: Route.LoaderArgs) {
+  await requireAuth(request);
   const server = getOrCreateServer(uid);
   const encoder = new TextEncoder();
   let closed = false;

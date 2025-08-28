@@ -1,50 +1,46 @@
 import { Button, Paper, Stack } from '@mantine/core';
-import { data, Form, Link, redirect } from 'react-router';
+import { Form, Link, redirect } from 'react-router';
 import { parseFormData, validationError } from '@rvf/react-router';
 import { z } from 'zod';
 import type { Route } from './+types/edit';
-import { getPathFromUrl, getStat, resolveSafePath } from '~/utils.server/path-validation';
-import { cleanPath, encodePathParam, isText, parentPath } from '~/utils/path-utils';
+import { getPathFromUrl, requireTextFile, resolveSafePath } from '~/utils.server/path-validation';
+import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
 import { readFile, writeFile } from 'node:fs/promises';
 import CodeMirror from '@uiw/react-codemirror';
 import { loadLanguage } from '@uiw/codemirror-extensions-langs';
 import { useState } from 'react';
 import { IconDeviceFloppy } from '@tabler/icons-react';
+import { requireAuth } from '~/utils.server/session';
 
 const saveSchema = z.object({
-  path: z.string(),
+  path: z.string().transform(cleanPath),
   content: z.string(),
 });
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
+  await requireAuth(request);
   const path = getPathFromUrl(request.url);
   const fullPath = resolveSafePath(uid, path);
-  const stats = await getStat(fullPath);
-  if (!stats.isFile() || !isText(path)) {
-    throw data('Bad Request: not a text file', { status: 400 });
-  }
+  await requireTextFile(fullPath);
   const content = await readFile(fullPath, 'utf-8');
   return { path, content };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
+  await requireAuth(request);
   const result = await parseFormData(request, saveSchema);
   if (result.error) return validationError(result.error, result.submittedData);
-  const path = cleanPath(result.data.path);
-  const fullPath = resolveSafePath(uid, path);
-  const stats = await getStat(fullPath);
-  if (!stats.isFile() || !isText(path)) {
-    throw data('Bad Request: not a text file', { status: 400 });
-  }
+  const fullPath = resolveSafePath(uid, result.data.path);
+  await requireTextFile(fullPath);
   await writeFile(fullPath, result.data.content, 'utf-8');
-  return redirect(`/servers/${uid}/files?path=${encodePathParam(parentPath(path) || '/')}`);
+  return redirect(`/servers/${uid}/files?path=${encodePathParam(extractEntryPath(result.data.path)!.parentPath)}`);
 }
 
 export default function EditFileRoute({ loaderData: { content, path }, params: { uid } }: Route.ComponentProps) {
   const ext = path.split('.').pop();
   const lang = ext ? loadLanguage(ext) : null;
   const [value, setValue] = useState(content);
-  const parent = parentPath(path) || '/';
+  const { parentPath } = extractEntryPath(path)!;
   return (
     <Paper withBorder>
       <Stack m="md" gap="md">
@@ -56,7 +52,7 @@ export default function EditFileRoute({ loaderData: { content, path }, params: {
             <Stack gap="xs" style={{ flexDirection: 'row' }}>
               <Button
                 component={Link}
-                to={`/servers/${uid}/files?path=${encodePathParam(parent)}`}
+                to={`/servers/${uid}/files?path=${encodePathParam(parentPath)}`}
                 variant="subtle"
                 color="gray"
                 type="button"

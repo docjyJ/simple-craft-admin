@@ -3,13 +3,16 @@ import type { Route } from './+types/management';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import { IconAlertHexagon, IconDownload, IconInfoHexagon } from '@tabler/icons-react';
 import { Form, useActionData, useNavigation } from 'react-router';
+import { requireAuth } from '~/utils.server/session';
 
-export async function loader({ params: { uid } }: Route.LoaderArgs) {
+export async function loader({ params: { uid }, request }: Route.LoaderArgs) {
+  await requireAuth(request);
   const instance = getOrCreateServer(uid);
   return { serverData: await instance.getServerData() };
 }
 
-export async function action({ params: { uid } }: Route.ActionArgs) {
+export async function action({ params: { uid }, request }: Route.ActionArgs) {
+  await requireAuth(request);
   const instance = getOrCreateServer(uid);
   try {
     await instance.updateJar();

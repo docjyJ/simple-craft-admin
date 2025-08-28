@@ -1,83 +1,96 @@
 import { Button, Group, Paper, Stack, Text, TextInput, Title } from '@mantine/core';
-import { data, Link, redirect } from 'react-router';
+import { Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { getPathFromUrl, getStat, resolveSafePath } from '~/utils.server/path-validation';
-import { cleanPath, encodePathParam, parentPath } from '~/utils/path-utils';
-import { rename as fsRename } from 'node:fs/promises';
+import {
+  getPathFromUrl,
+  outOfRoot,
+  pathExist,
+  requireNonRoot,
+  resolveSafePath,
+  throw404IfNotExist,
+} from '~/utils.server/path-validation';
+import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
+import { rename as fsRename, stat } from 'node:fs/promises';
 import { z } from 'zod';
 import type { Route } from './+types/rename';
+import { requireAuth } from '~/utils.server/session';
 
 const schema = z.object({
-  path: z.string(),
-  newName: z.string().min(1, 'Name is required'),
+  path: z.string().transform(cleanPath),
+  newPath: z.string().min(1, 'New is required').transform(cleanPath),
 });
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
+  await requireAuth(request);
   const path = getPathFromUrl(request.url);
-  if (path === '/') {
-    throw data('Forbidden: cannot rename root', { status: 403 });
-  }
-  const fullPath = resolveSafePath(uid, path);
-  const stats = await getStat(fullPath);
-  const parent = parentPath(path);
-  const fileName = path.split('/').pop() || 'Unknown';
-  return { isFolder: stats.isDirectory(), parent, fileName, path };
+  requireNonRoot(path);
+  return throw404IfNotExist(stat(resolveSafePath(uid, path))).then((stats) => ({
+    isFolder: stats.isDirectory(),
+    path,
+  }));
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
+  await requireAuth(request);
   const result = await parseFormData(request, schema);
   if (result.error) return validationError(result.error, result.submittedData);
-  const sourcePath = cleanPath(result.data.path);
-  if (sourcePath === '/') {
-    throw data('Forbidden: cannot rename root', { status: 403 });
+  requireNonRoot(result.data.path);
+  const sourcePath = resolveSafePath(uid, result.data.path);
+  const destPath = resolveSafePath(uid, result.data.newPath);
+  const isFolder = await throw404IfNotExist(stat(sourcePath)).then((s) => s.isDirectory());
+  if (sourcePath === destPath) {
+    return validationError(
+      {
+        formId: result.formId,
+        fieldErrors: { newPath: 'The new name must be different from the current name' },
+      },
+      result.submittedData,
+    );
   }
-  const parent = parentPath(sourcePath);
-  const currentName = sourcePath.split('/').pop();
-  const newName = result.data.newName;
-  if (currentName && currentName !== newName) {
-    if (newName.includes('/') || newName.includes('..')) {
-      return validationError(
-        {
-          formId: result.formId,
-          fieldErrors: { newName: 'Invalid name' },
-        },
-        result.submittedData,
-      );
-    }
-    try {
-      const srcFull = resolveSafePath(uid, sourcePath);
-      const parts = srcFull.split('/');
-      parts.pop();
-      const destFull = `${parts.join('/')}/${newName}`;
-      await fsRename(srcFull, destFull);
-    } catch (e: any) {
-      if (e?.code === 'ENOENT') throw new Response('Not Found', { status: 404 });
-      throw e;
-    }
+  if (outOfRoot(result.data.newPath)) {
+    return validationError(
+      {
+        formId: result.formId,
+        fieldErrors: { newName: 'Path is outside the root directory' },
+      },
+      result.submittedData,
+    );
   }
-  return redirect(`/servers/${uid}/files?path=${encodePathParam(parent === '' ? '/' : parent)}`);
+  if (await pathExist(destPath)) {
+    return validationError(
+      {
+        formId: result.formId,
+        fieldErrors: { newName: 'A file or folder with that name already exists' },
+      },
+      result.submittedData,
+    );
+  }
+  await fsRename(sourcePath, destPath);
+  return redirect(
+    `/servers/${uid}/files?path=${encodePathParam(isFolder ? result.data.newPath : extractEntryPath(result.data.newPath)!.parentPath)}`,
+  );
 }
 
-export default function RenameFileRoute({
-  loaderData: { isFolder, parent, fileName, path },
-  params: { uid },
-}: Route.ComponentProps) {
+export default function RenameFileRoute({ loaderData: { isFolder, path }, params: { uid } }: Route.ComponentProps) {
+  const { entryName, parentPath } = extractEntryPath(path)!;
   return (
     <Paper withBorder maw={500} m="auto">
       <Stack gap="lg" m="md">
         <Title order={3}>Rename {isFolder ? 'folder' : 'file'}</Title>
         <Text>
-          {isFolder ? `Enter a new name for the folder '${fileName}'.` : `Enter a new name for the file '${fileName}'.`}
+          {isFolder
+            ? `Enter a new name for the folder '${entryName}'.`
+            : `Enter a new name for the file '${entryName}'.`}
         </Text>
-        <ValidatedForm method="post" schema={schema} defaultValues={{ path, newName: fileName }}>
+        <ValidatedForm method="post" schema={schema} defaultValues={{ path, newPath: path }}>
           {(form) => (
             <>
               <input {...form.getInputProps('path', { type: 'hidden' })} />
-              <TextInput label="New name" required {...form.getInputProps('newName')} error={form.error('newName')} />
+              <TextInput label="New name" required {...form.getInputProps('newPath')} error={form.error('newPath')} />
               <Group justify="center" mt="md">
                 <Button
                   component={Link}
-                  to={`/servers/${uid}/files?path=${encodePathParam(parent)}`}
+                  to={`/servers/${uid}/files?path=${encodePathParam(parentPath)}`}
                   variant="subtle"
                   color="gray"
                   type="button"

@@ -5,8 +5,10 @@ import { IconAccessPoint, IconAccessPointOff, IconEdit } from '@tabler/icons-rea
 import { Link } from 'react-router';
 import ServerUser from '~/components/ServerUser';
 import ServerPlayerCount from '~/components/ServerPlayerCount';
+import { requireAuth } from '~/utils.server/session';
 
-export async function loader() {
+export async function loader({ request }: Route.LoaderArgs) {
+  await requireAuth(request);
   const servers = await fullListMinecraftServers();
   return { servers };
 }

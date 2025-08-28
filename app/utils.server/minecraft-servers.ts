@@ -1,6 +1,6 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'crypto';
-import { isValidUid, resolveSafePath, root } from '~/utils.server/path-validation';
+import { defaultIfNotExist, isValidUid, resolveSafePath, root } from '~/utils.server/path-validation';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import { getProperties } from 'properties-file';
 import type { ScaProperties, ServerProperties, ServerStatus } from '~/type';
@@ -44,15 +44,6 @@ export async function createMinecraftServer({ name }: { name: string }) {
   const instance = getOrCreateServer(uid);
   await instance.init({ name });
   return uid;
-}
-
-export function defaultIfFileNotExist<T>(defaultValue: T) {
-  return function (e: { code?: any }): T {
-    if (e.code === 'ENOENT') {
-      return defaultValue;
-    }
-    throw e;
-  };
 }
 
 export async function getServerStatus(port: number): Promise<ServerStatus | null> {
@@ -115,33 +106,36 @@ export async function getServerProperties(serverPropertiesFile: string) {
     max_players: 20,
     server_port: 25565,
   };
-  return readFile(serverPropertiesFile, 'utf8')
-    .then(getProperties)
-    .then((data) => {
-      if (data['motd']) {
-        properties.motd = data['motd'];
-      }
-      if (data['max-players']) {
-        const valueInt = parseInt(data['max-players'], 10);
-        if (!isNaN(valueInt)) {
-          properties.max_players = valueInt;
+  return defaultIfNotExist(
+    readFile(serverPropertiesFile, 'utf8')
+      .then(getProperties)
+      .then((data) => {
+        if (data['motd']) {
+          properties.motd = data['motd'];
         }
-      }
-      if (data['server-port']) {
-        const valueInt = parseInt(data['server-port'], 10);
-        if (!isNaN(valueInt)) {
-          properties.server_port = valueInt;
+        if (data['max-players']) {
+          const valueInt = parseInt(data['max-players'], 10);
+          if (!isNaN(valueInt)) {
+            properties.max_players = valueInt;
+          }
         }
-      }
-      return properties;
-    })
-    .catch(defaultIfFileNotExist(properties));
+        if (data['server-port']) {
+          const valueInt = parseInt(data['server-port'], 10);
+          if (!isNaN(valueInt)) {
+            properties.server_port = valueInt;
+          }
+        }
+        return properties;
+      }),
+    properties,
+  );
 }
 
 export async function getServerIcon(serverIconFile: string) {
-  return readFile(serverIconFile, 'base64')
-    .then((data) => `data:image/png;base64,${data}`)
-    .catch(defaultIfFileNotExist(pack_jpg));
+  return defaultIfNotExist(
+    readFile(serverIconFile, 'base64').then((data) => `data:image/png;base64,${data}`),
+    pack_jpg,
+  );
 }
 
 export async function getScaProperties(ScaPropertiesFile: string) {
@@ -150,26 +144,27 @@ export async function getScaProperties(ScaPropertiesFile: string) {
     jar_url: '',
     java_version: 'default',
   };
-  return readFile(ScaPropertiesFile, 'utf8')
-    .then(getProperties)
-    .then((data) => {
-      if (data['name']) {
-        properties.name = data['name'];
-      }
-      if (data['jar-url']) {
-        properties.jar_url = data['jar-url'];
-      }
-      if (data['java-version']) {
-        properties.java_version = data['java-version'];
-      }
-      return properties;
-    })
-    .catch(defaultIfFileNotExist(properties));
+  return defaultIfNotExist(
+    readFile(ScaPropertiesFile, 'utf8')
+      .then(getProperties)
+      .then((data) => {
+        if (data['name']) {
+          properties.name = data['name'];
+        }
+        if (data['jar-url']) {
+          properties.jar_url = data['jar-url'];
+        }
+        if (data['java-version']) {
+          properties.java_version = data['java-version'];
+        }
+        return properties;
+      }),
+    properties,
+  );
 }
 
 export async function editServerProperties(serverPropertiesFile: string, properties: Partial<ServerProperties>) {
-  return readFile(serverPropertiesFile, 'utf8')
-    .catch(defaultIfFileNotExist(''))
+  return defaultIfNotExist(readFile(serverPropertiesFile, 'utf8'), '')
     .then((data) => new PropertiesEditor(data))
     .then((editor) => {
       if (properties.motd !== undefined) {
@@ -187,8 +182,7 @@ export async function editServerProperties(serverPropertiesFile: string, propert
 }
 
 export async function editScaProperties(scaPropertiesFile: string, properties: Partial<ScaProperties>) {
-  return readFile(scaPropertiesFile, 'utf8')
-    .catch(defaultIfFileNotExist(''))
+  return defaultIfNotExist(readFile(scaPropertiesFile, 'utf8'), '')
     .then((data) => new PropertiesEditor(data))
     .then((editor) => {
       if (properties.name !== undefined) {

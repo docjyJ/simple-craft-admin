@@ -1,5 +1,10 @@
-export function parentPath(pathInput: string) {
-  return pathInput.split('/').slice(0, -1).join('/');
+export function extractEntryPath(pathInput: string) {
+  const parts = pathInput.split('/').filter(Boolean);
+  if (parts.length === 0) return undefined;
+  return {
+    entryName: parts[parts.length - 1],
+    parentPath: '/' + parts.slice(0, -1).join('/'),
+  };
 }
 
 export function cleanPath(pathInput: string) {

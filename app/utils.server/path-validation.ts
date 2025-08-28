@@ -1,15 +1,29 @@
 import { relative, resolve } from 'node:path';
-import { cleanPath } from '~/utils/path-utils';
+import { cleanPath, isArchive, isText } from '~/utils/path-utils';
 import { stat } from 'node:fs/promises';
 import { data } from 'react-router';
 
 export const root = resolve('./minecraft/servers');
 
+export async function throw404IfNotExist<T>(promise: Promise<T>) {
+  return promise.catch((e) => {
+    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
+    throw e;
+  });
+}
+
+export async function defaultIfNotExist<T>(promise: Promise<T>, defaultValue: T): Promise<T> {
+  return promise.catch((e) => {
+    if (e?.code === 'ENOENT') return defaultValue;
+    throw e;
+  });
+}
+
 export function isValidUid(uid: string) {
   return /^[a-zA-Z0-9-]+$/.test(uid);
 }
 
-function outOfRoot(path: string) {
+export function outOfRoot(path: string) {
   let depth = 0;
   const parts = path.split('/');
   for (const part of parts) {
@@ -45,9 +59,30 @@ export function getPathFromUrl(url: string): string {
   return cleanPath(raw);
 }
 
-export async function getStat(path: string) {
-  return stat(path).catch((e) => {
-    if (e?.code === 'ENOENT') throw data('Not Found', { status: 404 });
-    throw e;
-  });
+export async function pathExist(path: string) {
+  return stat(path)
+    .then(() => true)
+    .catch((e) => {
+      if (e?.code === 'ENOENT') return false;
+      throw e;
+    });
+}
+
+export async function requireDirectory(path: string) {
+  const stats = await throw404IfNotExist(stat(path));
+  if (!stats.isDirectory()) throw data('Bad Request: not a directory', { status: 400 });
+}
+
+export async function requireTextFile(path: string) {
+  const stats = await throw404IfNotExist(stat(path));
+  if (!stats.isFile() || !isText(path)) throw data('Bad Request: not a text file', { status: 400 });
+}
+
+export async function requireArchive(path: string) {
+  const stats = await throw404IfNotExist(stat(path));
+  if (!stats.isFile() || !isArchive(path)) throw data('Bad Request: not an archive', { status: 400 });
+}
+
+export function requireNonRoot(path: string) {
+  if (path === '/') throw data('Forbidden: cannot delete root', { status: 403 });
 }
