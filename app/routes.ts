@@ -23,5 +23,6 @@ export default [
     route('users', './routes/users/index.tsx'),
     route('users/new', './routes/users/new.tsx'),
     route('users/:uid/edit', './routes/users/$uid/edit.tsx'),
+    route('users/:uid/delete', './routes/users/$uid/delete.tsx'),
   ]),
 ] satisfies RouteConfig;

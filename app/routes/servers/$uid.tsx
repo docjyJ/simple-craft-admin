@@ -1,14 +1,18 @@
 import type { Route } from './+types/$uid';
-import { Form, Outlet, useLocation, useNavigate } from 'react-router';
+import { data, Form, Outlet, useLocation, useNavigate } from 'react-router';
 import { Button, Group, Paper, Stack, Tabs, Text } from '@mantine/core';
 import { IconPlayerStop, IconPower } from '@tabler/icons-react';
 import ServerUser from '~/components/ServerUser';
 import ServerPlayerCount from '~/components/ServerPlayerCount';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import { requireAuth } from '~/utils.server/session';
+import { isValidUid } from '~/utils.server/path-validation';
 
 export async function loader({ params: { uid }, request }: Route.LoaderArgs) {
   await requireAuth(request);
+  if (!isValidUid(uid)) {
+    throw data(`Invalid uid: '${uid}'.`, { status: 400 });
+  }
   const instance = getOrCreateServer(uid);
   return {
     server_data: await instance.getServerData(),

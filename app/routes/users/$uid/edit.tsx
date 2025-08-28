@@ -1,7 +1,7 @@
 import type { Route } from './+types/edit';
-import { data, Link } from 'react-router';
+import { Link } from 'react-router';
 import { z } from 'zod';
-import { getUserById, requireAuth, updateUser } from '~/utils.server/session';
+import { getUserByStringId, requireAuth, updateUser } from '~/utils.server/session';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import {
   Alert,
@@ -23,14 +23,6 @@ const schema = z.object({
   role: z.enum(['ADMIN', 'USER']),
   password: z.union([z.string().min(6, 'The password must be at least 6 characters long'), z.literal('')]),
 });
-
-async function getUserByStringId(uid: string) {
-  const id = Number(uid);
-  if (Number.isNaN(id)) throw data('Invalid user ID', { status: 400 });
-  const user = await getUserById(id);
-  if (!user) throw data('User not found', { status: 404 });
-  return { id, user };
-}
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   await requireAuth(request, { admin: true });

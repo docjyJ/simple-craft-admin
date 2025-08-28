@@ -71,6 +71,10 @@ export async function updateUser(id: number, data: { name: string; role: 'ADMIN'
   return prisma.user.update({ where: { id }, data: rest });
 }
 
+export async function deleteUser(id: number) {
+  return prisma.user.delete({ where: { id } });
+}
+
 export async function requireAuth(request: Request, permission?: { admin?: boolean }) {
   const user = await getUser(request);
   if (!user) {
@@ -81,4 +85,12 @@ export async function requireAuth(request: Request, permission?: { admin?: boole
     throw data('bad right', { status: 403 });
   }
   return user;
+}
+
+export async function getUserByStringId(uid: string) {
+  const id = Number(uid);
+  if (Number.isNaN(id)) throw data('Invalid user ID', { status: 400 });
+  const user = await getUserById(id);
+  if (!user) throw data('User not found', { status: 404 });
+  return { id, user };
 }

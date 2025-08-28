@@ -20,7 +20,7 @@ export async function defaultIfNotExist<T>(promise: Promise<T>, defaultValue: T)
 }
 
 export function isValidUid(uid: string) {
-  return /^[a-zA-Z0-9-]+$/.test(uid);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uid);
 }
 
 export function outOfRoot(path: string) {
