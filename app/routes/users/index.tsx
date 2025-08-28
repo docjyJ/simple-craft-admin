@@ -41,7 +41,13 @@ export default function UsersIndex({ loaderData: { users } }: Route.ComponentPro
                       <ActionIcon component={Link} to={`/users/${u.id}/edit`} variant="filled" aria-label="Edit user">
                         <IconEdit style={{ width: '70%', height: '70%' }} stroke={1.5} />
                       </ActionIcon>
-                      <ActionIcon component={Link} to={`/users/${u.id}/delete`} variant="light" color="red" aria-label="Delete user">
+                      <ActionIcon
+                        component={Link}
+                        to={`/users/${u.id}/delete`}
+                        variant="light"
+                        color="red"
+                        aria-label="Delete user"
+                      >
                         <IconTrash style={{ width: '70%', height: '70%' }} stroke={1.5} />
                       </ActionIcon>
                     </Group>

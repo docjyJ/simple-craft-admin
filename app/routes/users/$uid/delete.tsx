@@ -35,7 +35,9 @@ export default function DeleteUser({ loaderData: { user } }: Route.ComponentProp
       <Paper withBorder shadow="sm" p="lg" radius="md">
         <Form method="post">
           <Stack>
-            <Alert color="red" title="Warning" icon={<IconAlertHexagon />}>This action is irreversible.</Alert>
+            <Alert color="red" title="Warning" icon={<IconAlertHexagon />}>
+              This action is irreversible.
+            </Alert>
             <Text>Confirm deletion of the following user:</Text>
             <Text fw={500}>Username: {user.username}</Text>
             <Text>Name: {user.name}</Text>
