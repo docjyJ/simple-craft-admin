@@ -13,13 +13,6 @@ const schema = z.object({
     .int()
     .min(1, 'Port must be between 1 and 65535')
     .max(65535, 'Port must be between 1 and 65535'),
-  jar_url: z.union([
-    z.url({
-      protocol: /^https?$/,
-      hostname: z.regexes.domain,
-    }),
-    z.literal(''),
-  ]),
   java_version: z.string().min(1, 'Select a Java version'),
 });
 
@@ -49,7 +42,6 @@ export default function SettingsServer({ loaderData: { serverData } }: Route.Com
       defaultValues={{
         name: serverData.name,
         server_port: serverData.server_port,
-        jar_url: serverData.jar_url,
         java_version: serverData.java_version,
       }}
     >
@@ -70,12 +62,6 @@ export default function SettingsServer({ loaderData: { serverData } }: Route.Com
                 max={65535}
                 error={form.error('server_port')}
                 {...form.getInputProps('server_port')}
-              />
-              <TextInput
-                label="Jar URL"
-                placeholder="https://example.com/path/to/server.jar"
-                error={form.error('jar_url')}
-                {...form.getInputProps('jar_url')}
               />
               <Select
                 name="java_version"

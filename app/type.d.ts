@@ -19,6 +19,5 @@ export type ServerProperties = {
 
 export type ScaProperties = {
   name: string;
-  jar_url: string;
   java_version: string;
 };

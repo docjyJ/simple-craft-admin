@@ -33,7 +33,7 @@ export class ServerMinecraft {
 
   async init({ name }: { name: string }) {
     await mkdir(this.path, { recursive: true });
-    await writeFile(`${this.path}/sca.properties`, `name=${name}\njar-url=\njava-version=21\n`, { flag: 'w' });
+    await writeFile(`${this.path}/sca.properties`, `name=${name}\njava-version=21\n`, { flag: 'w' });
     await writeFile(`${this.path}/server.properties`, `motd=${name}\nmax-players=20\nserver-port=25565\n`, {
       flag: 'w',
     });
@@ -57,7 +57,6 @@ export class ServerMinecraft {
         server_version: serverStatus.version,
         name: scaProperties.name,
         server_port: serverProperties.server_port,
-        jar_url: scaProperties.jar_url,
         java_version: scaProperties.java_version,
       };
     }
@@ -68,24 +67,16 @@ export class ServerMinecraft {
       server_icon: await getServerIcon(`${this.path}/server-icon.png`),
       name: scaProperties.name,
       server_port: serverProperties.server_port,
-      jar_url: scaProperties.jar_url,
       java_version: scaProperties.java_version,
     };
   }
 
-  async updateConfig({
-    name,
-    server_port,
-    jar_url,
-    java_version,
-  }: {
-    name: string;
-    server_port: number;
-    jar_url: string;
-    java_version: string;
-  }) {
+  async updateConfig({ name, server_port, java_version }: { name: string; server_port: number; java_version: string }) {
     await editServerProperties(`${this.path}/server.properties`, { server_port });
-    await editScaProperties(`${this.path}/sca.properties`, { name: name.trim(), jar_url, java_version });
+    await editScaProperties(`${this.path}/sca.properties`, {
+      name: name.trim(),
+      java_version,
+    });
   }
 
   async start() {
@@ -139,17 +130,6 @@ export class ServerMinecraft {
   onLine(listener: (line: LogLine) => void) {
     this.emitter.on('line', listener);
     return () => this.emitter.off('line', listener);
-  }
-
-  async updateJar() {
-    const scaProperties = await getScaProperties(`${this.path}/sca.properties`);
-    const url = scaProperties.jar_url?.trim();
-    if (!url) throw new Error('No jar_url configured');
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Failed to download jar: ${res.status} ${res.statusText}`);
-    const arr = await res.arrayBuffer();
-    await writeFile(`${this.path}/server.jar`, Buffer.from(arr));
-    return true;
   }
 
   private pushLine(line: LogLine) {

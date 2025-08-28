@@ -1,6 +1,6 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'crypto';
-import { defaultIfNotExist, isValidUid, resolveSafePath, root } from '~/utils.server/path-validation';
+import { defaultIfNotExist, isValidUid, root } from '~/utils.server/path-validation';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import { getProperties } from 'properties-file';
 import type { ScaProperties, ServerProperties, ServerStatus } from '~/type';
@@ -24,19 +24,6 @@ export async function fullListMinecraftServers() {
     servers.push({ uid, server_data: serverData });
   }
   return servers;
-}
-
-export async function updateJar(uid: string) {
-  const fullPath = resolveSafePath(uid, '');
-  const { jar_url } = await getScaProperties(fullPath);
-  const jarPath = resolveSafePath(uid, 'server.jar');
-  const response = await fetch(jar_url);
-  if (!response.ok) {
-    throw new Error(`Failed to download jar file from ${jar_url}: ${response.statusText}`);
-  }
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  await writeFile(jarPath, buffer);
 }
 
 export async function createMinecraftServer({ name }: { name: string }) {
@@ -141,22 +128,14 @@ export async function getServerIcon(serverIconFile: string) {
 export async function getScaProperties(ScaPropertiesFile: string) {
   const properties: ScaProperties = {
     name: 'Unknown Server',
-    jar_url: '',
     java_version: 'default',
   };
   return defaultIfNotExist(
     readFile(ScaPropertiesFile, 'utf8')
       .then(getProperties)
       .then((data) => {
-        if (data['name']) {
-          properties.name = data['name'];
-        }
-        if (data['jar-url']) {
-          properties.jar_url = data['jar-url'];
-        }
-        if (data['java-version']) {
-          properties.java_version = data['java-version'];
-        }
+        if (data['name']) properties.name = data['name'];
+        if (data['java-version']) properties.java_version = data['java-version'];
         return properties;
       }),
     properties,
@@ -185,15 +164,8 @@ export async function editScaProperties(scaPropertiesFile: string, properties: P
   return defaultIfNotExist(readFile(scaPropertiesFile, 'utf8'), '')
     .then((data) => new PropertiesEditor(data))
     .then((editor) => {
-      if (properties.name !== undefined) {
-        editor.upsert('name', properties.name);
-      }
-      if (properties.jar_url !== undefined) {
-        editor.upsert('jar-url', properties.jar_url);
-      }
-      if (properties.java_version !== undefined) {
-        editor.upsert('java-version', properties.java_version.toString());
-      }
+      if (properties.name !== undefined) editor.upsert('name', properties.name);
+      if (properties.java_version !== undefined) editor.upsert('java-version', properties.java_version.toString());
       return editor.format();
     })
     .then((formattedData) => writeFile(scaPropertiesFile, formattedData, 'utf8'));
