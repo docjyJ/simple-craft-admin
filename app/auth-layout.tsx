@@ -1,5 +1,5 @@
 import type { Route } from './+types/auth-layout';
-import { AppShell, Burger, Button, Group, NavLink } from '@mantine/core';
+import { AppShell, Burger, Button, Group, Image, NavLink, Text, Title } from '@mantine/core';
 import { Link, Outlet, redirect } from 'react-router';
 import { IconServer, IconSettings, IconUsers } from '@tabler/icons-react';
 import { useState } from 'react';
@@ -23,14 +23,24 @@ export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
       }}
     >
       <AppShell.Header>
-        <Group justify="space-between" w="100%" px="md">
-          <Group>
+        <Group justify="space-between" align="center" w="100%" px="md" h="100%">
+          <Group align="center" gap="sm" wrap="nowrap">
             <Burger opened={opened} onClick={() => setOpened((o) => !o)} hiddenFrom="sm" size="sm" />
-            <div>SimpleCraftAdmin</div>
+            <Image
+              src="/Applied-Energistics-2_ME-Drive.png"
+              alt="Logo Applied Energistics 2"
+              height={36}
+              width={36}
+              fit="contain"
+              radius="md"
+            />
+            <Title order={3} fw={700} style={{ letterSpacing: 1 }}>
+              SimpleCraftAdmin
+            </Title>
           </Group>
-          <Group>
-            <div>{user.username}</div>
-            <Button component={Link} to="/logout" size="xs" variant="outline">
+          <Group align="center" gap="xs">
+            <Text fw={500}>{user.username}</Text>
+            <Button component={Link} to="/logout" size="xs" variant="outline" color="red">
               Logout
             </Button>
           </Group>
