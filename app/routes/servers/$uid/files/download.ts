@@ -1,29 +1,10 @@
 import type { Route } from './+types/download';
 import { getPathFromUrl, resolveSafePath, throw404IfNotExist } from '~/utils.server/path-validation';
-import { readdir, readFile, stat } from 'node:fs/promises';
-import JSZip from 'jszip';
+import { readFile, stat } from 'node:fs/promises';
 import { data } from 'react-router';
 import { requireAuth } from '~/utils.server/session';
 import { extractEntryPath } from '~/utils/path-utils';
-
-async function addDirToZip(dir: string, zipFolder: JSZip) {
-  const entries = await readdir(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const entryPath = `${dir}/${entry.name}`;
-    if (entry.isDirectory()) {
-      await addDirToZip(entryPath, zipFolder.folder(entry.name)!);
-    } else {
-      const fileData = await readFile(entryPath);
-      zipFolder.file(entry.name, fileData);
-    }
-  }
-}
-
-async function createZipFromDir(dir: string) {
-  const zip = new JSZip();
-  await addDirToZip(dir, zip);
-  return zip.generateAsync({ type: 'nodebuffer' });
-}
+import { createZipFromDir } from '~/utils.server/zip';
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   await requireAuth(request);

@@ -21,6 +21,7 @@ export default [
       route('files/edit', './routes/servers/$uid/files/edit.tsx'),
       route('files/extract', './routes/servers/$uid/files/extract.tsx'),
       route('files/upload', './routes/servers/$uid/files/upload.tsx'),
+      route('backup', './routes/servers/$uid/backup.tsx'),
     ]),
     route('users', './routes/users/index.tsx'),
     route('users/new', './routes/users/new.tsx'),

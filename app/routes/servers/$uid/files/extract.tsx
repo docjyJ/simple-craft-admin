@@ -1,4 +1,3 @@
-import JSZip from 'jszip';
 import { Button, Group, Paper, Stack, Text, TextInput, Title } from '@mantine/core';
 import { Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
@@ -6,9 +5,9 @@ import { z } from 'zod';
 import type { Route } from './+types/extract';
 import { getPathFromUrl, requireArchive, resolveSafePath } from '~/utils.server/path-validation';
 import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { requireAuth } from '~/utils.server/session';
+import { extractZipToDir } from '~/utils.server/zip';
 
 const schema = z.object({
   path: z.string().transform(cleanPath),
@@ -28,17 +27,7 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   const fullArchivePath = resolveSafePath(uid, result.data.path);
   await requireArchive(fullArchivePath);
   const destinationFull = resolveSafePath(uid, result.data.destinationDir);
-  const zip = await JSZip.loadAsync(await readFile(fullArchivePath));
-  await mkdir(destinationFull, { recursive: true });
-  for (const entry of Object.values(zip.files)) {
-    const filePath = `${destinationFull}/${entry.name}`;
-    if (entry.dir) {
-      await mkdir(filePath, { recursive: true });
-    } else {
-      await mkdir(dirname(filePath), { recursive: true });
-      await writeFile(filePath, await entry.async('nodebuffer'));
-    }
-  }
+  await extractZipToDir(await readFile(fullArchivePath), destinationFull);
   return redirect(`/servers/${uid}/files?path=${encodePathParam(result.data.destinationDir)}`);
 }
 

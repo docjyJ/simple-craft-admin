@@ -7,7 +7,7 @@ RUN apk add --no-cache \
     openjdk17-jre-headless=17.0.16_p8-r0 \
     openjdk21-jre-headless=21.0.8_p9-r0
 ENV DATABASE_URL="file:/app/config/db.sqlite"
-RUN mkdir -p /app/config /app/minecraft && chmod 755 /app/config /app/minecraft
+RUN mkdir -p /app/config /app/minecraft /app/backup && chmod 755 /app/config /app/minecraft /app/backup
 COPY . /app
 WORKDIR /app
 

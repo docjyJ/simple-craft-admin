@@ -69,6 +69,7 @@ export default function ServerLayout({
             <Tabs.Tab value={`/servers/${uid}/files`}>Files</Tabs.Tab>
             <Tabs.Tab value={`/servers/${uid}/settings`}>Settings</Tabs.Tab>
             <Tabs.Tab value={`/servers/${uid}/management`}>Management</Tabs.Tab>
+            <Tabs.Tab value={`/servers/${uid}/backup`}>Backup</Tabs.Tab>
           </Tabs.List>
         </Tabs>
       </Paper>

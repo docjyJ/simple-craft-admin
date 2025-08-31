@@ -3,7 +3,7 @@ import { cleanPath, isArchive, isText } from '~/utils/path-utils';
 import { stat } from 'node:fs/promises';
 import { data } from 'react-router';
 
-export const root = resolve('./minecraft/servers');
+export const root = resolve('./minecraft');
 
 export async function throw404IfNotExist<T>(promise: Promise<T>) {
   return promise.catch((e) => {

@@ -12,4 +12,5 @@ services:
     volumes:
       - ./config:/app/config
       - ./minecraft:/app/minecraft
+      - ./backup:/app/backup
     restart: unless-stopped

@@ -12,6 +12,7 @@
 
 /minecraft/
 /config/
+/backup/
 /app/generated/
 /.env
 /.gitignore
