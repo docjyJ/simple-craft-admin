@@ -8,7 +8,7 @@ describe('isValidUid', () => {
     expect(isValidUid(uuidSample)).toBe(true);
   });
   it('invalid uid', () => {
-    expect(isValidUid('AZaz09')).toBe(true);
+    expect(isValidUid('AZaz09')).toBe(false);
     expect(isValidUid('abc_123')).toBe(false);
     expect(isValidUid('abc/123')).toBe(false);
     expect(isValidUid('abc.123')).toBe(false);

@@ -1,7 +1,7 @@
 import type { Route } from './+types/auth-layout';
 import { AppShell, Burger, Button, Group, NavLink } from '@mantine/core';
 import { Link, Outlet, redirect } from 'react-router';
-import { IconServer, IconUsers, IconSettings } from '@tabler/icons-react';
+import { IconServer, IconSettings, IconUsers } from '@tabler/icons-react';
 import { useState } from 'react';
 import { getUser } from '~/utils.server/session';
 

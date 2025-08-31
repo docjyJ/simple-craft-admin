@@ -14,18 +14,18 @@ enum Role {
 }
 
 model User {
-  id       String @id @default(uuid())
-  username String @unique
+  id       String    @id @default(uuid())
+  username String    @unique
   name     String
   password String
-  role     Role   @default(USER)
+  role     Role      @default(USER)
   sessions Session[]
 }
 
 model Session {
-  id        String @id @default(uuid())
+  id        String   @id @default(uuid())
   userId    String?
-  user      User?     @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
   expiresAt DateTime @default(now())
 }
 
@@ -39,6 +39,7 @@ model VerssionCache {
   type        VersionType
   jarUrl      String
   releaseTime DateTime
+
   @@id([name, type])
   @@index([type])
 }

@@ -1,8 +1,8 @@
 import type { Route } from './+types/settings';
 import { redirect } from 'react-router';
 import { requireAuth } from '~/utils.server/session';
-import { getTheme, commitTheme } from '~/utils.server/theme';
-import { Container, Paper, Title, SegmentedControl, Stack, Button } from '@mantine/core';
+import { commitTheme, getTheme } from '~/utils.server/theme';
+import { Button, Container, Paper, SegmentedControl, Stack, Title } from '@mantine/core';
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAuth(request);
