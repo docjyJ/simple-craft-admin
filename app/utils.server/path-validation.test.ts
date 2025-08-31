@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { getRelativePath, isValidUid, resolveSafePath, root } from './path-validation';
 
+const uuidSample = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';
+
 describe('isValidUid', () => {
   it('valid uid', () => {
-    expect(isValidUid('abc-123')).toBe(true);
-    expect(isValidUid('AZaz09')).toBe(true);
+    expect(isValidUid(uuidSample)).toBe(true);
   });
   it('invalid uid', () => {
+    expect(isValidUid('AZaz09')).toBe(true);
     expect(isValidUid('abc_123')).toBe(false);
     expect(isValidUid('abc/123')).toBe(false);
     expect(isValidUid('abc.123')).toBe(false);
@@ -15,10 +17,10 @@ describe('isValidUid', () => {
 
 describe('resolveSafePath', () => {
   it('valid path', () => {
-    expect(resolveSafePath('abc-123', '/server.jar')).toBe(`${root}/abc-123/server.jar`);
-    expect(resolveSafePath('abc-123', 'plugins/plugin.jar')).toBe(`${root}/abc-123/plugins/plugin.jar`);
-    expect(resolveSafePath('abc-123', './config.yml')).toBe(`${root}/abc-123/config.yml`);
-    expect(resolveSafePath('abc-123', 'data/../server.jar')).toBe(`${root}/abc-123/server.jar`);
+    expect(resolveSafePath(uuidSample, '/server.jar')).toBe(`${root}/${uuidSample}/server.jar`);
+    expect(resolveSafePath(uuidSample, 'plugins/plugin.jar')).toBe(`${root}/${uuidSample}/plugins/plugin.jar`);
+    expect(resolveSafePath(uuidSample, './config.yml')).toBe(`${root}/${uuidSample}/config.yml`);
+    expect(resolveSafePath(uuidSample, 'data/../server.jar')).toBe(`${root}/${uuidSample}/server.jar`);
   });
   /*it('bad uid', () => {
     expect(() => resolveSafePath('abc_123', '/server.jar')).toThrow(
@@ -29,13 +31,13 @@ describe('resolveSafePath', () => {
     );
   });*/
   /*it('out of root', () => {
-    expect(() => resolveSafePath('abc-123', '../abc-123/server.jar')).toThrow(
-      "Path '../abc-123/server.jar' is outside the root directory.",
+    expect(() => resolveSafePath(uuidSample, '../${uuidSample}/server.jar')).toThrow(
+      "Path '../${uuidSample}/server.jar' is outside the root directory.",
     );
-    expect(() => resolveSafePath('abc-123', '../../other-server/server.jar')).toThrow(
+    expect(() => resolveSafePath(uuidSample, '../../other-server/server.jar')).toThrow(
       "Path '../../other-server/server.jar' is outside the root directory.",
     );
-    expect(() => resolveSafePath('abc-123', '/server/../data/../../server.jar')).toThrow(
+    expect(() => resolveSafePath(uuidSample, '/server/../data/../../server.jar')).toThrow(
       "Path '/server/../data/../../server.jar' is outside the root directory.",
     );
   });*/
@@ -43,9 +45,9 @@ describe('resolveSafePath', () => {
 
 describe('relativePath', () => {
   it('valid relative path', () => {
-    expect(getRelativePath('abc-123', `${root}/abc-123/server.jar`)).toBe('/server.jar');
-    expect(getRelativePath('abc-123', `${root}/abc-123/plugins/plugin.jar`)).toBe('/plugins/plugin.jar');
-    expect(getRelativePath('abc-123', `${root}/abc-123/config.yml`)).toBe('/config.yml');
-    expect(getRelativePath('abc-123', `${root}/abc-123`)).toBe('/');
+    expect(getRelativePath(uuidSample, `${root}/${uuidSample}/server.jar`)).toBe('/server.jar');
+    expect(getRelativePath(uuidSample, `${root}/${uuidSample}/plugins/plugin.jar`)).toBe('/plugins/plugin.jar');
+    expect(getRelativePath(uuidSample, `${root}/${uuidSample}/config.yml`)).toBe('/config.yml');
+    expect(getRelativePath(uuidSample, `${root}/${uuidSample}`)).toBe('/');
   });
 });
