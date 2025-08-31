@@ -7,9 +7,15 @@ export const appTheme = createTheme({
   primaryColor: 'brand',
 });
 
-export function AppTheme({ children, theme = appTheme, ...props }: MantineProviderProps) {
+export function AppTheme({
+  children,
+  theme = appTheme,
+  colorChoice = 'auto',
+  ...props
+}: MantineProviderProps & { colorChoice?: 'light' | 'dark' | 'auto' }) {
+  const forceColorScheme = colorChoice === 'auto' ? undefined : colorChoice;
   return (
-    <MantineProvider theme={theme} {...props}>
+    <MantineProvider theme={theme} defaultColorScheme="auto" forceColorScheme={forceColorScheme} {...props}>
       {children}
     </MantineProvider>
   );

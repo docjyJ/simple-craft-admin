@@ -1,7 +1,7 @@
 import type { Route } from './+types/auth-layout';
 import { AppShell, Burger, Button, Group, NavLink } from '@mantine/core';
 import { Link, Outlet, redirect } from 'react-router';
-import { IconServer, IconUsers } from '@tabler/icons-react';
+import { IconServer, IconUsers, IconSettings } from '@tabler/icons-react';
 import { useState } from 'react';
 import { getUser } from '~/utils.server/session';
 
@@ -44,6 +44,7 @@ export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
             <NavLink component={Link} to="/users" label="Users" leftSection={<IconUsers />} />
           </>
         )}
+        <NavLink component={Link} to="/settings" label="Settings" leftSection={<IconSettings />} />
       </AppShell.Navbar>
 
       <AppShell.Main>
