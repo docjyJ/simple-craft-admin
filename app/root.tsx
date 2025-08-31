@@ -1,5 +1,5 @@
 import React from 'react';
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from 'react-router';
+import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import { Box, Code, ColorSchemeScript, Container, mantineHtmlProps, Text, Title } from '@mantine/core';
 import type { Route } from './+types/root';
 import './app.css';

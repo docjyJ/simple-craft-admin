@@ -1,45 +1,109 @@
 import { hash, verify } from 'argon2';
-import { prisma, sessionStore } from '~/utils.server/global';
-import { data, redirect } from 'react-router';
+import { createSessionStorage, data, redirect } from 'react-router';
+import { prisma } from '~/utils.server/global';
+import type { User as PrismaUser } from '~/generated/prisma/client';
 
-export async function getUserId(request: Request) {
-  const session = await sessionStore.getSession(request.headers.get('Cookie'));
-  return session.get('userId') || null;
+type User = Omit<PrismaUser, 'password'>;
+
+type SessionData = { user: User };
+
+const sessionStore = createSessionStorage<SessionData, {}>({
+  cookie: {
+    name: '__session',
+    httpOnly: true,
+    maxAge: 3600,
+    path: '/',
+    sameSite: 'strict',
+    secrets: ['ecd0da9f-0133-4a0f-84c9-aca66208a78b'],
+    secure: true,
+  },
+  createData: createSession,
+  readData: getUserBySessionId,
+  updateData: updateSession,
+  deleteData: deleteSession,
+});
+
+async function createSession(data: Partial<SessionData>, expiresAt?: Date) {
+  const { id } = await prisma.session.create({
+    data: { userId: data.user?.id ?? null, expiresAt },
+    select: { id: true },
+  });
+  return id;
+}
+
+cleanSessions();
+
+async function cleanSessions() {
+  const now = new Date();
+  return prisma.session.deleteMany({ where: { expiresAt: { lt: now } } });
+}
+
+ensureAdminUser().then(() => {});
+
+async function ensureAdminUser() {
+  const username = 'admin';
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password) {
+    return;
+  }
+  const existing = await prisma.user.findUnique({ where: { username } });
+  if (existing) return;
+  const hashed = await hash(password);
+  await prisma.user.create({
+    data: {
+      username,
+      name: 'Administrator',
+      password: hashed,
+      role: 'ADMIN',
+    },
+  });
+}
+
+async function getUserBySessionId(id: string) {
+  const now = new Date();
+  return prisma.session
+    .findUnique({
+      where: { id, expiresAt: { gt: now } },
+      select: { user: { select: { id: true, username: true, name: true, role: true } } },
+    })
+    .then((session) => (session === null ? null : { user: session.user || undefined }));
+}
+
+async function updateSession(id: string, data: Partial<SessionData>, expiresAt?: Date) {
+  await prisma.session.update({
+    where: { id },
+    data: { userId: data.user?.id ?? null, expiresAt },
+  });
+}
+
+async function deleteSession(id: string) {
+  await prisma.session.delete({ where: { id } });
 }
 
 export async function getUser(request: Request) {
-  return getUserId(request).then((id) =>
-    id !== null
-      ? prisma.user.findUnique({
-          select: { username: true, name: true, role: true },
-          where: { id },
-        })
-      : null,
-  );
+  const session = await sessionStore.getSession(request.headers.get('Cookie'));
+  return session.get('user') || null;
 }
 
 export async function loginUser(request: Request, username: string, plainPassword: string) {
-  const user = await prisma.user.findUnique({
-    select: { id: true, password: true },
+  const data = await prisma.user.findUnique({
     where: { username },
   });
-  if (!user) return null;
+  if (!data) return null;
 
-  const valid = await verify(user.password, plainPassword);
+  const { password, ...user } = data;
+
+  const valid = await verify(password, plainPassword);
   if (!valid) return null;
 
   const session = await sessionStore.getSession(request.headers.get('Cookie'));
-  session.set('userId', user.id);
+  session.set('user', user);
   return sessionStore.commitSession(session).then((cookie) => ({ cookie }));
 }
 
 export async function logoutUser(request: Request) {
   const session = await sessionStore.getSession(request.headers.get('Cookie'));
   return sessionStore.destroySession(session).then((cookie) => ({ cookie }));
-}
-
-export function getUserByUsername(username: string) {
-  return prisma.user.findUnique({ where: { username } });
 }
 
 export async function createNewUser({
@@ -58,11 +122,11 @@ export function listUsers() {
   return prisma.user.findMany({ select: { id: true, username: true, name: true, role: true }, orderBy: { id: 'asc' } });
 }
 
-export function getUserById(id: number) {
+export function getUserById(id: string) {
   return prisma.user.findUnique({ select: { id: true, username: true, name: true, role: true }, where: { id } });
 }
 
-export async function updateUser(id: number, data: { name: string; role: 'ADMIN' | 'USER'; password?: string | null }) {
+export async function updateUser(id: string, data: { name: string; role: 'ADMIN' | 'USER'; password?: string | null }) {
   const { password, ...rest } = data;
   if (password && password.length > 0) {
     const hashed = await hash(password);
@@ -71,7 +135,7 @@ export async function updateUser(id: number, data: { name: string; role: 'ADMIN'
   return prisma.user.update({ where: { id }, data: rest });
 }
 
-export async function deleteUser(id: number) {
+export async function deleteUser(id: string) {
   return prisma.user.delete({ where: { id } });
 }
 
@@ -85,12 +149,4 @@ export async function requireAuth(request: Request, permission?: { admin?: boole
     throw data('bad right', { status: 403 });
   }
   return user;
-}
-
-export async function getUserByStringId(uid: string) {
-  const id = Number(uid);
-  if (Number.isNaN(id)) throw data('Invalid user ID', { status: 400 });
-  const user = await getUserById(id);
-  if (!user) throw data('User not found', { status: 404 });
-  return { id, user };
 }

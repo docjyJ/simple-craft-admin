@@ -2,7 +2,7 @@ import { redirect } from 'react-router';
 import type { Route } from './+types/new';
 import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { createNewUser, getUserByUsername, requireAuth } from '~/utils.server/session';
+import { createNewUser, requireAuth } from '~/utils.server/session';
 import { Button, Container, Paper, PasswordInput, Radio, Stack, TextInput, Title } from '@mantine/core';
 
 const schema = z.object({
@@ -21,17 +21,20 @@ export async function action({ request }: Route.ActionArgs) {
   await requireAuth(request, { admin: true });
   const result = await parseFormData(request, schema);
   if (result.error) return validationError(result.error, result.submittedData);
-  const existing = await getUserByUsername(result.data.username);
-  if (existing !== null) {
-    return validationError(
-      {
-        formId: result.formId,
-        fieldErrors: { username: 'This username is already taken' },
-      },
-      result.submittedData,
-    );
-  }
-  return createNewUser(result.data).then(({ id }) => redirect(`/users/${id}/edit`));
+  return createNewUser(result.data)
+    .then(({ id }) => redirect(`/users/${id}/edit`))
+    .catch((e) => {
+      if (e?.code == 'P2002') {
+        return validationError(
+          {
+            formId: result.formId,
+            fieldErrors: { username: 'This username is already taken' },
+          },
+          result.submittedData,
+        );
+      }
+      throw e;
+    });
 }
 
 export default function NewUser() {

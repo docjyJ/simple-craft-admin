@@ -4,25 +4,16 @@ import { deleteUser, getUserById, requireAuth } from '~/utils.server/session';
 import { Alert, Button, Container, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { IconAlertHexagon } from '@tabler/icons-react';
 
-async function getUserByStringId(uid: string | undefined) {
-  if (!uid) throw data('Invalid user ID', { status: 400 });
-  const id = Number(uid);
-  if (Number.isNaN(id)) throw data('Invalid user ID', { status: 400 });
-  const user = await getUserById(id);
-  if (!user) throw data('User not found', { status: 404 });
-  return { id, user };
-}
-
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   await requireAuth(request, { admin: true });
-  const { user } = await getUserByStringId(uid);
+  const user = await getUserById(uid);
+  if (!user) throw data('User not found', { status: 404 });
   return { user };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
   await requireAuth(request, { admin: true });
-  const { id } = await getUserByStringId(uid);
-  await deleteUser(id);
+  await deleteUser(uid);
   throw redirect('/users');
 }
 

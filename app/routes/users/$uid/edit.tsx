@@ -1,7 +1,7 @@
 import type { Route } from './+types/edit';
-import { Link } from 'react-router';
+import { data, Link } from 'react-router';
 import { z } from 'zod';
-import { getUserByStringId, requireAuth, updateUser } from '~/utils.server/session';
+import { getUserById, requireAuth, updateUser } from '~/utils.server/session';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import {
   Alert,
@@ -26,16 +26,18 @@ const schema = z.object({
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   await requireAuth(request, { admin: true });
-  const { user } = await getUserByStringId(uid);
+  const user = await getUserById(uid);
+  if (!user) throw data('User not found', { status: 404 });
   return { user };
 }
 
 export async function action({ request, params: { uid } }: Route.ActionArgs) {
   await requireAuth(request, { admin: true });
-  const { id } = await getUserByStringId(uid);
+  const user = await getUserById(uid);
+  if (!user) throw data('User not found', { status: 404 });
   const result = await parseFormData(request, schema);
   if (result.error) return validationError(result.error, result.submittedData);
-  await updateUser(id, result.data);
+  await updateUser(user.id, result.data);
   return null;
 }
 
