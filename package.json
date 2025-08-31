@@ -2,6 +2,7 @@
   "name": "simple-craft-admin",
   "private": true,
   "type": "module",
+  "version": "0.0.1",
   "scripts": {
     "build": "prisma generate && react-router build && cp ./app/generated/prisma/*.so.node ./build/server/",
     "dev": "react-router dev",
