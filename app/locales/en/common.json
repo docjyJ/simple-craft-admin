@@ -1,5 +1,6 @@
 {
   "app.title": "SimpleCraftAdmin",
+  "nav.dashboard": "Dashboard",
   "nav.servers": "Servers",
   "nav.users": "Users",
   "nav.settings": "Settings",
@@ -22,5 +23,6 @@
   "settings.theme.auto": "Auto",
   "settings.language": "Language",
   "settings.save": "Save",
-  "settings.title": "Settings"
+  "settings.title": "Settings",
+  "servers.empty": "No servers yet"
 }

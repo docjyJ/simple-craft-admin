@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import ServerUser from '~/components/ServerUser';
 import ServerPlayerCount from '~/components/ServerPlayerCount';
 import { requireAuth } from '~/utils.server/session';
+import { useTranslation } from 'react-i18next';
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAuth(request);
@@ -14,6 +15,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function ServersIndex({ loaderData: { servers } }: Route.ComponentProps) {
+  const { t } = useTranslation();
   const rows = servers.map(({ uid, server_data }) => (
     <Table.Tr key={uid}>
       <Table.Td>
@@ -63,7 +65,19 @@ export default function ServersIndex({ loaderData: { servers } }: Route.Componen
                 <Table.Th>Action</Table.Th>
               </Table.Tr>
             </Table.Thead>
-            <Table.Tbody>{rows}</Table.Tbody>
+            <Table.Tbody>
+              {rows.length ? (
+                rows
+              ) : (
+                <Table.Tr>
+                  <Table.Td colSpan={5}>
+                    <Text size="sm" c="dimmed">
+                      {t('servers.empty')}
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
           </Table>
         </Table.ScrollContainer>
       </Paper>

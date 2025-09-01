@@ -15,6 +15,7 @@
     "db-migrate": "prisma migrate dev"
   },
   "dependencies": {
+    "@mantine/charts": "^8.2.8",
     "@mantine/core": "^8.2.8",
     "@mantine/hooks": "^8.2.8",
     "@prisma/client": "^6.15.0",

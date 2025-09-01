@@ -5,6 +5,7 @@ export default [
   route('login', './routes/login.tsx'),
   route('logout', './routes/logout.ts'),
   layout('./auth-layout.tsx', [
+    route('dashboard', './routes/dashboard.tsx'),
     route('settings', './routes/settings.tsx'),
     route('servers', './routes/servers/index.tsx'),
     route('servers/new', './routes/servers/new.tsx'),
@@ -27,5 +28,6 @@ export default [
     route('users/new', './routes/users/new.tsx'),
     route('users/:uid/edit', './routes/users/$uid/edit.tsx'),
     route('users/:uid/delete', './routes/users/$uid/delete.tsx'),
+    route('stats', './routes/stats.ts'),
   ]),
 ] satisfies RouteConfig;

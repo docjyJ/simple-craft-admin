@@ -1,5 +1,6 @@
 {
   "app.title": "SimpleCraftAdmin",
+  "nav.dashboard": "Tableau de bord",
   "nav.servers": "Serveurs",
   "nav.users": "Utilisateurs",
   "nav.settings": "Paramètres",
@@ -22,5 +23,6 @@
   "settings.theme.auto": "Automatique",
   "settings.language": "Langue",
   "settings.save": "Enregistrer",
-  "settings.title": "Paramètres"
+  "settings.title": "Paramètres",
+  "servers.empty": "Aucun serveur pour le moment"
 }
