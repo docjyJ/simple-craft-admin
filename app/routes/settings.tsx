@@ -2,45 +2,94 @@ import type { Route } from './+types/settings';
 import { redirect } from 'react-router';
 import { requireAuth } from '~/utils.server/session';
 import { commitTheme, getTheme } from '~/utils.server/theme';
-import { Button, Container, Paper, SegmentedControl, Stack, Title } from '@mantine/core';
+import { Button, Container, Paper, Select, Stack, Title } from '@mantine/core';
+import { commitLocale, getLocale } from '~/utils.server/locale';
+import { useTranslation } from 'react-i18next';
+import '~/i18n';
+import { z } from 'zod';
+import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
+
+const schema = z.object({
+  theme: z.enum(['light', 'dark', 'auto']),
+  locale: z.enum(['en', 'fr']),
+});
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAuth(request);
-  const theme = await getTheme(request);
-  return { theme };
+  const [theme, locale] = await Promise.all([getTheme(request), getLocale(request)]);
+  return { theme, locale };
 }
 
 export async function action({ request }: Route.ActionArgs) {
   await requireAuth(request);
-  const formData = await request.formData();
-  const theme = formData.get('theme');
-  const value: 'light' | 'dark' | 'auto' = theme === 'light' || theme === 'dark' || theme === 'auto' ? theme : 'auto';
-  const cookie = await commitTheme(value);
-  return redirect('/settings', { headers: { 'Set-Cookie': cookie } });
+  const result = await parseFormData(request, schema);
+  if (result.error) {
+    return validationError(result.error, result.submittedData);
+  }
+  const themeCookie = await commitTheme(result.data.theme);
+  const localeCookie = await commitLocale(result.data.locale);
+  const headers = new Headers();
+  headers.append('Set-Cookie', themeCookie);
+  headers.append('Set-Cookie', localeCookie);
+  return redirect('/settings', { headers });
 }
 
 export default function Settings({ loaderData }: Route.ComponentProps) {
+  const { t, i18n } = useTranslation();
   return (
     <Container size={520} my={40}>
       <Title order={2} mb="md">
-        Settings
+        {t('settings.title')}
       </Title>
       <Paper withBorder p="lg" radius="md">
-        <form method="post">
-          <Stack>
-            <SegmentedControl
-              name="theme"
-              fullWidth
-              data={[
-                { label: 'Light', value: 'light' },
-                { label: 'Dark', value: 'dark' },
-                { label: 'Auto', value: 'auto' },
-              ]}
-              defaultValue={loaderData.theme}
-            />
-            <Button type="submit">Save</Button>
-          </Stack>
-        </form>
+        <ValidatedForm
+          method="post"
+          schema={schema}
+          defaultValues={{ theme: loaderData.theme, locale: loaderData.locale || i18n.language }}
+        >
+          {(form) => {
+            const { value: themeValue, ...themeInputProps } = form.getInputProps('theme');
+            const cleanThemeValue =
+              typeof themeValue === 'number'
+                ? themeValue.toString()
+                : typeof themeValue === 'object'
+                  ? undefined
+                  : themeValue;
+            const cleanThemeInputProps = { value: cleanThemeValue, ...themeInputProps };
+            const { value: localeValue, ...localeInputProps } = form.getInputProps('locale');
+            const cleanLocaleValue =
+              typeof localeValue === 'number'
+                ? localeValue.toString()
+                : typeof localeValue === 'object'
+                  ? undefined
+                  : localeValue;
+            const cleanLocaleInputProps = { value: cleanLocaleValue, ...localeInputProps };
+            return (
+              <Stack>
+                <Select
+                  label={t('settings.theme')}
+                  data={[
+                    { value: 'light', label: t('settings.light') },
+                    { value: 'dark', label: t('settings.dark') },
+                    { value: 'auto', label: t('settings.auto') },
+                  ]}
+                  {...cleanThemeInputProps}
+                />
+                <Select
+                  label={t('settings.language')}
+                  data={[
+                    { value: 'en', label: t('locale.en') },
+                    { value: 'fr', label: t('locale.fr') },
+                  ]}
+                  {...cleanLocaleInputProps}
+                />
+                <Button type="submit" loading={form.formState.isSubmitting}>
+                  {t('settings.save')}
+                </Button>
+              </Stack>
+            );
+          }}
+        </ValidatedForm>
       </Paper>
     </Container>
   );

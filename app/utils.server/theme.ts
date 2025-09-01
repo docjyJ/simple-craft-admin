@@ -8,13 +8,20 @@ export const themeCookie = createCookie('theme', {
   maxAge: 60 * 60 * 24 * 365 * 10,
 });
 
-export async function getTheme(request: Request): Promise<'light' | 'dark' | 'auto'> {
-  const cookieHeader = request.headers.get('Cookie') || '';
-  const stored = cookieHeader ? await themeCookie.parse(cookieHeader) : null;
-  if (stored === 'light' || stored === 'dark' || stored === 'auto') return stored;
-  return 'auto';
+function parseTheme(theme: any) {
+  if (theme === 'auto') return 'auto';
+  if (theme === 'light') return 'light';
+  if (theme === 'dark') return 'dark';
+  return null;
 }
 
 export async function commitTheme(value: 'light' | 'dark' | 'auto') {
   return themeCookie.serialize(value);
+}
+
+export async function getTheme(request: Request) {
+  const cookieHeader = request.headers.get('Cookie') || '';
+  const stored = cookieHeader ? await themeCookie.parse(cookieHeader).then(parseTheme) : null;
+  if (stored) return stored;
+  return 'auto';
 }

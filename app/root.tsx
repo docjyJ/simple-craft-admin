@@ -1,19 +1,23 @@
 import React from 'react';
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
+import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from 'react-router';
 import { Box, Code, ColorSchemeScript, Container, mantineHtmlProps, Text, Title } from '@mantine/core';
 import type { Route } from './+types/root';
 import './app.css';
 import { AppTheme } from '~/app-theme';
 import { getTheme } from '~/utils.server/theme';
+import { getLocale } from '~/utils.server/locale';
+import './i18n';
+import { useTranslation } from 'react-i18next';
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const theme = await getTheme(request);
-  return { theme };
+  const [theme, locale] = await Promise.all([getTheme(request), getLocale(request)]);
+  return { theme, locale };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useLoaderData<typeof loader>();
   return (
-    <html lang="en" {...mantineHtmlProps}>
+    <html lang={data?.locale || 'en'} {...mantineHtmlProps}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
@@ -30,7 +34,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App({ loaderData: { theme } }: Route.ComponentProps) {
+export default function App({ loaderData: { theme, locale } }: Route.ComponentProps) {
+  const { i18n } = useTranslation();
+  if (locale && i18n.language !== locale) {
+    // Ressources déjà chargées inline, changement synchro suffisant pour SSR
+    i18n.changeLanguage(locale).catch(() => {});
+  }
+  // useEffect garde une mise à jour client si nécessaire
+  React.useEffect(() => {
+    if (locale && i18n.language !== locale) {
+      i18n.changeLanguage(locale).catch(() => {});
+    }
+  }, [locale, i18n]);
   return (
     <AppTheme colorChoice={theme}>
       <Outlet />
@@ -39,13 +54,14 @@ export default function App({ loaderData: { theme } }: Route.ComponentProps) {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = 'Oops!';
-  let details = 'An unexpected error occurred.';
+  const { t } = useTranslation();
+  let message = t('error.oops');
+  let details = t('error.unexpected');
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? '404' : 'Error';
-    details = error.status === 404 ? 'The requested page could not be found.' : error.statusText || details;
+    message = error.status === 404 ? t('error.404') : t('error.generic');
+    details = error.status === 404 ? t('error.notfound') : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;

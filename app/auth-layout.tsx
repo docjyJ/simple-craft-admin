@@ -1,9 +1,10 @@
 import type { Route } from './+types/auth-layout';
 import { AppShell, Burger, Button, Group, Image, NavLink, Text, Title } from '@mantine/core';
-import { Link, Outlet, redirect } from 'react-router';
+import { Link, Outlet, redirect, useLocation } from 'react-router';
 import { IconServer, IconSettings, IconUsers } from '@tabler/icons-react';
 import { useState } from 'react';
 import { getUser } from '~/utils.server/session';
+import { useTranslation } from 'react-i18next';
 
 export async function loader({ request }: Route.LoaderArgs) {
   return getUser(request).then((user) => (user ? { user } : redirect('/login')));
@@ -11,6 +12,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
   const [opened, setOpened] = useState(false);
+  const { t } = useTranslation();
+  const location = useLocation();
 
   return (
     <AppShell
@@ -35,26 +38,24 @@ export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
               radius="md"
             />
             <Title order={3} fw={700} style={{ letterSpacing: 1 }}>
-              SimpleCraftAdmin
+              {t('app.title')}
             </Title>
           </Group>
           <Group align="center" gap="xs">
             <Text fw={500}>{user.username}</Text>
             <Button component={Link} to="/logout" size="xs" variant="outline" color="red">
-              Logout
+              {t('auth.logout')}
             </Button>
           </Group>
         </Group>
       </AppShell.Header>
 
       <AppShell.Navbar>
-        <NavLink component={Link} to="/servers" label="Servers" leftSection={<IconServer />} />
+        <NavLink component={Link} to="/servers" label={t('nav.servers')} leftSection={<IconServer />} />
         {user.role === 'ADMIN' && (
-          <>
-            <NavLink component={Link} to="/users" label="Users" leftSection={<IconUsers />} />
-          </>
+          <NavLink component={Link} to="/users" label={t('nav.users')} leftSection={<IconUsers />} />
         )}
-        <NavLink component={Link} to="/settings" label="Settings" leftSection={<IconSettings />} />
+        <NavLink component={Link} to="/settings" label={t('nav.settings')} leftSection={<IconSettings />} />
       </AppShell.Navbar>
 
       <AppShell.Main>

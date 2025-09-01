@@ -4,10 +4,12 @@ import { Button, Container, Paper, Stack, TextInput, Title } from '@mantine/core
 import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { getUser, loginUser } from '~/utils.server/session';
+import { useTranslation } from 'react-i18next';
+import '~/i18n';
 
 const schema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
+  username: z.string().min(1, 'login.error.required.username'),
+  password: z.string().min(1, 'login.error.required.password'),
 });
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -29,8 +31,8 @@ export async function action({ request }: Route.ActionArgs) {
       {
         formId: result.formId,
         fieldErrors: {
-          username: 'Invalid username or password',
-          password: 'Invalid username or password',
+          username: 'login.error.invalid',
+          password: 'login.error.invalid',
         },
       },
       result.submittedData,
@@ -44,10 +46,11 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function Login() {
+  const { t } = useTranslation();
   return (
     <Container size={420} my={40}>
       <Title ta="center" mb="md">
-        Login
+        {t('login.title')}
       </Title>
       <Paper withBorder shadow="sm" p="lg" radius="md">
         <ValidatedForm method="post" schema={schema} defaultValues={{ username: '', password: '' }}>
@@ -55,22 +58,22 @@ export default function Login() {
             <Stack>
               <TextInput
                 name="username"
-                label="Username"
+                label={t('login.username')}
                 placeholder="admin"
                 required
-                error={form.error('username')}
+                error={form.error('username') ? t(form.error('username')!) : null}
                 {...form.getInputProps('username')}
               />
               <TextInput
                 name="password"
-                label="Password"
+                label={t('login.password')}
                 type="password"
                 required
-                error={form.error('password')}
+                error={form.error('password') ? t(form.error('password')!) : null}
                 {...form.getInputProps('password')}
               />
               <Button type="submit" loading={form.formState.isSubmitting}>
-                Log In
+                {t('login.submit')}
               </Button>
             </Stack>
           )}
