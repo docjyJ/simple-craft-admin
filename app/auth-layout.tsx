@@ -1,6 +1,6 @@
 import type { Route } from './+types/auth-layout';
 import { AppShell, Burger, Button, Group, Image, NavLink, Text, Title } from '@mantine/core';
-import { Link, Outlet, redirect, useLocation } from 'react-router';
+import { Link, Outlet, redirect } from 'react-router';
 import { IconServer, IconSettings, IconUsers } from '@tabler/icons-react';
 import { useState } from 'react';
 import { getUser } from '~/utils.server/session';
@@ -13,7 +13,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
   const [opened, setOpened] = useState(false);
   const { t } = useTranslation();
-  const location = useLocation();
 
   return (
     <AppShell
@@ -35,7 +34,6 @@ export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
               height={36}
               width={36}
               fit="contain"
-              radius="md"
             />
             <Title order={3} fw={700} style={{ letterSpacing: 1 }}>
               {t('app.title')}
