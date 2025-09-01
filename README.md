@@ -11,15 +11,20 @@ A simple web application to manage Minecraft servers using Docker.
 
 ## Getting Started
 
+### Quick run
+
 ```bash
 docker run -d -p 80:3000 \
-    -e ADMIN_PASSWORD=<YourDefaultAdminPassword> \
+    -e ADMIN_PASSWORD=admin \
+    -e SESSION_SECRET=$(openssl rand -hex 32) \
     -v /path/to/config:/app/config \
     -v /path/to/minecraft:/app/minecraft \
     -v /path/to/backup:/app/backup \
     --name simple-craft-admin \
     ghcr.io/docjyj/simple-craft-admin:latest
 ```
+
+### docker-compose example
 
 ```yaml
 services:
@@ -28,7 +33,8 @@ services:
     restart: always
     container_name: simple-craft-admin
     environment:
-      - ADMIN_PASSWORD=<YourDefaultAdminPassword>
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - SESSION_SECRET=${SESSION_SECRET}
     ports:
       - '80:3000'
     volumes:
@@ -36,3 +42,7 @@ services:
       - ./minecraft:/app/minecraft
       - ./backup:/app/backup
 ```
+
+## License
+
+See [LICENSE](./LICENSE).

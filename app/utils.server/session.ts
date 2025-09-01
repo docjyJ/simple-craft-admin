@@ -2,10 +2,18 @@ import { hash, verify } from 'argon2';
 import { createSessionStorage, data, redirect } from 'react-router';
 import { prisma } from '~/utils.server/global';
 import type { User as PrismaUser } from '~/generated/prisma/client';
+import { encodePathParam } from '~/utils/path-utils';
 
 type User = Omit<PrismaUser, 'password'>;
 
 type SessionData = { user: User };
+
+function getSessionSecret() {
+  const secret = process.env.SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV !== 'production') return 'development-secret';
+  throw new Error('Missing SESSION_SECRET environment variable');
+}
 
 const sessionStore = createSessionStorage<SessionData, {}>({
   cookie: {
@@ -14,8 +22,8 @@ const sessionStore = createSessionStorage<SessionData, {}>({
     maxAge: 3600,
     path: '/',
     sameSite: 'strict',
-    secrets: ['ecd0da9f-0133-4a0f-84c9-aca66208a78b'],
-    secure: true,
+    secrets: [getSessionSecret()],
+    secure: process.env.NODE_ENV === 'production',
   },
   createData: createSession,
   readData: getUserBySessionId,
@@ -143,7 +151,7 @@ export async function requireAuth(request: Request, permission?: { admin?: boole
   const user = await getUser(request);
   if (!user) {
     const url = new URL(request.url);
-    throw redirect(`/login?redirect=${encodeURIComponent(url.pathname + url.search)}`);
+    throw redirect(`/login?redirect=${encodePathParam(url.pathname + url.search)}`);
   }
   if (permission?.admin && user.role !== 'ADMIN') {
     throw data('bad right', { status: 403 });
