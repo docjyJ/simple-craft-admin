@@ -33,7 +33,7 @@ export class ServerMinecraft {
 
   async init({ name }: { name: string }) {
     await mkdir(this.path, { recursive: true });
-    await writeFile(`${this.path}/sca.properties`, `name=${name}\njava-version=21\n`, { flag: 'w' });
+    await writeFile(`${this.path}/sca.properties`, `name=${name}\njava-version=default\n`, { flag: 'w' });
     await writeFile(`${this.path}/server.properties`, `motd=${name}\nmax-players=20\nserver-port=25565\n`, {
       flag: 'w',
     });
