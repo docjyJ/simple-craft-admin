@@ -9,10 +9,6 @@
   "error.404": "404",
   "error.generic": "Error",
   "error.notfound": "The requested page could not be found.",
-  "user.username": "Username",
-  "locale.en": "English",
-  "locale.fr": "Français",
-  "locale.label": "Language",
   "login.title": "Login",
   "login.username": "Username",
   "login.password": "Password",
@@ -20,12 +16,11 @@
   "login.error.required.username": "Username is required",
   "login.error.required.password": "Password is required",
   "login.error.invalid": "Invalid username or password",
+  "settings.theme": "Theme",
   "settings.theme.light": "Light",
   "settings.theme.dark": "Dark",
   "settings.theme.auto": "Auto",
   "settings.language": "Language",
   "settings.save": "Save",
-  "settings.title": "Settings",
-  "settings.error.invalid.theme": "Invalid theme",
-  "settings.error.invalid.locale": "Invalid language"
+  "settings.title": "Settings"
 }

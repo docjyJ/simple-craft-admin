@@ -35,7 +35,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function Settings({ loaderData }: Route.ComponentProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   return (
     <Container size={520} my={40}>
       <Title order={2} mb="md">
@@ -45,7 +45,7 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
         <ValidatedForm
           method="post"
           schema={schema}
-          defaultValues={{ theme: loaderData.theme, locale: loaderData.locale || i18n.language }}
+          defaultValues={{ theme: loaderData.theme, locale: loaderData.locale }}
         >
           {(form) => {
             const { value: themeValue, ...themeInputProps } = form.getInputProps('theme');
@@ -69,17 +69,17 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
                 <Select
                   label={t('settings.theme')}
                   data={[
-                    { value: 'light', label: t('settings.light') },
-                    { value: 'dark', label: t('settings.dark') },
-                    { value: 'auto', label: t('settings.auto') },
+                    { value: 'light', label: t('settings.theme.light') },
+                    { value: 'dark', label: t('settings.theme.dark') },
+                    { value: 'auto', label: t('settings.theme.auto') },
                   ]}
                   {...cleanThemeInputProps}
                 />
                 <Select
                   label={t('settings.language')}
                   data={[
-                    { value: 'en', label: t('locale.en') },
-                    { value: 'fr', label: t('locale.fr') },
+                    { value: 'en', label: 'English' },
+                    { value: 'fr', label: 'Français' },
                   ]}
                   {...cleanLocaleInputProps}
                 />
