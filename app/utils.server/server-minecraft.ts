@@ -89,7 +89,7 @@ export class ServerMinecraft {
       '17': '/usr/lib/jvm/java-17-openjdk/bin/java',
       default: '/usr/lib/jvm/java-21-openjdk/bin/java',
     };
-    const javaBin = version in javaPathMap ? javaPathMap[version] : javaPathMap['default'];
+    const javaBin = version in javaPathMap ? javaPathMap[version] : javaPathMap.default;
     const javaArgs = ['-Xmx1024M', '-Xms1024M', '-jar', 'server.jar', 'nogui'];
     const proc = spawn(javaBin, javaArgs, {
       cwd: this.path,
