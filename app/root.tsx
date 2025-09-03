@@ -55,13 +55,13 @@ export default function App({ loaderData: { theme, locale } }: Route.ComponentPr
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   const { t } = useTranslation();
-  let message = t('error.oops');
-  let details = t('error.unexpected');
+  let message = t(($) => $.error.oops) as string;
+  let details = t(($) => $.error.unexpected) as string;
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? t('error.404') : t('error.generic');
-    details = error.status === 404 ? t('error.notfound') : error.statusText || details;
+    message = error.status === 404 ? t(($) => $.error[404]) : t(($) => $.error.generic);
+    details = error.status === 404 ? t(($) => $.error.notfound) : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;

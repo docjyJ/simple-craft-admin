@@ -72,7 +72,7 @@ export default function ServersIndex({ loaderData: { servers } }: Route.Componen
                 <Table.Tr>
                   <Table.Td colSpan={5}>
                     <Text size="sm" c="dimmed">
-                      {t('servers.empty')}
+                      {t(($) => $.servers.empty)}
                     </Text>
                   </Table.Td>
                 </Table.Tr>

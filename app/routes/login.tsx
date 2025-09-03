@@ -20,7 +20,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   const url = new URL(request.url);
-  const redirectParam = url.searchParams.get('redirect') ?? '/dashboard';
+  const redirectParam = url.searchParams.get('redirect') || '/dashboard';
   const result = await parseFormData(request, schema);
   if (result.error) {
     return validationError(result.error, result.submittedData);
@@ -47,10 +47,16 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function Login() {
   const { t } = useTranslation();
+  const parseError = (error: string | null) => {
+    if (error === 'login.error.invalid') return t(($) => $.login.error.invalid);
+    if (error === 'login.error.required.username') return t(($) => $.login.error.required.username);
+    if (error === 'login.error.required.password') return t(($) => $.login.error.required.password);
+    return error;
+  };
   return (
     <Container size={420} my={40}>
       <Title ta="center" mb="md">
-        {t('login.title')}
+        {t(($) => $.login.title)}
       </Title>
       <Paper withBorder shadow="sm" p="lg" radius="md">
         <ValidatedForm method="post" schema={schema} defaultValues={{ username: '', password: '' }}>
@@ -58,22 +64,22 @@ export default function Login() {
             <Stack>
               <TextInput
                 name="username"
-                label={t('login.username')}
+                label={t(($) => $.login.username)}
                 placeholder="admin"
                 required
-                error={form.error('username') ? t(form.error('username')!) : null}
+                error={parseError(form.error('username'))}
                 {...form.getInputProps('username')}
               />
               <TextInput
                 name="password"
-                label={t('login.password')}
+                label={t(($) => $.login.password)}
                 type="password"
                 required
-                error={form.error('password') ? t(form.error('password')!) : null}
+                error={parseError(form.error('password'))}
                 {...form.getInputProps('password')}
               />
               <Button type="submit" loading={form.formState.isSubmitting}>
-                {t('login.submit')}
+                {t(($) => $.login.submit)}
               </Button>
             </Stack>
           )}

@@ -19,7 +19,7 @@ export async function commitLocale(locale: 'en' | 'fr') {
 }
 
 export async function getLocale(request: Request) {
-  const cookieHeader = request.headers.get('Cookie') || '';
+  const cookieHeader = request.headers.get('Cookie');
   const stored = cookieHeader ? await localeCookie.parse(cookieHeader).then(parseLang) : null;
   if (stored) return stored;
   const header = request.headers.get('Accept-Language');

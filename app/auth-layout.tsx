@@ -36,25 +36,25 @@ export default function Shell({ loaderData: { user } }: Route.ComponentProps) {
               fit="contain"
             />
             <Title order={3} fw={700} style={{ letterSpacing: 1 }}>
-              {t('app.title')}
+              {t(($) => $.app.title)}
             </Title>
           </Group>
           <Group align="center" gap="xs">
             <Text fw={500}>{user.username}</Text>
             <Button component={Link} to="/logout" size="xs" variant="outline" color="red">
-              {t('auth.logout')}
+              {t(($) => $.auth.logout)}
             </Button>
           </Group>
         </Group>
       </AppShell.Header>
 
       <AppShell.Navbar>
-        <NavLink component={Link} to="/dashboard" label={t('nav.dashboard')} leftSection={<IconGauge />} />
-        <NavLink component={Link} to="/servers" label={t('nav.servers')} leftSection={<IconServer />} />
+        <NavLink component={Link} to="/dashboard" label={t(($) => $.nav.dashboard)} leftSection={<IconGauge />} />
+        <NavLink component={Link} to="/servers" label={t(($) => $.nav.servers)} leftSection={<IconServer />} />
         {user.role === 'ADMIN' && (
-          <NavLink component={Link} to="/users" label={t('nav.users')} leftSection={<IconUsers />} />
+          <NavLink component={Link} to="/users" label={t(($) => $.nav.users)} leftSection={<IconUsers />} />
         )}
-        <NavLink component={Link} to="/settings" label={t('nav.settings')} leftSection={<IconSettings />} />
+        <NavLink component={Link} to="/settings" label={t(($) => $.nav.settings)} leftSection={<IconSettings />} />
       </AppShell.Navbar>
 
       <AppShell.Main>

@@ -39,7 +39,7 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
   return (
     <Container size={520} my={40}>
       <Title order={2} mb="md">
-        {t('settings.title')}
+        {t(($) => $.settings.title)}
       </Title>
       <Paper withBorder p="lg" radius="md">
         <ValidatedForm
@@ -67,16 +67,16 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
             return (
               <Stack>
                 <Select
-                  label={t('settings.theme')}
+                  label={t(($) => $.settings.theme)}
                   data={[
-                    { value: 'light', label: t('settings.theme.light') },
-                    { value: 'dark', label: t('settings.theme.dark') },
-                    { value: 'auto', label: t('settings.theme.auto') },
+                    { value: 'light', label: t(($) => $.settings.themeOptions.light) },
+                    { value: 'dark', label: t(($) => $.settings.themeOptions.dark) },
+                    { value: 'auto', label: t(($) => $.settings.themeOptions.auto) },
                   ]}
                   {...cleanThemeInputProps}
                 />
                 <Select
-                  label={t('settings.language')}
+                  label={t(($) => $.settings.language)}
                   data={[
                     { value: 'en', label: 'English' },
                     { value: 'fr', label: 'Français' },
@@ -84,7 +84,7 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
                   {...cleanLocaleInputProps}
                 />
                 <Button type="submit" loading={form.formState.isSubmitting}>
-                  {t('settings.save')}
+                  {t(($) => $.settings.save)}
                 </Button>
               </Stack>
             );
