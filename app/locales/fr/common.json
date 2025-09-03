@@ -1,5 +1,6 @@
 {
   "app.title": "SimpleCraftAdmin",
+  "app.brand": "Simple Craft Admin",
   "nav.dashboard": "Tableau de bord",
   "nav.servers": "Serveurs",
   "nav.users": "Utilisateurs",
@@ -24,5 +25,15 @@
   "settings.language": "Langue",
   "settings.save": "Enregistrer",
   "settings.title": "Paramètres",
-  "servers.empty": "Aucun serveur pour le moment"
+  "servers.empty": "Aucun serveur pour le moment",
+  "public.login": "Connexion",
+  "public.dashboard": "Accès dashboard",
+  "public.table.server": "Serveur",
+  "public.table.players": "Joueurs",
+  "public.table.version": "Version",
+  "public.table.status": "Statut",
+  "public.table.empty": "Aucun serveur trouvé.",
+  "status.online": "En ligne",
+  "status.offline": "Hors ligne",
+  "server.version.unknown": "Inconnue"
 }
