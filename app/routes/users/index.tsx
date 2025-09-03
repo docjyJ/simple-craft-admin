@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { listUsers, requireAuth } from '~/utils.server/session';
 import { ActionIcon, Button, Group, Paper, Table, Title } from '@mantine/core';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAuth(request, { admin: true });
@@ -11,12 +12,13 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function UsersIndex({ loaderData: { users } }: Route.ComponentProps) {
+  const { t } = useTranslation();
   return (
     <>
       <Group justify="space-between" mb="md">
-        <Title order={2}>Users</Title>
+        <Title order={2}>{t(($) => $.users.index.title)}</Title>
         <Button component={Link} to="/users/new">
-          New User
+          {t(($) => $.users.index.newUser)}
         </Button>
       </Group>
       <Paper withBorder>
@@ -24,10 +26,10 @@ export default function UsersIndex({ loaderData: { users } }: Route.ComponentPro
           <Table verticalSpacing="sm">
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Username</Table.Th>
-                <Table.Th>Name</Table.Th>
-                <Table.Th>Role</Table.Th>
-                <Table.Th>Action</Table.Th>
+                <Table.Th>{t(($) => $.users.index.username)}</Table.Th>
+                <Table.Th>{t(($) => $.users.index.name)}</Table.Th>
+                <Table.Th>{t(($) => $.users.index.role)}</Table.Th>
+                <Table.Th>{t(($) => $.users.index.action)}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -38,7 +40,12 @@ export default function UsersIndex({ loaderData: { users } }: Route.ComponentPro
                   <Table.Td>{u.role}</Table.Td>
                   <Table.Td>
                     <Group gap={8}>
-                      <ActionIcon component={Link} to={`/users/${u.id}/edit`} variant="filled" aria-label="Edit user">
+                      <ActionIcon
+                        component={Link}
+                        to={`/users/${u.id}/edit`}
+                        variant="filled"
+                        aria-label={t(($) => $.users.index.editUser)}
+                      >
                         <IconEdit style={{ width: '70%', height: '70%' }} stroke={1.5} />
                       </ActionIcon>
                       <ActionIcon
@@ -46,7 +53,7 @@ export default function UsersIndex({ loaderData: { users } }: Route.ComponentPro
                         to={`/users/${u.id}/delete`}
                         variant="light"
                         color="red"
-                        aria-label="Delete user"
+                        aria-label={t(($) => $.users.index.deleteUser)}
                       >
                         <IconTrash style={{ width: '70%', height: '70%' }} stroke={1.5} />
                       </ActionIcon>

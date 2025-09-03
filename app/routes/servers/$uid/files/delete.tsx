@@ -7,6 +7,7 @@ import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils
 import { rm, stat } from 'node:fs/promises';
 import type { Route } from './+types/delete';
 import { requireAuth } from '~/utils.server/session';
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
   path: z.string().transform(cleanPath),
@@ -34,16 +35,17 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 
 export default function DeleteFileRoute({ loaderData: { isFolder, path }, params: { uid } }: Route.ComponentProps) {
   const { entryName, parentPath } = extractEntryPath(path)!;
+  const { t } = useTranslation();
   return (
     <Paper withBorder maw={500} m="auto">
       <Stack gap="lg" m="md">
-        <Title order={3}>Confirm deletion</Title>
+        <Title order={3}>{t(($) => $.server.files.deleteConfirmTitle)}</Title>
         <Text>
           {isFolder
-            ? `Are you sure you want to delete the folder '${entryName}' and all of its contents?`
-            : `Are you sure you want to delete the file '${entryName}'?`}
+            ? t(($) => $.server.files.deleteConfirmFolder, { name: entryName })
+            : t(($) => $.server.files.deleteConfirmFile, { name: entryName })}
         </Text>
-        <Text>This action cannot be undone.</Text>
+        <Text>{t(($) => $.server.files.deleteIrreversible)}</Text>
         <ValidatedForm method="post" schema={schema} defaultValues={{ path: parentPath + '/' + entryName }}>
           {(form) => (
             <>
@@ -56,10 +58,10 @@ export default function DeleteFileRoute({ loaderData: { isFolder, path }, params
                   color="gray"
                   type="button"
                 >
-                  Cancel
+                  {t(($) => $.server.files.cancel)}
                 </Button>
                 <Button color="red" type="submit" loading={form.formState.isSubmitting}>
-                  Delete
+                  {t(($) => $.server.files.delete)}
                 </Button>
               </Group>
             </>

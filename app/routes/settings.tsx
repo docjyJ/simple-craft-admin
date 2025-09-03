@@ -5,7 +5,6 @@ import { commitTheme, getTheme } from '~/utils.server/theme';
 import { Button, Container, Paper, Select, Stack, Title } from '@mantine/core';
 import { commitLocale, getLocale } from '~/utils.server/locale';
 import { useTranslation } from 'react-i18next';
-import '~/i18n';
 import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 

@@ -17,11 +17,22 @@ import {
   Title,
 } from '@mantine/core';
 import { IconAlertHexagon, IconInfoHexagon } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 
+const { t } = useTranslation();
 const schema = z.object({
-  name: z.string().min(1, 'The full name is required'),
+  name: z.string().min(
+    1,
+    t(($) => $.users.edit.nameRequired),
+  ),
   role: z.enum(['ADMIN', 'USER']),
-  password: z.union([z.string().min(6, 'The password must be at least 6 characters long'), z.literal('')]),
+  password: z.union([
+    z.string().min(
+      6,
+      t(($) => $.users.edit.passwordLength),
+    ),
+    z.literal(''),
+  ]),
 });
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
@@ -42,56 +53,58 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 }
 
 export default function EditUser({ loaderData: { user } }: Route.ComponentProps) {
+  const { t } = useTranslation();
   return (
     <Container size={520} my={40}>
       <Title ta="center" mb="md">
-        Edit user
+        {t(($) => $.users.edit.title)}
       </Title>
       <Paper withBorder shadow="sm" p="lg" radius="md">
         <ValidatedForm method="post" schema={schema} defaultValues={{ name: user.name, role: user.role, password: '' }}>
           {(form) => (
             <Stack>
-              <Text fw={500}>Username: {user.username}</Text>
+              <Text fw={500}>
+                {t(($) => $.users.edit.username)}: {user.username}
+              </Text>
               <TextInput
                 name="name"
-                label="Full name"
+                label={t(($) => $.users.edit.name)}
                 required
                 error={form.error('name')}
                 {...form.getInputProps('name')}
               />
               <PasswordInput
                 name="password"
-                label="New password (leave blank to keep current)"
+                label={t(($) => $.users.edit.passwordLabel)}
                 error={form.error('password')}
                 {...form.getInputProps('password')}
               />
               <Radio
                 {...form.getInputProps('role', { type: 'radio', value: 'USER' })}
                 error={form.error('role')}
-                label="Standard user"
+                label={t(($) => $.users.edit.roleUser)}
               />
               <Radio
                 {...form.getInputProps('role', { type: 'radio', value: 'ADMIN' })}
                 error={form.error('role')}
-                label="Administrator"
+                label={t(($) => $.users.edit.roleAdmin)}
               />
               <Group justify="flex-end">
                 <Button variant="outline" component={Link} to="/users" disabled={form.formState.isSubmitting}>
-                  Cancel
+                  {t(($) => $.users.edit.cancel)}
                 </Button>
                 <Button type="submit" loading={form.formState.isSubmitting}>
-                  Save
+                  {t(($) => $.users.edit.save)}
                 </Button>
               </Group>
-
               {form.formState.submitStatus === 'success' && (
-                <Alert title="User Updated" color="green" icon={<IconInfoHexagon />}>
-                  The user have been updated successfully.
+                <Alert title={t(($) => $.users.edit.successTitle)} color="green" icon={<IconInfoHexagon />}>
+                  {t(($) => $.users.edit.successMsg)}
                 </Alert>
               )}
               {form.formState.submitStatus === 'error' && (
-                <Alert title="Error Updating User" color="red" icon={<IconAlertHexagon />}>
-                  There was an error updating the user. Please check the form for errors.
+                <Alert title={t(($) => $.users.edit.errorTitle)} color="red" icon={<IconAlertHexagon />}>
+                  {t(($) => $.users.edit.errorMsg)}
                 </Alert>
               )}
             </Stack>

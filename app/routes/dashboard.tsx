@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Anchor, Avatar, Badge, Card, Group, Progress, Stack, Text, Title } from '@mantine/core';
 import { fullListMinecraftServers } from '~/utils.server/minecraft-servers';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 // Types des stats
 interface DiskPoint {
@@ -64,6 +65,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Dashboard({ loaderData: { servers } }: Route.ComponentProps) {
+  const { t } = useTranslation();
   const stats = useServerStatsStream();
   const last = stats[stats.length - 1];
 
@@ -92,10 +94,10 @@ export default function Dashboard({ loaderData: { servers } }: Route.ComponentPr
 
   return (
     <Stack gap="md">
-      <Title order={2}>Dashboard Serveur</Title>
+      <Title order={2}>{t(($) => $.dashboard.title)}</Title>
       <Group align="stretch" grow>
         <Card withBorder>
-          <Title order={5}>CPU (%) (60s)</Title>
+          <Title order={5}>{t(($) => $.dashboard.cpu, { unit: '%', duration: 60 })}</Title>
           <AreaChart
             h={140}
             data={cpuChartData}
@@ -106,7 +108,7 @@ export default function Dashboard({ loaderData: { servers } }: Route.ComponentPr
           />
         </Card>
         <Card withBorder>
-          <Title order={5}>RAM ({ramUnit}) (60s)</Title>
+          <Title order={5}>{t(($) => $.dashboard.ram, { unit: ramUnit, duration: 60 })}</Title>
           <AreaChart
             h={140}
             data={ramChartData}
@@ -119,9 +121,9 @@ export default function Dashboard({ loaderData: { servers } }: Route.ComponentPr
       </Group>
       {last && (
         <Card withBorder>
-          <Title order={5}>Volumes</Title>
+          <Title order={5}>{t(($) => $.dashboard.volumes)}</Title>
           <Stack gap="xs">
-            {disks.map((d) => {
+            {disks.map((d: DiskPoint) => {
               const size = d.size;
               const used = d.used;
               const pct = size ? (used / size) * 100 : 0;
@@ -151,7 +153,7 @@ export default function Dashboard({ loaderData: { servers } }: Route.ComponentPr
             })}
             {!disks.length && (
               <Text size="xs" c="dimmed">
-                Aucun disque détecté.
+                {t(($) => $.dashboard.noDisks)}
               </Text>
             )}
           </Stack>
@@ -159,15 +161,15 @@ export default function Dashboard({ loaderData: { servers } }: Route.ComponentPr
       )}
       <Card withBorder>
         <Group justify="space-between" mb="xs">
-          <Title order={5}>Serveurs</Title>
+          <Title order={5}>{t(($) => $.dashboard.servers)}</Title>
           <Anchor component={Link} to="/servers" size="xs">
-            Voir tous
+            {t(($) => $.dashboard.seeAll)}
           </Anchor>
         </Group>
         <Stack gap="xs">
           {servers.length === 0 && (
             <Text size="sm" c="dimmed">
-              Aucun serveur pour le moment
+              {t(($) => $.dashboard.noServers)}
             </Text>
           )}
           {servers.slice(0, 5).map(({ uid, server_data }) => (
@@ -186,11 +188,11 @@ export default function Dashboard({ loaderData: { servers } }: Route.ComponentPr
               <Group gap={8} wrap="nowrap">
                 {server_data.is_online ? (
                   <Badge size="sm" color="green">
-                    On
+                    {t(($) => $.dashboard.on)}
                   </Badge>
                 ) : (
                   <Badge size="sm" color="red">
-                    Off
+                    {t(($) => $.dashboard.off)}
                   </Badge>
                 )}
                 {server_data.max_players !== undefined && server_data.online_players !== undefined && (
@@ -199,7 +201,7 @@ export default function Dashboard({ loaderData: { servers } }: Route.ComponentPr
                   </Text>
                 )}
                 <Anchor component={Link} to={`/servers/${uid}`} size="xs">
-                  Ouvrir
+                  {t(($) => $.dashboard.open)}
                 </Anchor>
               </Group>
             </Group>

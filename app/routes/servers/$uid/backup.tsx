@@ -8,6 +8,7 @@ import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createZipFromDir, extractZipToDir } from '~/utils.server/zip';
 import { resolve } from 'node:path';
 import { data } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 const BACKUP_ROOT = resolve('backup');
 
@@ -52,38 +53,52 @@ export async function action({ params: { uid }, request }: Route.ActionArgs) {
     return { ok: true };
   }
   if (intent === 'restore') {
-    if (!file) return validationError({ formId: result.formId, fieldErrors: { file: 'Missing file' } }, result.data);
+    if (!file)
+      return validationError(
+        { formId: result.formId, fieldErrors: { file: 'server.backup.error.missingFile' } },
+        result.data,
+      );
     const backupPath = getBackupPath(uid) + '/' + file;
     const serverDir = resolveSafePath(uid, '/');
     await rm(serverDir, { recursive: true, force: true });
     await extractZipToDir(await readFile(backupPath), serverDir);
     return { ok: true };
   }
-  return validationError({ formId: result.formId, fieldErrors: { intent: 'Invalid request' } }, result.data);
+  return validationError(
+    { formId: result.formId, fieldErrors: { intent: 'server.backup.error.invalidRequest' } },
+    result.data,
+  );
 }
 
 export default function BackupPage({ loaderData }: Route.ComponentProps) {
+  const { t } = useTranslation();
+  const parseError = (error: string | null) => {
+    if (!error) return null;
+    if (error === 'server.backup.error.missingFile') return t(($) => $.server.backup.error.missingFile);
+    if (error === 'server.backup.error.invalidRequest') return t(($) => $.server.backup.error.invalidRequest);
+    return error;
+  };
   return (
     <Stack>
-      <Title order={2}>Backups</Title>
+      <Title order={2}>{t(($) => $.server.backup.title)}</Title>
       <Paper withBorder p="md">
         <ValidatedForm method="post" schema={schema} defaultValues={{ intent: 'backup' }}>
           {(form) => (
             <>
               <Button type="submit" name="intent" value="backup">
-                Backup now
+                {t(($) => $.server.backup.backupNow)}
               </Button>
-              {form.error('intent') && <Text c="red">{form.error('intent')}</Text>}
+              {form.error('intent') && <Text c="red">{parseError(form.error('intent'))}</Text>}
             </>
           )}
         </ValidatedForm>
       </Paper>
       <Paper withBorder p="md">
         <Text fw={500} mb="sm">
-          Available backups:
+          {t(($) => $.server.backup.available)}
         </Text>
         <List spacing="xs">
-          {loaderData.backups.length === 0 && <Text>No backups available.</Text>}
+          {loaderData.backups.length === 0 && <Text>{t(($) => $.server.backup.none)}</Text>}
           {loaderData.backups.map((file: string) => (
             <List.Item key={file}>
               <Group>
@@ -98,9 +113,9 @@ export default function BackupPage({ loaderData }: Route.ComponentProps) {
                     <>
                       <input type="hidden" name="file" value={file} />
                       <Button type="submit" name="intent" value="restore" size="xs" color="orange">
-                        Restore
+                        {t(($) => $.server.backup.restore)}
                       </Button>
-                      {form.error('file') && <Text c="red">{form.error('file')}</Text>}
+                      {form.error('file') && <Text c="red">{parseError(form.error('file'))}</Text>}
                     </>
                   )}
                 </ValidatedForm>

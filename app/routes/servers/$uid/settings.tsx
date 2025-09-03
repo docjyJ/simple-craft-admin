@@ -5,15 +5,16 @@ import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import { requireAuth } from '~/utils.server/session';
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
-  name: z.coerce.string().min(1, 'Server name is required'),
+  name: z.coerce.string().min(1, 'server.settingsPage.nameRequired'),
   server_port: z.coerce
     .number()
     .int()
-    .min(1, 'Port must be between 1 and 65535')
-    .max(65535, 'Port must be between 1 and 65535'),
-  java_version: z.string().min(1, 'Select a Java version'),
+    .min(1, 'server.settingsPage.portRange')
+    .max(65535, 'server.settingsPage.portRange'),
+  java_version: z.string().min(1, 'server.settingsPage.javaVersionRequired'),
 });
 
 export async function loader({ params: { uid }, request }: Route.LoaderArgs) {
@@ -34,6 +35,14 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 }
 
 export default function SettingsServer({ loaderData: { serverData } }: Route.ComponentProps) {
+  const { t } = useTranslation();
+  const parseError = (error: string | null) => {
+    if (!error) return null;
+    if (error === 'server.settingsPage.nameRequired') return t(($) => $.server.settingsPage.nameRequired);
+    if (error === 'server.settingsPage.portRange') return t(($) => $.server.settingsPage.portRange);
+    if (error === 'server.settingsPage.javaVersionRequired') return t(($) => $.server.settingsPage.javaVersionRequired);
+    return error;
+  };
   return (
     <ValidatedForm
       id="settings-form"
@@ -52,42 +61,47 @@ export default function SettingsServer({ loaderData: { serverData } }: Route.Com
         return (
           <Paper withBorder p="md">
             <Stack justify="left">
-              <Title order={3}>Server Settings</Title>
+              <Title order={3}>{t(($) => $.server.settingsPage.title)}</Title>
               <input name="type" type="hidden" value="settings" />
-              <TextInput name="name" label="Server Name" error={form.error('name')} {...form.getInputProps('name')} />
+              <TextInput
+                name="name"
+                label={t(($) => $.server.settingsPage.name)}
+                error={parseError(form.error('name'))}
+                {...form.getInputProps('name')}
+              />
               <NumberInput
                 name="server_port"
-                label="Server Port"
+                label={t(($) => $.server.settingsPage.port)}
                 min={1}
                 max={65535}
-                error={form.error('server_port')}
+                error={parseError(form.error('server_port'))}
                 {...form.getInputProps('server_port')}
               />
               <Select
                 name="java_version"
-                label="Version Java"
+                label={t(($) => $.server.settingsPage.javaVersion)}
                 data={[
-                  { value: 'default', label: 'Use default (Java 21)' },
+                  { value: 'default', label: t(($) => $.server.settingsPage.javaDefault) },
                   { value: '21', label: 'Java 21' },
                   { value: '17', label: 'Java 17' },
                   { value: '11', label: 'Java 11' },
                   { value: '8', label: 'Java 8' },
                 ]}
-                error={form.error('java_version')}
+                error={parseError(form.error('java_version'))}
                 {...cleanSelectInputProps}
               />
               <Button type="submit" leftSection={<IconDeviceFloppy size={18} />} loading={form.formState.isSubmitting}>
-                Save Settings
+                {t(($) => $.server.settingsPage.save)}
               </Button>
 
               {form.formState.submitStatus === 'success' && (
-                <Alert title="Settings Updated" color="green" icon={<IconInfoHexagon />}>
-                  The server settings have been updated successfully.
+                <Alert title={t(($) => $.server.settingsPage.updatedTitle)} color="green" icon={<IconInfoHexagon />}>
+                  {t(($) => $.server.settingsPage.updatedMsg)}
                 </Alert>
               )}
               {form.formState.submitStatus === 'error' && (
-                <Alert title="Error Updating Settings" color="red" icon={<IconAlertHexagon />}>
-                  There was an error updating the server settings. Please check the form for errors.
+                <Alert title={t(($) => $.server.settingsPage.errorTitle)} color="red" icon={<IconAlertHexagon />}>
+                  {t(($) => $.server.settingsPage.errorMsg)}
                 </Alert>
               )}
             </Stack>

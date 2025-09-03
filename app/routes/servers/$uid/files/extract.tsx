@@ -8,10 +8,11 @@ import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils
 import { readFile } from 'node:fs/promises';
 import { requireAuth } from '~/utils.server/session';
 import { extractZipToDir } from '~/utils.server/zip';
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
   path: z.string().transform(cleanPath),
-  destinationDir: z.string().min(1, 'Destination is required').transform(cleanPath),
+  destinationDir: z.string().min(1, 'server.files.destinationRequired').transform(cleanPath),
 });
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
@@ -34,22 +35,26 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 export default function ExtractArchiveRoute({ loaderData: { path }, params: { uid } }: Route.ComponentProps) {
   const { entryName, parentPath } = extractEntryPath(path)!;
   const destinationDir = (parentPath === '/' ? '/' : parentPath + '/') + entryName.replace(/\.[^/.]+$/, '');
+  const { t } = useTranslation();
+  const parseError = (error: string | null) => {
+    if (!error) return null;
+    if (error === 'server.files.destinationRequired') return t(($) => $.server.files.destinationRequired);
+    return error;
+  };
   return (
     <Paper withBorder maw={500} m="auto">
       <Stack gap="lg" m="md">
-        <Title order={3}>Extract archive</Title>
-        <Text>
-          You are about to extract the archive '{entryName}'. Its contents will be placed into the destination folder.
-        </Text>
+        <Title order={3}>{t(($) => $.server.files.extractTitle)}</Title>
+        <Text>{t(($) => $.server.files.extractDescription, { name: entryName })}</Text>
         <ValidatedForm method="post" schema={schema} defaultValues={{ path, destinationDir }}>
           {(form) => (
             <>
               <input {...form.getInputProps('path', { type: 'hidden' })} />
               <TextInput
-                label="Destination folder"
+                label={t(($) => $.server.files.destinationFolder)}
                 required
                 {...form.getInputProps('destinationDir')}
-                error={form.error('destinationDir')}
+                error={parseError(form.error('destinationDir'))}
               />
               <Group justify="center" mt="md">
                 <Button
@@ -59,10 +64,10 @@ export default function ExtractArchiveRoute({ loaderData: { path }, params: { ui
                   color="gray"
                   type="button"
                 >
-                  Cancel
+                  {t(($) => $.server.files.cancel)}
                 </Button>
                 <Button color="blue" type="submit" loading={form.formState.isSubmitting}>
-                  Extract
+                  {t(($) => $.server.files.extractAction)}
                 </Button>
               </Group>
             </>

@@ -25,21 +25,26 @@ export default function ServersIndex({ loaderData: { servers } }: Route.Componen
         <ServerPlayerCount max_players={server_data.max_players} online_players={server_data.online_players} />
       </Table.Td>
       <Table.Td>
-        <Text fz="sm">{server_data.server_version ?? 'Unknown'}</Text>
+        <Text fz="sm">{server_data.server_version ?? t(($) => $.servers.index.unknown)}</Text>
       </Table.Td>
       <Table.Td>
         {server_data.is_online ? (
           <Badge color="green" size="sm" leftSection={<IconAccessPoint size={12} />}>
-            Online
+            {t(($) => $.servers.index.online)}
           </Badge>
         ) : (
           <Badge color="red" size="sm" leftSection={<IconAccessPointOff size={12} />}>
-            Offline
+            {t(($) => $.servers.index.offline)}
           </Badge>
         )}
       </Table.Td>
       <Table.Td>
-        <ActionIcon component={Link} to={`/servers/${uid}`} variant="filled" aria-label="Settings">
+        <ActionIcon
+          component={Link}
+          to={`/servers/${uid}`}
+          variant="filled"
+          aria-label={t(($) => $.servers.index.settings)}
+        >
           <IconEdit style={{ width: '70%', height: '70%' }} stroke={1.5} />
         </ActionIcon>
       </Table.Td>
@@ -48,9 +53,9 @@ export default function ServersIndex({ loaderData: { servers } }: Route.Componen
   return (
     <>
       <Group justify="space-between" mb="md">
-        <Title order={2}>Servers</Title>
+        <Title order={2}>{t(($) => $.servers.index.title)}</Title>
         <Button component={Link} to="/servers/new">
-          New Server
+          {t(($) => $.servers.index.newServer)}
         </Button>
       </Group>
       <Paper withBorder>
@@ -58,11 +63,11 @@ export default function ServersIndex({ loaderData: { servers } }: Route.Componen
           <Table verticalSpacing="sm">
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Server</Table.Th>
-                <Table.Th>Players</Table.Th>
-                <Table.Th>Version</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th>Action</Table.Th>
+                <Table.Th>{t(($) => $.servers.index.server)}</Table.Th>
+                <Table.Th>{t(($) => $.servers.index.players)}</Table.Th>
+                <Table.Th>{t(($) => $.servers.index.version)}</Table.Th>
+                <Table.Th>{t(($) => $.servers.index.status)}</Table.Th>
+                <Table.Th>{t(($) => $.servers.index.action)}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>

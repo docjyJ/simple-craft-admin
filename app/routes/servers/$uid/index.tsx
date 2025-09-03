@@ -7,13 +7,14 @@ import { z } from 'zod';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import type { LogLine } from '~/type';
 import { requireAuth } from '~/utils.server/session';
+import { useTranslation } from 'react-i18next';
 
 const commandSchema = z.object({
   command: z
     .string()
     .trim()
-    .min(1, 'Command cannot be empty')
-    .max(32767, 'Command too long')
+    .min(1, 'server.console.error.commandEmpty')
+    .max(32767, 'server.console.error.commandTooLong')
     .transform((s) => s.trim()),
 });
 
@@ -23,14 +24,15 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   if (result.error) return validationError(result.error, result.submittedData);
   if (!getOrCreateServer(uid).sendCommand(result.data.command)) {
     return validationError(
-      { formId: result.formId, fieldErrors: { command: 'Failed to send command, is the server running?' } },
+      { formId: result.formId, fieldErrors: { command: 'server.console.error.commandFailed' } },
       result.submittedData,
     );
   }
+  return null;
 }
 
-// TODO: clean code, create hooks for log stream
 export default function ServerConsole({ params: { uid } }: Route.ComponentProps) {
+  const { t } = useTranslation();
   const [log, setLog] = useState<LogLine[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
@@ -121,6 +123,14 @@ export default function ServerConsole({ params: { uid } }: Route.ComponentProps)
     );
   };
 
+  const parseError = (error: string | null) => {
+    if (!error) return null;
+    if (error === 'server.console.error.commandEmpty') return t(($) => $.server.console.error.commandEmpty);
+    if (error === 'server.console.error.commandTooLong') return t(($) => $.server.console.error.commandTooLong);
+    if (error === 'server.console.error.commandFailed') return t(($) => $.server.console.error.commandFailed);
+    return error;
+  };
+
   return (
     <Stack>
       <Paper ref={scrollRef} onScroll={checkStick} withBorder p="xs" h={360} style={{ overflow: 'auto', fontSize: 12 }}>
@@ -142,7 +152,7 @@ export default function ServerConsole({ params: { uid } }: Route.ComponentProps)
             <Stack>
               <Group align="end">
                 <TextInput
-                  placeholder="Enter a command..."
+                  placeholder={t(($) => $.server.console.placeholder)}
                   autoComplete="off"
                   {...form.getInputProps('command')}
                   style={{ flexGrow: 1 }}
@@ -154,12 +164,12 @@ export default function ServerConsole({ params: { uid } }: Route.ComponentProps)
                   leftSection={<IconSend />}
                   loading={form.formState.isSubmitting}
                 >
-                  Send
+                  {t(($) => $.server.console.send)}
                 </Button>
               </Group>
               {form.formState.submitStatus === 'error' && errorCommand && (
                 <Text c="red" fz="sm">
-                  {errorCommand}
+                  {parseError(errorCommand)}
                 </Text>
               )}
             </Stack>

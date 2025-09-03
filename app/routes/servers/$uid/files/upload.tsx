@@ -7,6 +7,7 @@ import { getPathFromUrl, requireDirectory, resolveSafePath } from '~/utils.serve
 import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
 import { writeFile } from 'node:fs/promises';
 import { requireAuth } from '~/utils.server/session';
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
   path: z.string().transform(cleanPath),
@@ -31,14 +32,25 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 
 export default function UploadFileRoute({ loaderData: { path }, params: { uid } }: Route.ComponentProps) {
   const folderName = extractEntryPath(path)?.entryName;
+  const { t } = useTranslation();
   return (
     <Paper withBorder maw={500} m="auto">
       <Stack gap="lg" m="md">
-        <Title order={3}>Upload file</Title>
-        <Text>{folderName ? `Uploading into folder '${folderName}'` : 'Uploading into root folder'}</Text>
+        <Title order={3}>{t(($) => $.server.files.uploadTitle)}</Title>
+        <Text>
+          {folderName
+            ? t(($) => $.server.files.uploadingInto, { name: folderName })
+            : t(($) => $.server.files.uploadingIntoRoot)}
+        </Text>
         <Form method="post" encType="multipart/form-data">
           <input type="hidden" name="path" value={path} />
-          <FileInput name="file" required label="File" placeholder="Select file" accept="*/*" />
+          <FileInput
+            name="file"
+            required
+            label={t(($) => $.server.files.fileLabel)}
+            placeholder={t(($) => $.server.files.filePlaceholder)}
+            accept="*/*"
+          />
           <Group justify="center" mt="md">
             <Button
               component={Link}
@@ -47,10 +59,10 @@ export default function UploadFileRoute({ loaderData: { path }, params: { uid } 
               color="gray"
               type="button"
             >
-              Cancel
+              {t(($) => $.server.files.cancel)}
             </Button>
             <Button color="blue" type="submit">
-              Upload
+              {t(($) => $.server.files.uploadAction)}
             </Button>
           </Group>
         </Form>

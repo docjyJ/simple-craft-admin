@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { getUser, loginUser } from '~/utils.server/session';
 import { useTranslation } from 'react-i18next';
-import '~/i18n';
 
 const schema = z.object({
   username: z.string().min(1, 'login.error.required.username'),

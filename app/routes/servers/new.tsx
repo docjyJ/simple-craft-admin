@@ -5,9 +5,10 @@ import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router
 import { createMinecraftServer } from '~/utils.server/minecraft-servers';
 import { requireAuth } from '~/utils.server/session';
 import { Button, Container, Paper, Stack, TextInput, Title } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
-  name: z.string().min(1, 'Server name is required'),
+  name: z.string().min(1, 'servers.new.nameRequired'),
 });
 
 export async function action({ request }: Route.ActionArgs) {
@@ -19,10 +20,15 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function NewServer() {
+  const { t } = useTranslation();
+  const parseError = (error: string | null) => {
+    if (error === 'servers.new.nameRequired') return t(($) => $.servers.new.nameRequired);
+    return error;
+  };
   return (
     <Container size={520} my={40}>
       <Title ta="center" mb="md">
-        Create a new server
+        {t(($) => $.servers.new.title)}
       </Title>
       <Paper withBorder shadow="sm" p="lg" radius="md">
         <ValidatedForm method="post" schema={schema} defaultValues={{ name: '' }}>
@@ -30,14 +36,14 @@ export default function NewServer() {
             <Stack>
               <TextInput
                 name="serverName"
-                label="Server name"
-                placeholder="My Awesome Server"
+                label={t(($) => $.servers.new.nameLabel)}
+                placeholder={t(($) => $.servers.new.namePlaceholder)}
                 required
-                error={form.error('name')}
+                error={parseError(form.error('name'))}
                 {...form.getInputProps('name')}
               />
               <Button type="submit" loading={form.formState.isSubmitting}>
-                Create
+                {t(($) => $.servers.new.create)}
               </Button>
             </Stack>
           )}

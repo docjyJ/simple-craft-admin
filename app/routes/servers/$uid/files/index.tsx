@@ -17,6 +17,7 @@ import {
   IconUpload,
 } from '@tabler/icons-react';
 import { requireAuth } from '~/utils.server/session';
+import { useTranslation } from 'react-i18next';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   await requireAuth(request);
@@ -42,6 +43,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 export default function FileExplorerIndex({ loaderData: { entries, path } }: Route.ComponentProps) {
   const pathArray = path === '/' ? [''] : path.split('/');
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <Stack miw={600}>
       <Group style={{ flexWrap: 'nowrap' }}>
@@ -50,10 +52,10 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
             {[...pathArray].map((seg, idx, arr) => {
               const target = pathArray.slice(0, idx + 1).join('/');
               return idx === arr.length - 1 ? (
-                <Text key={idx}>{idx === 0 ? 'Root' : seg}</Text>
+                <Text key={idx}>{idx === 0 ? t(($) => $.server.files.root) : seg}</Text>
               ) : (
                 <Anchor key={idx} component={Link} to={`?path=${encodePathParam(target === '' ? '/' : target)}`}>
-                  {idx === 0 ? 'Root' : seg}
+                  {idx === 0 ? t(($) => $.server.files.root) : seg}
                 </Anchor>
               );
             })}
@@ -65,28 +67,28 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
           download
           reloadDocument
           color="blue"
-          aria-label="Download folder"
+          aria-label={t(($) => $.server.files.downloadFolder)}
           leftSection={<IconDownload />}
         >
-          Download
+          {t(($) => $.server.files.download)}
         </Button>
         <Button
           component={Link}
           to={`upload?path=${encodePathParam(path)}`}
           color="blue"
-          aria-label="Upload file"
+          aria-label={t(($) => $.server.files.upload)}
           leftSection={<IconUpload />}
         >
-          Upload
+          {t(($) => $.server.files.upload)}
         </Button>
       </Group>
       <Paper withBorder>
         <Table highlightOnHover>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Type</Table.Th>
-              <Table.Th>Actions</Table.Th>
+              <Table.Th>{t(($) => $.server.files.name)}</Table.Th>
+              <Table.Th>{t(($) => $.server.files.type)}</Table.Th>
+              <Table.Th>{t(($) => $.server.files.actions)}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -112,12 +114,12 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
                   </Table.Td>
                   <Table.Td>
                     {entry.type === 'folder'
-                      ? 'Folder'
+                      ? t(($) => $.server.files.folder)
                       : entry.type === 'archive'
-                        ? 'Archive'
+                        ? t(($) => $.server.files.archive)
                         : entry.type === 'text'
-                          ? 'Text file'
-                          : 'Binary file'}
+                          ? t(($) => $.server.files.textFile)
+                          : t(($) => $.server.files.binaryFile)}
                   </Table.Td>
                   <Table.Td>
                     <Group>
@@ -126,7 +128,7 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
                         to={`delete?path=${encodePathParam(filePath)}`}
                         color="red"
                         type="button"
-                        aria-label="Delete"
+                        aria-label={t(($) => $.server.files.delete)}
                         onClick={(e) => e.stopPropagation()}
                       >
                         <IconTrash />
@@ -138,7 +140,11 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
                         reloadDocument
                         color="blue"
                         type="button"
-                        aria-label={entry.type === 'folder' ? 'Download folder' : 'Download file'}
+                        aria-label={
+                          entry.type === 'folder'
+                            ? t(($) => $.server.files.downloadFolder)
+                            : t(($) => $.server.files.downloadFile)
+                        }
                         onClick={(e) => e.stopPropagation()}
                       >
                         <IconDownload />
@@ -148,7 +154,7 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
                         to={`rename?path=${encodePathParam(filePath)}`}
                         color="blue"
                         type="button"
-                        aria-label="Rename"
+                        aria-label={t(($) => $.server.files.rename)}
                         onClick={(e) => e.stopPropagation()}
                       >
                         <IconPencil />
@@ -159,7 +165,7 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
                           to={`extract?path=${encodePathParam(filePath)}`}
                           color="blue"
                           type="button"
-                          aria-label="Extract archive"
+                          aria-label={t(($) => $.server.files.extractArchive)}
                           onClick={(e) => e.stopPropagation()}
                         >
                           <IconFolderUp />
@@ -171,7 +177,7 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
                           to={`edit?path=${encodePathParam(filePath)}`}
                           color="blue"
                           type="button"
-                          aria-label="Edit file"
+                          aria-label={t(($) => $.server.files.editFile)}
                           onClick={(e) => e.stopPropagation()}
                         >
                           <IconEdit />

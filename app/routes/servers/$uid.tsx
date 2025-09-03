@@ -7,6 +7,7 @@ import ServerPlayerCount from '~/components/ServerPlayerCount';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import { requireAuth } from '~/utils.server/session';
 import { isValidUid } from '~/utils.server/path-validation';
+import { useTranslation } from 'react-i18next';
 
 export async function loader({ params: { uid }, request }: Route.LoaderArgs) {
   await requireAuth(request);
@@ -35,6 +36,7 @@ export default function ServerLayout({
 }: Route.ComponentProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { t } = useTranslation();
 
   return (
     <Stack h="100%" justify="space-between" p="md">
@@ -42,7 +44,7 @@ export default function ServerLayout({
         <Group justify="space-between">
           <ServerUser name={server_data.name} motd={server_data.motd} icon={server_data.server_icon} />
           <ServerPlayerCount max_players={server_data.max_players} online_players={server_data.online_players} />
-          <Text fz="sm">{server_data.server_version ?? 'Unknown'}</Text>
+          <Text fz="sm">{server_data.server_version ?? t(($) => $.server.version.unknown)}</Text>
           <Form method="post">
             <Button
               color={is_online ? 'red' : 'green'}
@@ -51,7 +53,7 @@ export default function ServerLayout({
               value={is_online ? 'stop' : 'start'}
               leftSection={is_online ? <IconPlayerStop size={18} /> : <IconPower size={18} />}
             >
-              {is_online ? 'Force Stop' : 'Start Server'}
+              {is_online ? t(($) => $.server.actions.forceStop) : t(($) => $.server.actions.startServer)}
             </Button>
           </Form>
         </Group>
@@ -65,11 +67,11 @@ export default function ServerLayout({
           variant="pills"
         >
           <Tabs.List>
-            <Tabs.Tab value={`/servers/${uid}`}>Console</Tabs.Tab>
-            <Tabs.Tab value={`/servers/${uid}/files`}>Files</Tabs.Tab>
-            <Tabs.Tab value={`/servers/${uid}/settings`}>Settings</Tabs.Tab>
-            <Tabs.Tab value={`/servers/${uid}/management`}>Management</Tabs.Tab>
-            <Tabs.Tab value={`/servers/${uid}/backup`}>Backup</Tabs.Tab>
+            <Tabs.Tab value={`/servers/${uid}`}>{t(($) => $.server.tabs.console)}</Tabs.Tab>
+            <Tabs.Tab value={`/servers/${uid}/files`}>{t(($) => $.server.tabs.files)}</Tabs.Tab>
+            <Tabs.Tab value={`/servers/${uid}/settings`}>{t(($) => $.server.tabs.settings)}</Tabs.Tab>
+            <Tabs.Tab value={`/servers/${uid}/management`}>{t(($) => $.server.tabs.management)}</Tabs.Tab>
+            <Tabs.Tab value={`/servers/${uid}/backup`}>{t(($) => $.server.tabs.backup)}</Tabs.Tab>
           </Tabs.List>
         </Tabs>
       </Paper>

@@ -3,6 +3,7 @@ import { data, Form, Link, redirect } from 'react-router';
 import { deleteUser, getUserById, requireAuth } from '~/utils.server/session';
 import { Alert, Button, Container, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { IconAlertHexagon } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   await requireAuth(request, { admin: true });
@@ -18,27 +19,34 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 }
 
 export default function DeleteUser({ loaderData: { user } }: Route.ComponentProps) {
+  const { t } = useTranslation();
   return (
     <Container size={520} my={40}>
       <Title ta="center" mb="md">
-        Delete user
+        {t(($) => $.users.delete.title)}
       </Title>
       <Paper withBorder shadow="sm" p="lg" radius="md">
         <Form method="post">
           <Stack>
-            <Alert color="red" title="Warning" icon={<IconAlertHexagon />}>
-              This action is irreversible.
+            <Alert color="red" title={t(($) => $.users.delete.warning)} icon={<IconAlertHexagon />}>
+              {t(($) => $.users.delete.irreversible)}
             </Alert>
-            <Text>Confirm deletion of the following user:</Text>
-            <Text fw={500}>Username: {user.username}</Text>
-            <Text>Name: {user.name}</Text>
-            <Text>Role: {user.role}</Text>
+            <Text>{t(($) => $.users.delete.confirm)}</Text>
+            <Text fw={500}>
+              {t(($) => $.users.delete.username)}: {user.username}
+            </Text>
+            <Text>
+              {t(($) => $.users.delete.name)}: {user.name}
+            </Text>
+            <Text>
+              {t(($) => $.users.delete.role)}: {user.role}
+            </Text>
             <Group justify="flex-end">
               <Button variant="outline" component={Link} to="/users">
-                Cancel
+                {t(($) => $.users.delete.cancel)}
               </Button>
               <Button color="red" type="submit">
-                Delete
+                {t(($) => $.users.delete.delete)}
               </Button>
             </Group>
           </Stack>

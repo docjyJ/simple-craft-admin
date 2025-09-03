@@ -11,6 +11,7 @@ import { loadLanguage } from '@uiw/codemirror-extensions-langs';
 import { useState } from 'react';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import { requireAuth } from '~/utils.server/session';
+import { useTranslation } from 'react-i18next';
 
 const saveSchema = z.object({
   path: z.string().transform(cleanPath),
@@ -41,6 +42,7 @@ export default function EditFileRoute({ loaderData: { content, path }, params: {
   const lang = ext ? loadLanguage(ext) : null;
   const [value, setValue] = useState(content);
   const { parentPath } = extractEntryPath(path)!;
+  const { t } = useTranslation();
   return (
     <Paper withBorder>
       <Stack m="md" gap="md">
@@ -57,10 +59,10 @@ export default function EditFileRoute({ loaderData: { content, path }, params: {
                 color="gray"
                 type="button"
               >
-                Cancel
+                {t(($) => $.server.files.editCancel)}
               </Button>
               <Button color="green" type="submit" leftSection={<IconDeviceFloppy />}>
-                Save
+                {t(($) => $.server.files.editSave)}
               </Button>
             </Stack>
           </Stack>
