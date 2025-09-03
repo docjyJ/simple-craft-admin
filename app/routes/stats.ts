@@ -5,7 +5,6 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 
-// Chemins candidats fixes (sans variable d'env)
 const DISK_CANDIDATE_PATHS = [
   path.resolve('minecraft'),
   path.resolve('backup'),
@@ -14,20 +13,20 @@ const DISK_CANDIDATE_PATHS = [
 ];
 
 interface DiskCacheEntry {
-  used: number; // MB
-  free: number; // MB
-  size: number; // MB
+  used: number;
+  free: number;
+  size: number;
   mount: string;
   ts: number;
 }
 const diskMountCache = new Map<string, DiskCacheEntry>();
-const DISK_CACHE_TTL_MS = 10_000; // 10s
+const DISK_CACHE_TTL_MS = 10_000;
 
 function parseDfForPath(p: string): { entry: DiskCacheEntry; mount: string } | null {
   try {
     const raw = execSync(`df -kP ${p}`).toString().trim().split('\n');
     if (raw.length >= 2) {
-      const cols = raw[1].split(/\s+/).filter(Boolean); // Filesystem Size Used Avail Use% Mounted
+      const cols = raw[1].split(/\s+/).filter(Boolean);
       if (cols.length >= 6) {
         const sizeKB = parseInt(cols[1], 10) || 0;
         const usedKB = parseInt(cols[2], 10) || 0;

@@ -39,10 +39,10 @@ export async function getServerStatus(port: number): Promise<ServerStatus | null
 
     socket.on('connect', () => {
       const handshake = Buffer.from([
-        0x0f, // Handshake length
-        0x00, // Packet ID for Handshake
-        0x04, // Protocol version (0 for legacy)
-        0x09, // Server address length
+        0x0f,
+        0x00,
+        0x04,
+        0x09,
         0x6c,
         0x6f,
         0x63,
@@ -51,12 +51,12 @@ export async function getServerStatus(port: number): Promise<ServerStatus | null
         0x68,
         0x6f,
         0x73,
-        0x74, // Server address (localhost)
+        0x74,
         (port >> 8) & 0xff,
-        port & 0xff, // Port number
-        0x01, // Next state
-        0x01, // Status Request length
-        0x00, // Packet ID for Status Request
+        port & 0xff,
+        0x01,
+        0x01,
+        0x00,
       ]);
       socket.write(handshake);
       socket.end();

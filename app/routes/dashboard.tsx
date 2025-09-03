@@ -7,13 +7,12 @@ import { fullListMinecraftServers } from '~/utils.server/minecraft-servers';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
-// Types des stats
 interface DiskPoint {
   mount: string;
-  used: number; // Mo
-  free: number; // Mo
-  size: number; // Mo total
-  samplePaths: string[]; // chemins inclus sur ce disque
+  used: number;
+  free: number;
+  size: number;
+  samplePaths: string[];
 }
 interface StatPoint {
   ts: number;
@@ -22,7 +21,6 @@ interface StatPoint {
   disks: DiskPoint[];
 }
 
-// Helpers unités
 function pickUnitFromMB(maxMB: number) {
   if (maxMB >= 1024 * 1024) return { unit: 'To', divisor: 1024 * 1024 };
   if (maxMB >= 1024) return { unit: 'Go', divisor: 1024 };
@@ -34,7 +32,6 @@ function pickUnitFromMB(maxMB: number) {
 //   return val.toFixed(2);
 // }
 
-// Stream SSE des stats serveur
 function useServerStatsStream() {
   const [stats, setStats] = useState<StatPoint[]>([]);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -47,7 +44,6 @@ function useServerStatsStream() {
         const data = JSON.parse(event.data) as Omit<StatPoint, 'ts'>;
         setStats((prev) => {
           const next: StatPoint = { ts: Date.now(), ...data };
-          // Conserver seulement 60 points (dernière minute si fréquence 1s)
           return [...prev.slice(-59), next];
         });
       } catch {}
@@ -69,7 +65,6 @@ export default function Dashboard({ loaderData: { servers } }: Route.ComponentPr
   const stats = useServerStatsStream();
   const last = stats[stats.length - 1];
 
-  // CPU chart data (raw %)
   const cpuChartData = useMemo(
     () =>
       stats.map((s) => ({
@@ -79,7 +74,6 @@ export default function Dashboard({ loaderData: { servers } }: Route.ComponentPr
     [stats],
   );
 
-  // RAM chart with unit scaling
   const { ramChartData, ramUnit } = useMemo(() => {
     const maxMB = stats.reduce((m, s) => (s.ram > m ? s.ram : m), 0);
     const { unit, divisor } = pickUnitFromMB(maxMB || 0);

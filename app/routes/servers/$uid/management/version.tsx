@@ -20,19 +20,16 @@ export async function loader({ params: { uid }, request }: Route.LoaderArgs) {
   return { serverData, releases, snapshots };
 }
 
-// Schéma pour sélectionner une version
 const selectSchema = z.object({
   intent: z.literal('select'),
   versionName: z.string().min(1, 'server.management.errors.missingVersionName'),
   versionType: z.enum(['release', 'snapshot']),
 });
 
-// Schéma pour rafraîchir la liste
 const refreshSchema = z.object({
   intent: z.literal('refresh'),
 });
 
-// Union discriminée sur intent
 const versionActionSchema = z.discriminatedUnion('intent', [refreshSchema, selectSchema]);
 
 export async function action({ params: { uid }, request }: Route.ActionArgs) {
@@ -77,7 +74,7 @@ export async function action({ params: { uid }, request }: Route.ActionArgs) {
       }
       const buf = Buffer.from(await jarRes.arrayBuffer());
       await writeFile(resolveSafePath(uid, 'server.jar'), buf);
-      return null; // Succès silencieux
+      return null;
     } catch (e: any) {
       return validationError(
         { formId: result.formId, fieldErrors: { versionName: 'server.management.errors.selectError' } },
