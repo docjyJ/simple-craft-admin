@@ -7,6 +7,7 @@ services:
     container_name: simple-craft-admin
     environment:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - SESSION_SECRET=${SESSION_SECRET}
     ports:
       - '80:3000'
     volumes:
