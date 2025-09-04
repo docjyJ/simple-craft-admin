@@ -1,7 +1,7 @@
 import os from 'os';
 import type { Route } from './+types/stats';
 import { requireAuth } from '~/utils.server/session';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 
@@ -24,7 +24,7 @@ const DISK_CACHE_TTL_MS = 10_000;
 
 function parseDfForPath(p: string): { entry: DiskCacheEntry; mount: string } | null {
   try {
-    const raw = execSync(`df -kP ${p}`).toString().trim().split('\n');
+    const raw = execFileSync('df', ['-kP', p]).toString().trim().split('\n');
     if (raw.length >= 2) {
       const cols = raw[1].split(/\s+/).filter(Boolean);
       if (cols.length >= 6) {
