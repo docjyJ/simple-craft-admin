@@ -37,7 +37,6 @@ export default function ExtractArchiveRoute({ loaderData: { path }, params: { ui
   const destinationDir = (parentPath === '/' ? '/' : parentPath + '/') + entryName.replace(/\.[^/.]+$/, '');
   const { t } = useTranslation();
   const parseError = (error: string | null) => {
-    if (!error) return null;
     if (error === 'server.files.destinationRequired') return t(($) => $.server.files.destinationRequired);
     return error;
   };

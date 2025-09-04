@@ -37,7 +37,6 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 export default function SettingsServer({ loaderData: { serverData } }: Route.ComponentProps) {
   const { t } = useTranslation();
   const parseError = (error: string | null) => {
-    if (!error) return null;
     if (error === 'server.settingsPage.nameRequired') return t(($) => $.server.settingsPage.nameRequired);
     if (error === 'server.settingsPage.portRange') return t(($) => $.server.settingsPage.portRange);
     if (error === 'server.settingsPage.javaVersionRequired') return t(($) => $.server.settingsPage.javaVersionRequired);

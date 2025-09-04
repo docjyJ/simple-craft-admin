@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from 'react-router';
-import { Box, Code, ColorSchemeScript, Container, mantineHtmlProps, Text, Title } from '@mantine/core';
+import {
+  Box,
+  Code,
+  ColorSchemeScript,
+  Container,
+  createTheme,
+  DEFAULT_THEME,
+  mantineHtmlProps,
+  MantineProvider,
+  Text,
+  Title,
+} from '@mantine/core';
 import type { Route } from './+types/root';
 import './app.css';
-import { AppTheme } from '~/app-theme';
 import { getTheme } from '~/utils.server/theme';
 import { getLocale } from '~/utils.server/locale';
 import './i18n';
@@ -14,8 +24,40 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { theme, locale };
 }
 
+const appTheme = createTheme({
+  colors: {
+    brand: DEFAULT_THEME.colors.blue,
+  },
+  primaryColor: 'brand',
+});
+
+function AppProvider({
+  children,
+  theme,
+  locale,
+}: {
+  children: React.ReactNode;
+  theme?: 'auto' | 'light' | 'dark';
+  locale?: 'en' | 'fr';
+}) {
+  const { i18n } = useTranslation();
+  if (locale && i18n.language !== locale) {
+    i18n.changeLanguage(locale).then(() => {});
+  }
+  useEffect(() => {
+    if (locale && i18n.language !== locale) {
+      i18n.changeLanguage(locale).then(() => {});
+    }
+  }, [i18n, locale]);
+  return (
+    <MantineProvider theme={appTheme} defaultColorScheme="auto" forceColorScheme={theme === 'auto' ? undefined : theme}>
+      {children}
+    </MantineProvider>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
-  const data = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader | undefined>();
   return (
     <html lang={data?.locale || 'en'} {...mantineHtmlProps}>
       <head>
@@ -26,7 +68,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <AppProvider theme={data?.theme} locale={data?.locale}>
+          {children}
+        </AppProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -34,23 +78,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App({ loaderData: { theme, locale } }: Route.ComponentProps) {
-  const { i18n } = useTranslation();
-  if (locale && i18n.language !== locale) {
-    // Ressources déjà chargées inline, changement synchro suffisant pour SSR
-    i18n.changeLanguage(locale).catch(() => {});
-  }
-  // useEffect garde une mise à jour client si nécessaire
-  React.useEffect(() => {
-    if (locale && i18n.language !== locale) {
-      i18n.changeLanguage(locale).catch(() => {});
-    }
-  }, [locale, i18n]);
-  return (
-    <AppTheme colorChoice={theme}>
-      <Outlet />
-    </AppTheme>
-  );
+export default function App() {
+  return <Outlet />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

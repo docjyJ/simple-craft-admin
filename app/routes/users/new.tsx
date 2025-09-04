@@ -6,20 +6,10 @@ import { createNewUser, requireAuth } from '~/utils.server/session';
 import { Button, Container, Paper, PasswordInput, Radio, Stack, TextInput, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 
-const { t } = useTranslation();
 const schema = z.object({
-  username: z.string().min(
-    1,
-    t(($) => $.users.new.usernameRequired),
-  ),
-  name: z.string().min(
-    1,
-    t(($) => $.users.new.nameRequired),
-  ),
-  password: z.string().min(
-    6,
-    t(($) => $.users.new.passwordLength),
-  ),
+  username: z.string().min(1, 'users.new.usernameRequired'),
+  name: z.string().min(1, 'users.new.nameRequired'),
+  password: z.string().min(6, 'users.new.passwordLength'),
   role: z.enum(['ADMIN', 'USER']).default('USER'),
 });
 
@@ -50,6 +40,12 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function NewUser() {
   const { t } = useTranslation();
+  const parseError = (error: string | null) => {
+    if (error === 'users.new.usernameRequired') return t(($) => $.users.new.usernameRequired);
+    if (error === 'users.new.nameRequired') return t(($) => $.users.new.nameRequired);
+    if (error === 'users.new.passwordLength') return t(($) => $.users.new.passwordLength);
+    return error;
+  };
   return (
     <Container size={520} my={40}>
       <Title ta="center" mb="md">
@@ -68,30 +64,30 @@ export default function NewUser() {
                 label={t(($) => $.users.new.username)}
                 placeholder={t(($) => $.users.new.usernamePlaceholder)}
                 required
-                error={form.error('username')}
+                error={parseError(form.error('username'))}
                 {...form.getInputProps('username')}
               />
               <TextInput
                 label={t(($) => $.users.new.name)}
                 placeholder={t(($) => $.users.new.namePlaceholder)}
                 required
-                error={form.error('name')}
+                error={parseError(form.error('name'))}
                 {...form.getInputProps('name')}
               />
               <PasswordInput
                 label={t(($) => $.users.new.password)}
                 required
-                error={form.error('password')}
+                error={parseError(form.error('password'))}
                 {...form.getInputProps('password')}
               />
               <Radio
                 {...form.getInputProps('role', { type: 'radio', value: 'USER' })}
-                error={form.error('role')}
+                error={parseError(form.error('role'))}
                 label={t(($) => $.users.new.roleUser)}
               />
               <Radio
                 {...form.getInputProps('role', { type: 'radio', value: 'ADMIN' })}
-                error={form.error('role')}
+                error={parseError(form.error('role'))}
                 label={t(($) => $.users.new.roleAdmin)}
               />
               <Button type="submit" loading={form.formState.isSubmitting}>

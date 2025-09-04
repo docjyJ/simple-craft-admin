@@ -19,20 +19,10 @@ import {
 import { IconAlertHexagon, IconInfoHexagon } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
-const { t } = useTranslation();
 const schema = z.object({
-  name: z.string().min(
-    1,
-    t(($) => $.users.edit.nameRequired),
-  ),
+  name: z.string().min(1, 'users.edit.nameRequired'),
   role: z.enum(['ADMIN', 'USER']),
-  password: z.union([
-    z.string().min(
-      6,
-      t(($) => $.users.edit.passwordLength),
-    ),
-    z.literal(''),
-  ]),
+  password: z.union([z.string().min(6, 'users.edit.passwordLength'), z.literal('')]),
 });
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
@@ -54,6 +44,11 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 
 export default function EditUser({ loaderData: { user } }: Route.ComponentProps) {
   const { t } = useTranslation();
+  const parseError = (error: string | null) => {
+    if (error === 'users.edit.nameRequired') return t(($) => $.users.edit.nameRequired);
+    if (error === 'users.edit.passwordLength') return t(($) => $.users.edit.passwordLength);
+    return error;
+  };
   return (
     <Container size={520} my={40}>
       <Title ta="center" mb="md">
@@ -70,23 +65,23 @@ export default function EditUser({ loaderData: { user } }: Route.ComponentProps)
                 name="name"
                 label={t(($) => $.users.edit.name)}
                 required
-                error={form.error('name')}
+                error={parseError(form.error('name'))}
                 {...form.getInputProps('name')}
               />
               <PasswordInput
                 name="password"
                 label={t(($) => $.users.edit.passwordLabel)}
-                error={form.error('password')}
+                error={parseError(form.error('password'))}
                 {...form.getInputProps('password')}
               />
               <Radio
                 {...form.getInputProps('role', { type: 'radio', value: 'USER' })}
-                error={form.error('role')}
+                error={parseError(form.error('role'))}
                 label={t(($) => $.users.edit.roleUser)}
               />
               <Radio
                 {...form.getInputProps('role', { type: 'radio', value: 'ADMIN' })}
-                error={form.error('role')}
+                error={parseError(form.error('role'))}
                 label={t(($) => $.users.edit.roleAdmin)}
               />
               <Group justify="flex-end">

@@ -73,7 +73,6 @@ export async function action({ params: { uid }, request }: Route.ActionArgs) {
 export default function BackupPage({ loaderData }: Route.ComponentProps) {
   const { t } = useTranslation();
   const parseError = (error: string | null) => {
-    if (!error) return null;
     if (error === 'server.backup.error.missingFile') return t(($) => $.server.backup.error.missingFile);
     if (error === 'server.backup.error.invalidRequest') return t(($) => $.server.backup.error.invalidRequest);
     return error;

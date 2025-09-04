@@ -76,7 +76,6 @@ export default function RenameFileRoute({ loaderData: { isFolder, path }, params
   const { entryName, parentPath } = extractEntryPath(path)!;
   const { t } = useTranslation();
   const parseError = (error: string | null) => {
-    if (!error) return null;
     if (error === 'server.files.newNameRequired') return t(($) => $.server.files.newNameRequired);
     if (error === 'server.files.newNameDifferent') return t(($) => $.server.files.newNameDifferent);
     if (error === 'server.files.pathOutside') return t(($) => $.server.files.pathOutside);

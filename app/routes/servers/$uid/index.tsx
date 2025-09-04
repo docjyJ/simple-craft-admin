@@ -124,7 +124,6 @@ export default function ServerConsole({ params: { uid } }: Route.ComponentProps)
   };
 
   const parseError = (error: string | null) => {
-    if (!error) return null;
     if (error === 'server.console.error.commandEmpty') return t(($) => $.server.console.error.commandEmpty);
     if (error === 'server.console.error.commandTooLong') return t(($) => $.server.console.error.commandTooLong);
     if (error === 'server.console.error.commandFailed') return t(($) => $.server.console.error.commandFailed);
