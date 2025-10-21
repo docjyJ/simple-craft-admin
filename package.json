@@ -29,7 +29,7 @@
     "i18next": "^25.4.2",
     "isbot": "^5.1.30",
     "jszip": "^3.10.1",
-    "prisma": "^6.15.0",
+    "prisma": "^6.17.1",
     "properties-file": "^3.6.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
