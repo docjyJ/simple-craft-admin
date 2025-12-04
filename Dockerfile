@@ -1,4 +1,4 @@
-FROM alpine:3.22.1 AS base
+FROM alpine:3.23.0 AS base
 RUN apk add --no-cache \
     nodejs=22.16.0-r2  \
     pnpm=10.9.0-r0 \
