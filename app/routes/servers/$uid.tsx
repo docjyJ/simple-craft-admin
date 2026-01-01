@@ -1,13 +1,13 @@
-import type { Route } from './+types/$uid';
-import { data, Form, Outlet, useLocation, useNavigate } from 'react-router';
 import { Button, Group, Paper, Stack, Tabs, Text } from '@mantine/core';
 import { IconPlayerStop, IconPower } from '@tabler/icons-react';
-import ServerUser from '~/components/ServerUser';
+import { useTranslation } from 'react-i18next';
+import { data, Form, Outlet, useLocation, useNavigate } from 'react-router';
 import ServerPlayerCount from '~/components/ServerPlayerCount';
+import ServerUser from '~/components/ServerUser';
+import { isValidUid } from '~/utils.server/path-validation';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import { requireAuth } from '~/utils.server/session';
-import { isValidUid } from '~/utils.server/path-validation';
-import { useTranslation } from 'react-i18next';
+import type { Route } from './+types/$uid';
 
 export async function loader({ params: { uid }, request }: Route.LoaderArgs) {
   await requireAuth(request);

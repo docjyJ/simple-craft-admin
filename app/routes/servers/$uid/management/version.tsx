@@ -1,15 +1,15 @@
-import type { Route } from './+types/version';
-import { requireAuth } from '~/utils.server/session';
-import { getOrCreateServer } from '~/utils.server/server-minecraft';
-import { listCachedMinecraftVersions, refreshMinecraftVersionCache } from '~/utils.server/minecraft-versions';
-import { Button, Group, Paper, ScrollArea, Stack, Tabs, Title } from '@mantine/core';
-import { IconRefresh } from '@tabler/icons-react';
 import { writeFile } from 'node:fs/promises';
-import { resolveSafePath } from '~/utils.server/path-validation';
-import { z } from 'zod';
+import { Button, Group, Paper, ScrollArea, Stack, Tabs, Title } from '@mantine/core';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { prisma } from '~/utils.server/global';
+import { IconRefresh } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
+import { prisma } from '~/utils.server/global';
+import { listCachedMinecraftVersions, refreshMinecraftVersionCache } from '~/utils.server/minecraft-versions';
+import { resolveSafePath } from '~/utils.server/path-validation';
+import { getOrCreateServer } from '~/utils.server/server-minecraft';
+import { requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/version';
 
 export async function loader({ params: { uid }, request }: Route.LoaderArgs) {
   await requireAuth(request, { admin: true });
@@ -42,7 +42,7 @@ export async function action({ params: { uid }, request }: Route.ActionArgs) {
     try {
       await refreshMinecraftVersionCache();
       return null;
-    } catch (e: any) {
+    } catch (_e) {
       return validationError(
         {
           formId: result.formId,
@@ -75,7 +75,7 @@ export async function action({ params: { uid }, request }: Route.ActionArgs) {
       const buf = Buffer.from(await jarRes.arrayBuffer());
       await writeFile(resolveSafePath(uid, 'server.jar'), buf);
       return null;
-    } catch (e: any) {
+    } catch (_e) {
       return validationError(
         { formId: result.formId, fieldErrors: { versionName: 'server.management.errors.selectError' } },
         result.submittedData,
@@ -121,7 +121,9 @@ function VersionList({ items, type }: { items: { name: string; jarUrl: string }[
                     {v.name}
                   </Button>
                   {status === 'error' && errorName && (
-                    <div style={{ color: 'var(--mantine-color-red-6)', fontSize: 12 }}>{t(errorName as any)}</div>
+                    <div style={{ color: 'var(--mantine-color-red-6)', fontSize: 12 }}>
+                      {t(($) => $.server.management.errors.missingVersionName)}
+                    </div>
                   )}
                 </>
               );
@@ -145,7 +147,6 @@ export default function ManagementVersion({ loaderData: { releases, snapshots } 
             {(form) => {
               const status = form.formState.submitStatus;
               const color = status === 'error' ? 'red' : status === 'success' ? 'green' : undefined;
-              const err = form.error('intent');
               return (
                 <>
                   <input type="hidden" {...form.getInputProps('intent')} />
@@ -159,7 +160,6 @@ export default function ManagementVersion({ loaderData: { releases, snapshots } 
                   >
                     {t(($) => $.server.management.refreshList)}
                   </Button>
-                  {err && <div style={{ color: 'var(--mantine-color-red-6)', fontSize: 12 }}>{t(err as any)}</div>}
                 </>
               );
             }}

@@ -1,12 +1,12 @@
-import type { Route } from './+types/settings';
+import { Button, Container, Paper, Select, Stack, Title } from '@mantine/core';
+import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
+import { useTranslation } from 'react-i18next';
 import { redirect } from 'react-router';
+import { z } from 'zod';
+import { commitLocale, getLocale } from '~/utils.server/locale';
 import { requireAuth } from '~/utils.server/session';
 import { commitTheme, getTheme } from '~/utils.server/theme';
-import { Button, Container, Paper, Select, Stack, Title } from '@mantine/core';
-import { commitLocale, getLocale } from '~/utils.server/locale';
-import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
-import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
+import type { Route } from './+types/settings';
 
 const schema = z.object({
   theme: z.enum(['light', 'dark', 'auto']),

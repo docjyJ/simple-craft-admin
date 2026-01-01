@@ -8,7 +8,7 @@ export const themeCookie = createCookie('theme', {
   maxAge: 60 * 60 * 24 * 365 * 10,
 });
 
-function parseTheme(theme: any) {
+function parseTheme(theme: unknown) {
   if (theme === 'auto') return 'auto';
   if (theme === 'light') return 'light';
   if (theme === 'dark') return 'dark';

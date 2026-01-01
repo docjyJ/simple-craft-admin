@@ -8,7 +8,7 @@ export const localeCookie = createCookie('locale', {
   maxAge: 60 * 60 * 24 * 365 * 5,
 });
 
-function parseLang(locale: any) {
+function parseLang(locale: unknown) {
   if (locale === 'en') return 'en';
   if (locale === 'fr') return 'fr';
   return null;

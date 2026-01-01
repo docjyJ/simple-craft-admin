@@ -1,17 +1,17 @@
-import { Button, Paper, Stack } from '@mantine/core';
-import { Form, Link, redirect } from 'react-router';
-import { parseFormData, validationError } from '@rvf/react-router';
-import { z } from 'zod';
-import type { Route } from './+types/edit';
-import { getPathFromUrl, requireTextFile, resolveSafePath } from '~/utils.server/path-validation';
-import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
 import { readFile, writeFile } from 'node:fs/promises';
-import CodeMirror from '@uiw/react-codemirror';
-import { loadLanguage } from '@uiw/codemirror-extensions-langs';
-import { useState } from 'react';
+import { Button, Paper, Stack } from '@mantine/core';
+import { parseFormData, validationError } from '@rvf/react-router';
 import { IconDeviceFloppy } from '@tabler/icons-react';
-import { requireAuth } from '~/utils.server/session';
+import { loadLanguage } from '@uiw/codemirror-extensions-langs';
+import CodeMirror from '@uiw/react-codemirror';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Form, Link, redirect } from 'react-router';
+import { z } from 'zod';
+import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
+import { getPathFromUrl, requireTextFile, resolveSafePath } from '~/utils.server/path-validation';
+import { requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/edit';
 
 const saveSchema = z.object({
   path: z.string().transform(cleanPath),
@@ -34,14 +34,16 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   const fullPath = resolveSafePath(uid, result.data.path);
   await requireTextFile(fullPath);
   await writeFile(fullPath, result.data.content, 'utf-8');
-  return redirect(`/servers/${uid}/files?path=${encodePathParam(extractEntryPath(result.data.path)!.parentPath)}`);
+  return redirect(
+    `/servers/${uid}/files?path=${encodePathParam(extractEntryPath(result.data.path)?.parentPath ?? '/')}`,
+  );
 }
 
 export default function EditFileRoute({ loaderData: { content, path }, params: { uid } }: Route.ComponentProps) {
   const ext = path.split('.').pop();
   const lang = ext ? loadLanguage(ext) : null;
   const [value, setValue] = useState(content);
-  const { parentPath } = extractEntryPath(path)!;
+  const { parentPath } = extractEntryPath(path) || { parentPath: '/' };
   const { t } = useTranslation();
   return (
     <Paper withBorder>

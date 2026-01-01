@@ -1,11 +1,11 @@
 import { AreaChart } from '@mantine/charts';
-import type { Route } from './+types/dashboard';
-import { requireAuth } from '~/utils.server/session';
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { Anchor, Avatar, Badge, Card, Group, Progress, Stack, Text, Title } from '@mantine/core';
-import { fullListMinecraftServers } from '~/utils.server/minecraft-servers';
-import { Link } from 'react-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
+import { fullListMinecraftServers } from '~/utils.server/minecraft-servers';
+import { requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/dashboard';
 
 interface DiskPoint {
   mount: string;

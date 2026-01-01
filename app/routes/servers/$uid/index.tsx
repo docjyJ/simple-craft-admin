@@ -1,13 +1,13 @@
 import { Button, Group, Paper, Stack, Text, TextInput } from '@mantine/core';
-import { IconSend } from '@tabler/icons-react';
-import type { Route } from './+types/index';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { z } from 'zod';
-import { getOrCreateServer } from '~/utils.server/server-minecraft';
-import type { LogLine } from '~/type';
-import { requireAuth } from '~/utils.server/session';
+import { IconSend } from '@tabler/icons-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
+import type { LogLine } from '~/type';
+import { getOrCreateServer } from '~/utils.server/server-minecraft';
+import { requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/index';
 
 const commandSchema = z.object({
   command: z
@@ -53,10 +53,6 @@ export default function ServerConsole({ params: { uid } }: Route.ComponentProps)
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [log, scrollToBottom]);
-
-  useEffect(() => {
     if (!uid) return;
     let es: EventSource | null = null;
     let closed = false;
@@ -70,10 +66,9 @@ export default function ServerConsole({ params: { uid } }: Route.ComponentProps)
           const data = JSON.parse((e as MessageEvent).data);
           if (Array.isArray(data)) {
             setLog(
-              data
-                .filter((l: any) => l && (l.out || l.err || l.in))
-                .map((l: any) => ({ out: l.out, err: l.err, in: l.in })),
+              data.filter((l) => l && (l.out || l.err || l.in)).map((l) => ({ out: l.out, err: l.err, in: l.in })),
             );
+            scrollToBottom();
           }
         } catch {}
       });
@@ -83,6 +78,7 @@ export default function ServerConsole({ params: { uid } }: Route.ComponentProps)
           const data = JSON.parse((e as MessageEvent).data);
           if (data && (data.out || data.err || data.in)) {
             setLog((prev) => prev.concat([{ out: data.out, err: data.err, in: data.in }]));
+            scrollToBottom();
           }
         } catch {}
       });
@@ -99,13 +95,13 @@ export default function ServerConsole({ params: { uid } }: Route.ComponentProps)
       closed = true;
       if (es) es.close();
     };
-  }, [uid]);
+  }, [uid, scrollToBottom]);
 
   const renderLine = (entry: { out?: string; err?: string; in?: string }, idx: number) => {
     if (entry.in) {
       return (
         <Text key={idx} c="green" component="i">
-          {'> ' + entry.in}
+          {`> ${entry.in}`}
         </Text>
       );
     }

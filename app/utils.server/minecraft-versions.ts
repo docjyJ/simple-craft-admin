@@ -14,7 +14,7 @@ export async function refreshMinecraftVersionCache() {
     const type = v?.type === 'release' ? 'release' : v?.type === 'snapshot' ? 'snapshot' : null;
     const url = typeof v?.url === 'string' ? v.url : null;
     const rel = typeof v?.releaseTime === 'string' ? Date.parse(v.releaseTime) : NaN;
-    if (!name || !type || !url || isNaN(rel)) continue;
+    if (!name || !type || !url || Number.isNaN(rel)) continue;
     const detailRes = await fetch(url).catch(() => null);
     if (!detailRes?.ok) continue;
     const detail = await detailRes.json().catch(() => null);

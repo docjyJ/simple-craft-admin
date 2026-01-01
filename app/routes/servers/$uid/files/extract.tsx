@@ -1,14 +1,14 @@
-import { Button, Group, Paper, Stack, Text, TextInput, Title } from '@mantine/core';
-import { Link, redirect } from 'react-router';
-import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { z } from 'zod';
-import type { Route } from './+types/extract';
-import { getPathFromUrl, requireArchive, resolveSafePath } from '~/utils.server/path-validation';
-import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
 import { readFile } from 'node:fs/promises';
+import { Button, Group, Paper, Stack, Text, TextInput, Title } from '@mantine/core';
+import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
+import { useTranslation } from 'react-i18next';
+import { Link, redirect } from 'react-router';
+import { z } from 'zod';
+import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
+import { getPathFromUrl, requireArchive, resolveSafePath } from '~/utils.server/path-validation';
 import { requireAuth } from '~/utils.server/session';
 import { extractZipToDir } from '~/utils.server/zip';
-import { useTranslation } from 'react-i18next';
+import type { Route } from './+types/extract';
 
 const schema = z.object({
   path: z.string().transform(cleanPath),
@@ -33,8 +33,8 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
 }
 
 export default function ExtractArchiveRoute({ loaderData: { path }, params: { uid } }: Route.ComponentProps) {
-  const { entryName, parentPath } = extractEntryPath(path)!;
-  const destinationDir = (parentPath === '/' ? '/' : parentPath + '/') + entryName.replace(/\.[^/.]+$/, '');
+  const { entryName, parentPath } = extractEntryPath(path) ?? { entryName: '', parentPath: '/' };
+  const destinationDir = (parentPath === '/' ? '/' : `${parentPath}/`) + entryName.replace(/\.[^/.]+$/, '');
   const { t } = useTranslation();
   const parseError = (error: string | null) => {
     if (error === 'server.files.destinationRequired') return t(($) => $.server.files.destinationRequired);

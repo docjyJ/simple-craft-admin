@@ -1,14 +1,14 @@
-import type { Route } from './+types/backup';
-import { Button, Group, List, Paper, Stack, Text, Title } from '@mantine/core';
-import { requireAuth } from '~/utils.server/session';
-import { z } from 'zod';
-import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { isValidUid, resolveSafePath } from '~/utils.server/path-validation';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { createZipFromDir, extractZipToDir } from '~/utils.server/zip';
 import { resolve } from 'node:path';
-import { data } from 'react-router';
+import { Button, Group, List, Paper, Stack, Text, Title } from '@mantine/core';
+import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { useTranslation } from 'react-i18next';
+import { data } from 'react-router';
+import { z } from 'zod';
+import { isValidUid, resolveSafePath } from '~/utils.server/path-validation';
+import { requireAuth } from '~/utils.server/session';
+import { createZipFromDir, extractZipToDir } from '~/utils.server/zip';
+import type { Route } from './+types/backup';
 
 const BACKUP_ROOT = resolve('backup');
 
@@ -58,7 +58,7 @@ export async function action({ params: { uid }, request }: Route.ActionArgs) {
         { formId: result.formId, fieldErrors: { file: 'server.backup.error.missingFile' } },
         result.data,
       );
-    const backupPath = getBackupPath(uid) + '/' + file;
+    const backupPath = `${getBackupPath(uid)}/${file}`;
     const serverDir = resolveSafePath(uid, '/');
     await rm(serverDir, { recursive: true, force: true });
     await extractZipToDir(await readFile(backupPath), serverDir);

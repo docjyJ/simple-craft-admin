@@ -1,6 +1,6 @@
-import type { Route } from './+types/log';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import { requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/log';
 
 // TODO Clean (see index.tsx)
 export async function loader({ params: { uid }, request }: Route.LoaderArgs) {

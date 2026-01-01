@@ -1,9 +1,9 @@
-import os from 'os';
-import type { Route } from './+types/stats';
-import { requireAuth } from '~/utils.server/session';
 import { execFileSync } from 'node:child_process';
-import path from 'node:path';
 import { readFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/stats';
 
 const DISK_CANDIDATE_PATHS = [
   path.resolve('minecraft'),

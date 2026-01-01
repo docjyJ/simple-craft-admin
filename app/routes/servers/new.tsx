@@ -1,11 +1,11 @@
-import { redirect } from 'react-router';
-import type { Route } from './+types/new';
-import { z } from 'zod';
+import { Button, Container, Paper, Stack, TextInput, Title } from '@mantine/core';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
+import { useTranslation } from 'react-i18next';
+import { redirect } from 'react-router';
+import { z } from 'zod';
 import { createMinecraftServer } from '~/utils.server/minecraft-servers';
 import { requireAuth } from '~/utils.server/session';
-import { Button, Container, Paper, Stack, TextInput, Title } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import type { Route } from './+types/new';
 
 const schema = z.object({
   name: z.string().min(1, 'servers.new.nameRequired'),

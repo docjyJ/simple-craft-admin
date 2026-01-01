@@ -1,10 +1,10 @@
-import type { Route } from './+types/download';
-import { getPathFromUrl, resolveSafePath, throw404IfNotExist } from '~/utils.server/path-validation';
 import { readFile, stat } from 'node:fs/promises';
 import { data } from 'react-router';
-import { requireAuth } from '~/utils.server/session';
 import { extractEntryPath } from '~/utils/path-utils';
+import { getPathFromUrl, resolveSafePath, throw404IfNotExist } from '~/utils.server/path-validation';
+import { requireAuth } from '~/utils.server/session';
 import { createZipFromDir } from '~/utils.server/zip';
+import type { Route } from './+types/download';
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   await requireAuth(request);

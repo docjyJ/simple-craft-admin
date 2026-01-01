@@ -1,10 +1,10 @@
-import { redirect } from 'react-router';
-import type { Route } from './+types/new';
-import { z } from 'zod';
-import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { createNewUser, requireAuth } from '~/utils.server/session';
 import { Button, Container, Paper, PasswordInput, Radio, Stack, TextInput, Title } from '@mantine/core';
+import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { useTranslation } from 'react-i18next';
+import { redirect } from 'react-router';
+import { z } from 'zod';
+import { createNewUser, requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/new';
 
 const schema = z.object({
   username: z.string().min(1, 'users.new.usernameRequired'),
@@ -25,7 +25,7 @@ export async function action({ request }: Route.ActionArgs) {
   return createNewUser(result.data)
     .then(({ id }) => redirect(`/users/${id}/edit`))
     .catch((e) => {
-      if (e?.code == 'P2002') {
+      if (e?.code === 'P2002') {
         return validationError(
           {
             formId: result.formId,

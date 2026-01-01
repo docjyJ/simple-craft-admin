@@ -1,13 +1,13 @@
-import { Button, FileInput, Group, Paper, Stack, Text, Title } from '@mantine/core';
-import { Form, Link, redirect } from 'react-router';
-import { parseFormData, validationError } from '@rvf/react-router';
-import { z } from 'zod';
-import type { Route } from './+types/upload';
-import { getPathFromUrl, requireDirectory, resolveSafePath } from '~/utils.server/path-validation';
-import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
 import { writeFile } from 'node:fs/promises';
-import { requireAuth } from '~/utils.server/session';
+import { Button, FileInput, Group, Paper, Stack, Text, Title } from '@mantine/core';
+import { parseFormData, validationError } from '@rvf/react-router';
 import { useTranslation } from 'react-i18next';
+import { Form, Link, redirect } from 'react-router';
+import { z } from 'zod';
+import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
+import { getPathFromUrl, requireDirectory, resolveSafePath } from '~/utils.server/path-validation';
+import { requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/upload';
 
 const schema = z.object({
   path: z.string().transform(cleanPath),

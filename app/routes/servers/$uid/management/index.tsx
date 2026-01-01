@@ -1,6 +1,6 @@
 import { Button, Group, Paper, Stack, Title } from '@mantine/core';
-import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 
 export default function ManagementServer() {
   const { t } = useTranslation();

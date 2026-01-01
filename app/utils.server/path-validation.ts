@@ -1,7 +1,7 @@
-import { relative, resolve } from 'node:path';
-import { cleanPath, isArchive, isText } from '~/utils/path-utils';
 import { stat } from 'node:fs/promises';
+import { relative, resolve } from 'node:path';
 import { data } from 'react-router';
+import { cleanPath, isArchive, isText } from '~/utils/path-utils';
 
 export const root = resolve('./minecraft');
 
@@ -50,7 +50,7 @@ export function resolveSafePath(uid: string, pathInput: string) {
 }
 
 export function getRelativePath(uid: string, fullPath: string) {
-  return '/' + relative(resolve(root, uid), fullPath);
+  return `/${relative(resolve(root, uid), fullPath)}`;
 }
 
 export function getPathFromUrl(url: string): string {

@@ -1,9 +1,8 @@
 import { type ChildProcess, spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
-import { resolveSafePath } from '~/utils.server/path-validation';
-import { serverMinecraftInstances } from '~/utils.server/global';
 import { mkdir, writeFile } from 'node:fs/promises';
 import type { LogLine } from '~/type';
+import { serverMinecraftInstances } from '~/utils.server/global';
 import {
   editScaProperties,
   editServerProperties,
@@ -12,6 +11,7 @@ import {
   getServerProperties,
   getServerStatus,
 } from '~/utils.server/minecraft-servers';
+import { resolveSafePath } from '~/utils.server/path-validation';
 
 export class ServerMinecraft {
   readonly uid: string;
@@ -112,7 +112,7 @@ export class ServerMinecraft {
   sendCommand(command: string) {
     if (!this.proc?.stdin) return false;
     this.pushLine({ in: command });
-    this.proc.stdin.write(command + '\n');
+    this.proc.stdin.write(`${command}\n`);
     return true;
   }
 
@@ -139,21 +139,23 @@ export class ServerMinecraft {
 
   private handleErrChunk(chunk: string) {
     this.stderrBuf += chunk.replace(/\r/g, '');
-    let idx: number;
-    while ((idx = this.stderrBuf.indexOf('\n')) !== -1) {
+    let idx = this.stderrBuf.indexOf('\n');
+    while (idx !== -1) {
       const line = this.stderrBuf.slice(0, idx).replace(/\r$/, '');
       this.stderrBuf = this.stderrBuf.slice(idx + 1);
       this.pushLine({ err: line });
+      idx = this.stderrBuf.indexOf('\n');
     }
   }
 
   private handleOutChunk(chunk: string) {
     this.stdoutBuf += chunk.replace(/\r/g, '');
-    let idx: number;
-    while ((idx = this.stdoutBuf.indexOf('\n')) !== -1) {
+    let idx = this.stdoutBuf.indexOf('\n');
+    while (idx !== -1) {
       const line = this.stdoutBuf.slice(0, idx);
       this.stdoutBuf = this.stdoutBuf.slice(idx + 1);
       this.pushLine({ out: line });
+      idx = this.stdoutBuf.indexOf('\n');
     }
   }
 

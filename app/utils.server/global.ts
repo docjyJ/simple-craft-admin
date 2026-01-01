@@ -3,14 +3,20 @@ import type { ServerMinecraft } from '~/utils.server/server-minecraft';
 
 let serverMinecraftInstances: Map<string, ServerMinecraft>;
 if (!global.__MC_INSTANCE__) {
-  global.__MC_INSTANCE__ = new Map();
+  const map = new Map<string, ServerMinecraft>();
+  global.__MC_INSTANCE__ = map;
+  serverMinecraftInstances = map;
+} else {
+  serverMinecraftInstances = global.__MC_INSTANCE__;
 }
-serverMinecraftInstances = global.__MC_INSTANCE__;
 
 let prisma: PrismaClient;
 if (!global.__PRISMA__) {
-  global.__PRISMA__ = new PrismaClient();
+  const client = new PrismaClient();
+  global.__PRISMA__ = client;
+  prisma = client;
+} else {
+  prisma = global.__PRISMA__;
 }
-prisma = global.__PRISMA__;
 
 export { prisma, serverMinecraftInstances };

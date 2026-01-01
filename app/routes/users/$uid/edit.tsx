@@ -1,8 +1,3 @@
-import type { Route } from './+types/edit';
-import { data, Link } from 'react-router';
-import { z } from 'zod';
-import { getUserById, requireAuth, updateUser } from '~/utils.server/session';
-import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import {
   Alert,
   Button,
@@ -16,8 +11,13 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
+import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { IconAlertHexagon, IconInfoHexagon } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { data, Link } from 'react-router';
+import { z } from 'zod';
+import { getUserById, requireAuth, updateUser } from '~/utils.server/session';
+import type { Route } from './+types/edit';
 
 const schema = z.object({
   name: z.string().min(1, 'users.edit.nameRequired'),

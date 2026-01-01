@@ -1,4 +1,7 @@
-import type { Route } from './+types/players';
+import { Button, Divider, Group, Paper, SimpleGrid, Stack, Text, TextInput, Title } from '@mantine/core';
+import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
+import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 import {
   banIp,
   banPlayer,
@@ -14,10 +17,7 @@ import {
   whitelistRemove,
 } from '~/utils.server/minecraft-players';
 import { requireAuth } from '~/utils.server/session';
-import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { z } from 'zod';
-import { Button, Divider, Group, Paper, SimpleGrid, Stack, Text, TextInput, Title } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import type { Route } from './+types/players';
 
 const valueSchema = z.object({
   intent: z.enum(['whitelist_add', 'whitelist_remove', 'op_add', 'op_remove', 'ban_player', 'pardon_player']),

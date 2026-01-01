@@ -24,15 +24,15 @@ async function readJsonArray<T>(path: string): Promise<T[]> {
     const raw = await readFile(path, 'utf8');
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? (parsed as T[]) : [];
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return [];
+  } catch (e) {
+    if (e instanceof Error && 'code' in e && e.code === 'ENOENT') return [];
     // si JSON invalide, on retourne vide pour rester robuste
     return [];
   }
 }
 
 async function writeJsonArray<T>(path: string, value: T[]): Promise<void> {
-  await writeFile(path, JSON.stringify(value, null, 2) + '\n', 'utf8');
+  await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
 
 export function isServerOnline(uid: string): boolean {

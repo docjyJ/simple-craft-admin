@@ -1,12 +1,12 @@
-import { fullListMinecraftServers } from '~/utils.server/minecraft-servers';
-import type { Route } from './+types/index';
 import { ActionIcon, Badge, Button, Group, Paper, Table, Text, Title } from '@mantine/core';
 import { IconAccessPoint, IconAccessPointOff, IconEdit } from '@tabler/icons-react';
-import { Link } from 'react-router';
-import ServerUser from '~/components/ServerUser';
-import ServerPlayerCount from '~/components/ServerPlayerCount';
-import { requireAuth } from '~/utils.server/session';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
+import ServerPlayerCount from '~/components/ServerPlayerCount';
+import ServerUser from '~/components/ServerUser';
+import { fullListMinecraftServers } from '~/utils.server/minecraft-servers';
+import { requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/index';
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAuth(request);

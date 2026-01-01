@@ -1,6 +1,10 @@
+import { rename as fsRename, stat } from 'node:fs/promises';
 import { Button, Group, Paper, Stack, Text, TextInput, Title } from '@mantine/core';
-import { Link, redirect } from 'react-router';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
+import { useTranslation } from 'react-i18next';
+import { Link, redirect } from 'react-router';
+import { z } from 'zod';
+import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
 import {
   getPathFromUrl,
   outOfRoot,
@@ -9,12 +13,8 @@ import {
   resolveSafePath,
   throw404IfNotExist,
 } from '~/utils.server/path-validation';
-import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
-import { rename as fsRename, stat } from 'node:fs/promises';
-import { z } from 'zod';
-import type { Route } from './+types/rename';
 import { requireAuth } from '~/utils.server/session';
-import { useTranslation } from 'react-i18next';
+import type { Route } from './+types/rename';
 
 const schema = z.object({
   path: z.string().transform(cleanPath),
@@ -68,12 +68,12 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   }
   await fsRename(sourcePath, destPath);
   return redirect(
-    `/servers/${uid}/files?path=${encodePathParam(isFolder ? result.data.newPath : extractEntryPath(result.data.newPath)!.parentPath)}`,
+    `/servers/${uid}/files?path=${encodePathParam(isFolder ? result.data.newPath : (extractEntryPath(result.data.newPath)?.parentPath ?? '/'))}`,
   );
 }
 
 export default function RenameFileRoute({ loaderData: { isFolder, path }, params: { uid } }: Route.ComponentProps) {
-  const { entryName, parentPath } = extractEntryPath(path)!;
+  const { entryName, parentPath } = extractEntryPath(path) ?? { entryName: '', parentPath: '/' };
   const { t } = useTranslation();
   const parseError = (error: string | null) => {
     if (error === 'server.files.newNameRequired') return t(($) => $.server.files.newNameRequired);

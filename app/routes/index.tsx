@@ -1,12 +1,12 @@
-import { Link } from 'react-router';
-import type { Route } from './+types/index';
-import { fullListMinecraftServers } from '~/utils.server/minecraft-servers';
-import { getUser } from '~/utils.server/session';
 import { Avatar, Badge, Button, Container, Group, Paper, Table, Text, Title } from '@mantine/core';
 import { IconAccessPoint, IconAccessPointOff, IconDashboard, IconKey } from '@tabler/icons-react';
-import ServerUser from '~/components/ServerUser';
-import ServerPlayerCount from '~/components/ServerPlayerCount';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
+import ServerPlayerCount from '~/components/ServerPlayerCount';
+import ServerUser from '~/components/ServerUser';
+import { fullListMinecraftServers } from '~/utils.server/minecraft-servers';
+import { getUser } from '~/utils.server/session';
+import type { Route } from './+types/index';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const [servers, user] = await Promise.all([fullListMinecraftServers(), getUser(request)]);

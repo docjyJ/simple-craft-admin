@@ -1,9 +1,5 @@
-import type { Route } from './+types/index';
-import { encodePathParam, isArchive, isText } from '~/utils/path-utils';
-import { Link, useNavigate } from 'react-router';
-import { ActionIcon, Anchor, Breadcrumbs, Button, Group, Paper, Stack, Table, Text } from '@mantine/core';
-import { getPathFromUrl, requireDirectory, resolveSafePath } from '~/utils.server/path-validation';
 import { readdir } from 'node:fs/promises';
+import { ActionIcon, Anchor, Breadcrumbs, Button, Group, Paper, Stack, Table, Text } from '@mantine/core';
 import {
   IconDownload,
   IconEdit,
@@ -16,8 +12,12 @@ import {
   IconTrash,
   IconUpload,
 } from '@tabler/icons-react';
-import { requireAuth } from '~/utils.server/session';
 import { useTranslation } from 'react-i18next';
+import { Link, useNavigate } from 'react-router';
+import { encodePathParam, isArchive, isText } from '~/utils/path-utils';
+import { getPathFromUrl, requireDirectory, resolveSafePath } from '~/utils.server/path-validation';
+import { requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/index';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   await requireAuth(request);
@@ -50,11 +50,11 @@ export default function FileExplorerIndex({ loaderData: { entries, path } }: Rou
         <Paper withBorder style={{ flexGrow: 1, overflowX: 'auto' }}>
           <Breadcrumbs m="sm" style={{ flexWrap: 'nowrap' }}>
             {[...pathArray].map((seg, idx, arr) => {
-              const target = pathArray.slice(0, idx + 1).join('/');
+              const target = pathArray.slice(0, idx + 1).join('/') || '/';
               return idx === arr.length - 1 ? (
-                <Text key={idx}>{idx === 0 ? t(($) => $.server.files.root) : seg}</Text>
+                <Text key={target}>{idx === 0 ? t(($) => $.server.files.root) : seg}</Text>
               ) : (
-                <Anchor key={idx} component={Link} to={`?path=${encodePathParam(target === '' ? '/' : target)}`}>
+                <Anchor key={target} component={Link} to={`?path=${encodePathParam(target)}`}>
                   {idx === 0 ? t(($) => $.server.files.root) : seg}
                 </Anchor>
               );

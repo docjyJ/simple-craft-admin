@@ -1,8 +1,8 @@
 import { hash, verify } from 'argon2';
 import { createSessionStorage, data, redirect } from 'react-router';
-import { prisma } from '~/utils.server/global';
 import type { User as PrismaUser } from '~/generated/prisma/client';
 import { encodePathParam } from '~/utils/path-utils';
+import { prisma } from '~/utils.server/global';
 
 type User = Omit<PrismaUser, 'password'>;
 
@@ -15,7 +15,7 @@ function getSessionSecret() {
   throw new Error('Missing SESSION_SECRET environment variable');
 }
 
-const sessionStore = createSessionStorage<SessionData, {}>({
+const sessionStore = createSessionStorage<SessionData, Record<string, never>>({
   cookie: {
     name: '__session',
     httpOnly: true,

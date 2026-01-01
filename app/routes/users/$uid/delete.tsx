@@ -1,9 +1,9 @@
-import type { Route } from './+types/delete';
-import { data, Form, Link, redirect } from 'react-router';
-import { deleteUser, getUserById, requireAuth } from '~/utils.server/session';
 import { Alert, Button, Container, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { IconAlertHexagon } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { data, Form, Link, redirect } from 'react-router';
+import { deleteUser, getUserById, requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/delete';
 
 export async function loader({ request, params: { uid } }: Route.LoaderArgs) {
   await requireAuth(request, { admin: true });

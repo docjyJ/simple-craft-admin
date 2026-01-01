@@ -1,5 +1,3 @@
-import React, { useEffect } from 'react';
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from 'react-router';
 import {
   Box,
   Code,
@@ -7,15 +5,18 @@ import {
   Container,
   createTheme,
   DEFAULT_THEME,
-  mantineHtmlProps,
   MantineProvider,
+  mantineHtmlProps,
   Text,
   Title,
 } from '@mantine/core';
+import type React from 'react';
+import { useEffect } from 'react';
+import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from 'react-router';
 import type { Route } from './+types/root';
 import './app.css';
-import { getTheme } from '~/utils.server/theme';
 import { getLocale } from '~/utils.server/locale';
+import { getTheme } from '~/utils.server/theme';
 import './i18n';
 import { useTranslation } from 'react-i18next';
 

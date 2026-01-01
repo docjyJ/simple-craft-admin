@@ -1,11 +1,11 @@
 import { Alert, Button, NumberInput, Paper, Select, Stack, TextInput, Title } from '@mantine/core';
-import type { Route } from './+types/settings';
-import { IconAlertHexagon, IconDeviceFloppy, IconInfoHexagon } from '@tabler/icons-react';
-import { z } from 'zod';
 import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
+import { IconAlertHexagon, IconDeviceFloppy, IconInfoHexagon } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
 import { requireAuth } from '~/utils.server/session';
-import { useTranslation } from 'react-i18next';
+import type { Route } from './+types/settings';
 
 const schema = z.object({
   name: z.coerce.string().min(1, 'server.settingsPage.nameRequired'),

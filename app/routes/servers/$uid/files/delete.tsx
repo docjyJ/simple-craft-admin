@@ -1,13 +1,13 @@
-import { Button, Group, Paper, Stack, Text, Title } from '@mantine/core';
-import { Link, redirect } from 'react-router';
-import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
-import { z } from 'zod';
-import { getPathFromUrl, requireNonRoot, resolveSafePath, throw404IfNotExist } from '~/utils.server/path-validation';
-import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
 import { rm, stat } from 'node:fs/promises';
-import type { Route } from './+types/delete';
-import { requireAuth } from '~/utils.server/session';
+import { Button, Group, Paper, Stack, Text, Title } from '@mantine/core';
+import { parseFormData, ValidatedForm, validationError } from '@rvf/react-router';
 import { useTranslation } from 'react-i18next';
+import { Link, redirect } from 'react-router';
+import { z } from 'zod';
+import { cleanPath, encodePathParam, extractEntryPath } from '~/utils/path-utils';
+import { getPathFromUrl, requireNonRoot, resolveSafePath, throw404IfNotExist } from '~/utils.server/path-validation';
+import { requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/delete';
 
 const schema = z.object({
   path: z.string().transform(cleanPath),
@@ -29,12 +29,12 @@ export async function action({ request, params: { uid } }: Route.ActionArgs) {
   if (result.error) return validationError(result.error, result.submittedData);
   requireNonRoot(result.data.path);
   return throw404IfNotExist(rm(resolveSafePath(uid, result.data.path), { recursive: true, force: false })).then(() =>
-    redirect(`/servers/${uid}/files?path=${encodePathParam(extractEntryPath(result.data.path)!.parentPath)}`),
+    redirect(`/servers/${uid}/files?path=${encodePathParam(extractEntryPath(result.data.path)?.parentPath ?? '/')}`),
   );
 }
 
 export default function DeleteFileRoute({ loaderData: { isFolder, path }, params: { uid } }: Route.ComponentProps) {
-  const { entryName, parentPath } = extractEntryPath(path)!;
+  const { entryName, parentPath } = extractEntryPath(path) ?? { entryName: '', parentPath: '/' };
   const { t } = useTranslation();
   return (
     <Paper withBorder maw={500} m="auto">
@@ -46,7 +46,7 @@ export default function DeleteFileRoute({ loaderData: { isFolder, path }, params
             : t(($) => $.server.files.deleteConfirmFile, { name: entryName })}
         </Text>
         <Text>{t(($) => $.server.files.deleteIrreversible)}</Text>
-        <ValidatedForm method="post" schema={schema} defaultValues={{ path: parentPath + '/' + entryName }}>
+        <ValidatedForm method="post" schema={schema} defaultValues={{ path: `${parentPath}/${entryName}` }}>
           {(form) => (
             <>
               <input {...form.getInputProps('path', { type: 'hidden' })} />

@@ -1,12 +1,12 @@
+import { randomUUID } from 'node:crypto';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { randomUUID } from 'crypto';
+import { Socket } from 'node:net';
+import { getProperties } from 'properties-file';
+import { PropertiesEditor } from 'properties-file/editor';
+import pack_jpg from '~/assets/pack_png';
+import type { ScaProperties, ServerProperties, ServerStatus } from '~/type';
 import { defaultIfNotExist, isValidUid, root } from '~/utils.server/path-validation';
 import { getOrCreateServer } from '~/utils.server/server-minecraft';
-import { getProperties } from 'properties-file';
-import type { ScaProperties, ServerProperties, ServerStatus } from '~/type';
-import { Socket } from 'node:net';
-import pack_jpg from '~/assets/pack_png';
-import { PropertiesEditor } from 'properties-file/editor';
 
 export async function listMinecraftServers() {
   const dirs = await readdir(root, { withFileTypes: true });
@@ -75,7 +75,7 @@ export async function getServerStatus(port: number): Promise<ServerStatus | null
           motd: obj.description as string,
           icon: obj.favicon as string,
         });
-      } catch (e) {
+      } catch (_e) {
         resolve(null);
       }
     });
@@ -97,18 +97,18 @@ export async function getServerProperties(serverPropertiesFile: string) {
     readFile(serverPropertiesFile, 'utf8')
       .then(getProperties)
       .then((data) => {
-        if (data['motd']) {
-          properties.motd = data['motd'];
+        if (data.motd) {
+          properties.motd = data.motd;
         }
         if (data['max-players']) {
           const valueInt = parseInt(data['max-players'], 10);
-          if (!isNaN(valueInt)) {
+          if (!Number.isNaN(valueInt)) {
             properties.max_players = valueInt;
           }
         }
         if (data['server-port']) {
           const valueInt = parseInt(data['server-port'], 10);
-          if (!isNaN(valueInt)) {
+          if (!Number.isNaN(valueInt)) {
             properties.server_port = valueInt;
           }
         }
@@ -134,7 +134,7 @@ export async function getScaProperties(ScaPropertiesFile: string) {
     readFile(ScaPropertiesFile, 'utf8')
       .then(getProperties)
       .then((data) => {
-        if (data['name']) properties.name = data['name'];
+        if (data.name) properties.name = data.name;
         if (data['java-version']) properties.java_version = data['java-version'];
         return properties;
       }),

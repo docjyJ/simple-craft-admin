@@ -3,7 +3,7 @@ export function extractEntryPath(pathInput: string) {
   if (parts.length === 0) return undefined;
   return {
     entryName: parts[parts.length - 1],
-    parentPath: '/' + parts.slice(0, -1).join('/'),
+    parentPath: `/${parts.slice(0, -1).join('/')}`,
   };
 }
 

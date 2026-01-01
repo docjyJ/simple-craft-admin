@@ -1,10 +1,10 @@
-import type { Route } from './+types/auth-layout';
 import { AppShell, Burger, Button, Group, Image, NavLink, Text, Title } from '@mantine/core';
-import { Link, Outlet, redirect } from 'react-router';
 import { IconGauge, IconServer, IconSettings, IconUsers } from '@tabler/icons-react';
 import { useState } from 'react';
-import { getUser } from '~/utils.server/session';
 import { useTranslation } from 'react-i18next';
+import { Link, Outlet, redirect } from 'react-router';
+import { getUser } from '~/utils.server/session';
+import type { Route } from './+types/auth-layout';
 
 export async function loader({ request }: Route.LoaderArgs) {
   return getUser(request).then((user) => (user ? { user } : redirect('/login')));

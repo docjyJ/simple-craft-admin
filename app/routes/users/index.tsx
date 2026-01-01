@@ -1,9 +1,9 @@
-import type { Route } from './+types/index';
-import { Link } from 'react-router';
-import { listUsers, requireAuth } from '~/utils.server/session';
 import { ActionIcon, Button, Group, Paper, Table, Title } from '@mantine/core';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
+import { listUsers, requireAuth } from '~/utils.server/session';
+import type { Route } from './+types/index';
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAuth(request, { admin: true });

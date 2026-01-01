@@ -1,12 +1,14 @@
-import JSZip from 'jszip';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import JSZip from 'jszip';
 
 async function zipDir(zip: JSZip, dirPath: string) {
   for (const entry of await readdir(dirPath, { withFileTypes: true })) {
     const path = `${dirPath}/${entry.name}`;
-    if (entry.isDirectory()) await zipDir(zip.folder(entry.name)!, path);
-    else await readFile(path).then((data) => zip.file(entry.name, data));
+    if (entry.isDirectory()) {
+      const zipChild = zip.folder(entry.name);
+      if (zipChild) await zipDir(zipChild, path);
+    } else await readFile(path).then((data) => zip.file(entry.name, data));
   }
 }
 
