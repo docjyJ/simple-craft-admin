@@ -68,6 +68,7 @@ export default function ServerLayout({
         >
           <Tabs.List>
             <Tabs.Tab value={`/servers/${uid}`}>{t(($) => $.server.tabs.console)}</Tabs.Tab>
+            <Tabs.Tab value={`/servers/${uid}/players`}>{t(($) => $.server.tabs.players)}</Tabs.Tab>
             <Tabs.Tab value={`/servers/${uid}/files`}>{t(($) => $.server.tabs.files)}</Tabs.Tab>
             <Tabs.Tab value={`/servers/${uid}/settings`}>{t(($) => $.server.tabs.settings)}</Tabs.Tab>
             <Tabs.Tab value={`/servers/${uid}/management`}>{t(($) => $.server.tabs.management)}</Tabs.Tab>

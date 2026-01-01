@@ -15,6 +15,7 @@ export default [
       route('settings', './routes/servers/$uid/settings.tsx'),
       route('management', './routes/servers/$uid/management/index.tsx'),
       route('management/version', './routes/servers/$uid/management/version.tsx'),
+      route('players', './routes/servers/$uid/players.tsx'),
       route('files', './routes/servers/$uid/files/index.tsx'),
       route('files/download', './routes/servers/$uid/files/download.ts'),
       route('files/delete', './routes/servers/$uid/files/delete.tsx'),
