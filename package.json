@@ -12,7 +12,8 @@
     "biome:check": "biome check .",
     "biome:fix": "biome check --fix .",
     "db-generate": "prisma generate",
-    "db-migrate": "prisma migrate dev"
+    "db-migrate": "prisma migrate dev",
+    "update:minecraft": "tsx jars-database/script-minecraft.ts"
   },
   "dependencies": {
     "@mantine/charts": "^8.2.8",
